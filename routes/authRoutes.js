@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { protect } = require("../middleware/authMiddleware");    
 
 const User = require("../models/User");
 
@@ -115,6 +116,21 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error during login",
+      error: error.message,
+    });
+  }
+});
+
+// GET LOGGED-IN USER PROFILE
+router.get("/profile", protect, async (req, res) => {
+  try {
+    res.status(200).json({
+      message: "Profile fetched successfully",
+      user: req.user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch profile",
       error: error.message,
     });
   }

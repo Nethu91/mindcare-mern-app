@@ -13,6 +13,7 @@ const resourceRoutes = require("./routes/resourceRoutes");
 const medicationRoutes = require("./routes/medicationRoutes");
 const emergencyRoutes = require("./routes/emergencyRoutes");
 
+
 const app = express();
 
 connectDB();
