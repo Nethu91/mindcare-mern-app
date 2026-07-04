@@ -137,3 +137,74 @@ router.get("/profile", protect, async (req, res) => {
 });
 
 module.exports = router;
+// ===========================
+// GET /profile
+// Returns the logged-in user's full profile (minus password)
+// ===========================
+
+router.get("/profile", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ===========================
+// PUT /profile
+// Updates the logged-in user's profile fields
+// ===========================
+
+router.put("/profile", protect, async (req, res) => {
+  try {
+    const {
+      name,
+      phone,
+      city,
+      age,
+      gender,
+      emergencyName,
+      emergencyPhone,
+      goal,
+      reminderTime,
+      preferredSupport,
+    } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Only update fields that were actually sent, so a partial
+    // save from the frontend never wipes out other fields.
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    if (city !== undefined) user.city = city;
+    if (age !== undefined) user.age = age;
+    if (gender !== undefined) user.gender = gender;
+    if (emergencyName !== undefined) user.emergencyName = emergencyName;
+    if (emergencyPhone !== undefined) user.emergencyPhone = emergencyPhone;
+    if (goal !== undefined) user.goal = goal;
+    if (reminderTime !== undefined) user.reminderTime = reminderTime;
+    if (preferredSupport !== undefined)
+      user.preferredSupport = preferredSupport;
+
+    await user.save();
+
+    const updatedUser = user.toObject();
+    delete updatedUser.password;
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});

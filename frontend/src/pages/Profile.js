@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
 
 function Profile() {
   const navigate = useNavigate();
@@ -7,22 +8,62 @@ function Profile() {
   const savedUser = JSON.parse(localStorage.getItem("user"));
 
   const [profile, setProfile] = useState({
-    name: savedUser?.name || "Rashmi Athapaththu",
-    email: savedUser?.email || "rashmi@example.com",
-    phone: "+94 77 123 4567",
-    age: "23",
-    gender: "Female",
-    city: "Colombo",
+    name: savedUser?.name || "",
+    email: savedUser?.email || "",
+    phone: "",
+    age: "",
+    gender: "",
+    city: "",
     role: "MindCare User",
-    emergencyName: "Madara",
-    emergencyPhone: "+94 77 765 4321",
-    goal: "Reduce stress and improve daily emotional balance",
-    reminderTime: "20:30",
-    preferredSupport: "Counselor + Meditation",
+    emergencyName: "",
+    emergencyPhone: "",
+    goal: "",
+    reminderTime: "",
+    preferredSupport: "",
   });
 
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [selectedMood, setSelectedMood] = useState("Calm");
+
+  // ===========================
+  // Load real profile from backend
+  // ===========================
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      setLoadingProfile(true);
+
+      const res = await API.get("/auth/profile"); // ⚠️ adjust path if your authRoutes are mounted elsewhere
+
+      if (res?.data) {
+        setProfile((prev) => ({
+          ...prev,
+          name: res.data.name || "",
+          email: res.data.email || "",
+          phone: res.data.phone || "",
+          age: res.data.age ?? "",
+          gender: res.data.gender || "",
+          city: res.data.city || "",
+          emergencyName: res.data.emergencyName || "",
+          emergencyPhone: res.data.emergencyPhone || "",
+          goal: res.data.goal || "",
+          reminderTime: res.data.reminderTime || "",
+          preferredSupport: res.data.preferredSupport || "",
+        }));
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Couldn't load your profile. Showing saved local data instead.");
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
 
   const wellnessStats = [
     {
@@ -81,16 +122,45 @@ function Profile() {
     });
   };
 
-  const handleSave = () => {
-    const updatedUser = {
-      ...savedUser,
-      name: profile.name,
-      email: profile.email,
-    };
+  // ===========================
+  // Save profile to backend
+  // ===========================
 
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setIsEditing(false);
-    alert("Profile updated successfully 💜");
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      const res = await API.put("/auth/profile", {
+        name: profile.name,
+        phone: profile.phone,
+        city: profile.city,
+        age: profile.age,
+        gender: profile.gender,
+        emergencyName: profile.emergencyName,
+        emergencyPhone: profile.emergencyPhone,
+        goal: profile.goal,
+        reminderTime: profile.reminderTime,
+        preferredSupport: profile.preferredSupport,
+      });
+
+      // Keep the locally-stored user (used for the dashboard greeting
+      // etc.) in sync with the name that was just saved.
+      const updatedUser = {
+        ...savedUser,
+        name: res?.data?.name || profile.name,
+        email: res?.data?.email || profile.email,
+      };
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      setIsEditing(false);
+      alert("Profile updated successfully 💜");
+    } catch (err) {
+      console.log(err);
+      alert("Failed to save your profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = () => {
@@ -125,6 +195,10 @@ function Profile() {
           <div style={styles.headerBadge}>👤 Personal Wellness Space</div>
         </div>
 
+        {loadingProfile && (
+          <div style={styles.loadingPill}>⏳ Loading your profile...</div>
+        )}
+
         <div style={styles.mainGrid}>
           <div style={styles.leftPanel}>
             <div style={styles.profileCard}>
@@ -133,7 +207,7 @@ function Profile() {
                 <div style={styles.onlineDot}></div>
               </div>
 
-              <h2 style={styles.profileName}>{profile.name}</h2>
+              <h2 style={styles.profileName}>{profile.name || "User"}</h2>
               <p style={styles.profileRole}>{profile.role}</p>
 
               <div style={styles.moodBadge}>Current Mood: {selectedMood}</div>
@@ -141,12 +215,16 @@ function Profile() {
               <div style={styles.quickInfoGrid}>
                 <div style={styles.quickInfoBox}>
                   <span style={styles.quickLabel}>City</span>
-                  <strong style={styles.quickValue}>{profile.city}</strong>
+                  <strong style={styles.quickValue}>
+                    {profile.city || "-"}
+                  </strong>
                 </div>
 
                 <div style={styles.quickInfoBox}>
                   <span style={styles.quickLabel}>Age</span>
-                  <strong style={styles.quickValue}>{profile.age}</strong>
+                  <strong style={styles.quickValue}>
+                    {profile.age || "-"}
+                  </strong>
                 </div>
               </div>
 
@@ -218,7 +296,8 @@ function Profile() {
                     name="email"
                     value={profile.email}
                     onChange={handleChange}
-                    disabled={!isEditing}
+                    disabled
+                    title="Email can't be changed here"
                   />
                 </div>
 
@@ -268,8 +347,12 @@ function Profile() {
               </div>
 
               {isEditing && (
-                <button style={styles.saveButton} onClick={handleSave}>
-                  Save Changes
+                <button
+                  style={{ ...styles.saveButton, opacity: saving ? 0.7 : 1 }}
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save Changes"}
                 </button>
               )}
             </div>
@@ -529,6 +612,16 @@ const styles = {
     boxShadow: "0 12px 25px rgba(49,34,68,0.12)",
     color: "#4A4E69",
     fontWeight: "800",
+  },
+
+  loadingPill: {
+    background: "#F8F4FF",
+    borderRadius: "18px",
+    padding: "14px",
+    textAlign: "center",
+    marginBottom: "20px",
+    color: "#7C3AED",
+    fontWeight: "700",
   },
 
   mainGrid: {

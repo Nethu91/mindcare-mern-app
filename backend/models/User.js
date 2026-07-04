@@ -5,21 +5,17 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true,
     },
 
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
-      trim: true,
     },
 
     password: {
       type: String,
       required: true,
-      minlength: 6,
     },
 
     age: {
@@ -28,19 +24,54 @@ const userSchema = new mongoose.Schema(
 
     gender: {
       type: String,
-      enum: ["Male", "Female", "Other", ""],
-      default: "",
     },
 
     role: {
       type: String,
-      enum: ["user", "counselor", "admin"],
       default: "user",
     },
+
+    // ===========================
+    // Profile fields
+    // (added to support the Profile page)
+    // ===========================
+
+    phone: {
+      type: String,
+      default: "",
+    },
+
+    city: {
+      type: String,
+      default: "",
+    },
+
+    emergencyName: {
+      type: String,
+      default: "",
+    },
+
+    emergencyPhone: {
+      type: String,
+      default: "",
+    },
+
+    goal: {
+      type: String,
+      default: "",
+    },
+
+    reminderTime: {
+      type: String,
+      default: "",
+    },
+
+    preferredSupport: {
+      type: String,
+      default: "",
+    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("User", userSchema);

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
 
 function CalmVideos() {
   const navigate = useNavigate();
@@ -95,18 +96,77 @@ function CalmVideos() {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedVideo, setSelectedVideo] = useState(videos[0]);
+
+  // ===========================
+  // Favorites (persisted to backend)
+  // ===========================
+
   const [favorites, setFavorites] = useState([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
+  const [savingFavoriteId, setSavingFavoriteId] = useState(null);
+
+  useEffect(() => {
+    loadFavorites();
+  }, []);
+
+  const loadFavorites = async () => {
+    try {
+      setLoadingFavorites(true);
+
+      const res = await API.get("/favorites");
+
+      // Expecting something like [{ videoId: 1 }, { videoId: 3 }]
+      // or just [1, 3] — handle both shapes.
+      const ids = (res.data || []).map((item) =>
+        typeof item === "object" ? item.videoId : item
+      );
+
+      setFavorites(ids);
+    } catch (err) {
+      console.log(err);
+      // If the endpoint isn't available yet, favorites just
+      // won't persist — the rest of the page still works.
+    } finally {
+      setLoadingFavorites(false);
+    }
+  };
 
   const filteredVideos =
     selectedCategory === "All"
       ? videos
       : videos.filter((video) => video.category === selectedCategory);
 
-  const toggleFavorite = (id) => {
-    if (favorites.includes(id)) {
+  const toggleFavorite = async (id) => {
+    const isFavorited = favorites.includes(id);
+
+    // Optimistic UI update.
+    if (isFavorited) {
       setFavorites(favorites.filter((item) => item !== id));
     } else {
       setFavorites([...favorites, id]);
+    }
+
+    setSavingFavoriteId(id);
+
+    try {
+      if (isFavorited) {
+        await API.delete(`/favorites/${id}`);
+      } else {
+        await API.post("/favorites", { videoId: id });
+      }
+    } catch (err) {
+      console.log(err);
+
+      // Roll back if the save failed.
+      if (isFavorited) {
+        setFavorites((prev) => [...prev, id]);
+      } else {
+        setFavorites((prev) => prev.filter((item) => item !== id));
+      }
+
+      alert("Couldn't save that favorite. Please try again.");
+    } finally {
+      setSavingFavoriteId(null);
     }
   };
 
@@ -148,7 +208,9 @@ function CalmVideos() {
           <div style={styles.statCard}>
             <div style={styles.statIcon}>💜</div>
             <div>
-              <h3 style={styles.statNumber}>{favorites.length}</h3>
+              <h3 style={styles.statNumber}>
+                {loadingFavorites ? "…" : favorites.length}
+              </h3>
               <p style={styles.statText}>Favorites</p>
             </div>
           </div>
@@ -229,7 +291,11 @@ function CalmVideos() {
                   </div>
 
                   <button
-                    style={styles.favoriteButton}
+                    style={{
+                      ...styles.favoriteButton,
+                      opacity: savingFavoriteId === video.id ? 0.5 : 1,
+                    }}
+                    disabled={savingFavoriteId === video.id}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite(video.id);
@@ -281,7 +347,11 @@ function CalmVideos() {
               </div>
 
               <button
-                style={styles.primaryButton}
+                style={{
+                  ...styles.primaryButton,
+                  opacity: savingFavoriteId === selectedVideo.id ? 0.7 : 1,
+                }}
+                disabled={savingFavoriteId === selectedVideo.id}
                 onClick={() => toggleFavorite(selectedVideo.id)}
               >
                 {favorites.includes(selectedVideo.id)
