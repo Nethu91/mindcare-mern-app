@@ -1,47 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
 
 function Emergency() {
   const navigate = useNavigate();
-
-  const emergencyContacts = [
-    {
-      id: 1,
-      name: "National Mental Health Helpline",
-      type: "Mental Health Support",
-      phone: "1926",
-      available: "24/7",
-      icon: "🧠",
-      color: "#CDB4DB",
-    },
-    {
-      id: 2,
-      name: "Emergency Ambulance",
-      type: "Medical Emergency",
-      phone: "1990",
-      available: "24/7",
-      icon: "🚑",
-      color: "#FFAFCC",
-    },
-    {
-      id: 3,
-      name: "Police Emergency",
-      type: "Safety Emergency",
-      phone: "119",
-      available: "24/7",
-      icon: "🚓",
-      color: "#B8C0FF",
-    },
-    {
-      id: 4,
-      name: "Trusted Friend",
-      type: "Personal Support",
-      phone: "+94 77 123 4567",
-      available: "Saved Contact",
-      icon: "🤝",
-      color: "#A8DADC",
-    },
-  ];
 
   const safetySteps = [
     "Move to a safe and quiet place if possible.",
@@ -51,12 +13,81 @@ function Emergency() {
     "Seek professional help immediately if the situation is serious.",
   ];
 
-  const [selectedContact, setSelectedContact] = useState(emergencyContacts[0]);
+  const iconPalette = [
+    { icon: "🧠", color: "#CDB4DB" },
+    { icon: "🚑", color: "#FFAFCC" },
+    { icon: "🚓", color: "#B8C0FF" },
+    { icon: "🤝", color: "#A8DADC" },
+  ];
+
+  const [contacts, setContacts] = useState([]);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const [message, setMessage] = useState(
     "I need urgent support. Please contact me as soon as possible."
   );
   const [locationShared, setLocationShared] = useState(false);
   const [sosSent, setSosSent] = useState(false);
+
+  // Add personal contact form
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newRelationship, setNewRelationship] = useState("");
+  const [addingContact, setAddingContact] = useState(false);
+
+  // -----------------------------
+  // Load helplines (static) + personal contacts (DB) from backend
+  // -----------------------------
+  useEffect(() => {
+    loadContacts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadContacts = async () => {
+    try {
+      setLoading(true);
+
+      const [helplinesRes, personalRes] = await Promise.all([
+        API.get("/emergency/helplines"),
+        API.get("/emergency/contacts"),
+      ]);
+
+      const helplineContacts = helplinesRes.data.map((h, index) => ({
+        id: `helpline-${index}`,
+        name: h.name,
+        type: "Emergency Helpline",
+        phone: h.phone,
+        available: "24/7",
+        icon: iconPalette[index % iconPalette.length].icon,
+        color: iconPalette[index % iconPalette.length].color,
+        isPersonal: false,
+      }));
+
+      const personalContacts = personalRes.data.map((c, index) => ({
+        id: c._id,
+        name: c.name,
+        type: c.relationship || "Personal Support",
+        phone: c.phone,
+        available: "Saved Contact",
+        icon: "🤝",
+        color: iconPalette[(index + 3) % iconPalette.length].color,
+        isPersonal: true,
+      }));
+
+      const combined = [...helplineContacts, ...personalContacts];
+
+      setContacts(combined);
+
+      if (combined.length > 0) {
+        setSelectedContact(combined[0]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCall = (phone) => {
     window.location.href = `tel:${phone}`;
@@ -68,10 +99,60 @@ function Emergency() {
   };
 
   const handleSendSOS = () => {
+    if (!selectedContact) {
+      alert("Please select a contact first.");
+      return;
+    }
+
     setSosSent(true);
     alert(
       `SOS Alert Prepared!\n\nContact: ${selectedContact.name}\nPhone: ${selectedContact.phone}\nMessage: ${message}`
     );
+  };
+
+  // -----------------------------
+  // Add a personal emergency contact -> saves to DB
+  // -----------------------------
+  const handleAddContact = async () => {
+    if (!newName || !newPhone) {
+      alert("Please enter a name and phone number.");
+      return;
+    }
+
+    try {
+      setAddingContact(true);
+
+      await API.post("/emergency/contacts", {
+        name: newName,
+        phone: newPhone,
+        relationship: newRelationship,
+      });
+
+      setNewName("");
+      setNewPhone("");
+      setNewRelationship("");
+
+      await loadContacts();
+    } catch (err) {
+      console.error(err);
+      alert(
+        err.response?.data?.message || "Failed to add emergency contact."
+      );
+    } finally {
+      setAddingContact(false);
+    }
+  };
+
+  const handleDeleteContact = async (id) => {
+    try {
+      await API.delete(`/emergency/contacts/${id}`);
+      await loadContacts();
+    } catch (err) {
+      console.error(err);
+      alert(
+        err.response?.data?.message || "Failed to delete emergency contact."
+      );
+    }
   };
 
   return (
@@ -118,7 +199,7 @@ function Emergency() {
           <div style={styles.statCard}>
             <div style={styles.statIcon}>📞</div>
             <div>
-              <h3 style={styles.statNumber}>{emergencyContacts.length}</h3>
+              <h3 style={styles.statNumber}>{contacts.length}</h3>
               <p style={styles.statText}>Emergency Contacts</p>
             </div>
           </div>
@@ -156,103 +237,165 @@ function Emergency() {
             </div>
 
             <div style={styles.contactList}>
-              {emergencyContacts.map((contact) => (
-                <div
-                  key={contact.id}
-                  style={{
-                    ...styles.contactCard,
-                    border:
-                      selectedContact.id === contact.id
-                        ? "3px solid #E63946"
-                        : "1px solid rgba(255,255,255,0.75)",
-                    background:
-                      selectedContact.id === contact.id
-                        ? "linear-gradient(145deg, #FFFFFF, #FFE5EC)"
-                        : "rgba(255,255,255,0.64)",
-                  }}
-                  onClick={() => setSelectedContact(contact)}
-                >
+              {loading ? (
+                <p style={{ color: "#6D597A", textAlign: "center" }}>
+                  Loading contacts...
+                </p>
+              ) : (
+                contacts.map((contact) => (
                   <div
+                    key={contact.id}
                     style={{
-                      ...styles.contactIcon,
-                      backgroundColor: contact.color,
+                      ...styles.contactCard,
+                      border:
+                        selectedContact?.id === contact.id
+                          ? "3px solid #E63946"
+                          : "1px solid rgba(255,255,255,0.75)",
+                      background:
+                        selectedContact?.id === contact.id
+                          ? "linear-gradient(145deg, #FFFFFF, #FFE5EC)"
+                          : "rgba(255,255,255,0.64)",
                     }}
+                    onClick={() => setSelectedContact(contact)}
                   >
-                    {contact.icon}
-                  </div>
+                    <div
+                      style={{
+                        ...styles.contactIcon,
+                        backgroundColor: contact.color,
+                      }}
+                    >
+                      {contact.icon}
+                    </div>
 
-                  <div style={styles.contactInfo}>
-                    <h3 style={styles.contactName}>{contact.name}</h3>
-                    <p style={styles.contactType}>{contact.type}</p>
+                    <div style={styles.contactInfo}>
+                      <h3 style={styles.contactName}>{contact.name}</h3>
+                      <p style={styles.contactType}>{contact.type}</p>
 
-                    <div style={styles.metaRow}>
-                      <span style={styles.metaBadge}>☎ {contact.phone}</span>
-                      <span style={styles.metaBadge}>⏰ {contact.available}</span>
+                      <div style={styles.metaRow}>
+                        <span style={styles.metaBadge}>☎ {contact.phone}</span>
+                        <span style={styles.metaBadge}>
+                          ⏰ {contact.available}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <button
+                        style={styles.callButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCall(contact.phone);
+                        }}
+                      >
+                        Call
+                      </button>
+
+                      {contact.isPersonal && (
+                        <button
+                          style={styles.deleteButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteContact(contact.id);
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   </div>
+                ))
+              )}
+            </div>
 
-                  <button
-                    style={styles.callButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCall(contact.phone);
-                    }}
-                  >
-                    Call
-                  </button>
-                </div>
-              ))}
+            {/* Add personal contact form */}
+            <div style={styles.addContactBox}>
+              <h3 style={styles.addContactTitle}>Add a Trusted Contact</h3>
+
+              <input
+                style={styles.input}
+                placeholder="Name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+              />
+
+              <input
+                style={styles.input}
+                placeholder="Phone number"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+              />
+
+              <input
+                style={styles.input}
+                placeholder="Relationship (e.g. Friend, Parent)"
+                value={newRelationship}
+                onChange={(e) => setNewRelationship(e.target.value)}
+              />
+
+              <button
+                style={{
+                  ...styles.callButton,
+                  width: "100%",
+                  opacity: addingContact ? 0.7 : 1,
+                }}
+                onClick={handleAddContact}
+                disabled={addingContact}
+              >
+                {addingContact ? "Adding..." : "+ Add Contact"}
+              </button>
             </div>
           </div>
 
           <div style={styles.rightPanel}>
-            <div style={styles.sosCard}>
-              <div
-                style={{
-                  ...styles.selectedIconBox,
-                  backgroundColor: selectedContact.color,
-                }}
-              >
-                {selectedContact.icon}
-              </div>
-
-              <h2 style={styles.selectedTitle}>{selectedContact.name}</h2>
-              <p style={styles.selectedType}>{selectedContact.type}</p>
-
-              <div style={styles.phoneBadge}>☎ {selectedContact.phone}</div>
-
-              <label style={styles.label}>Emergency Message</label>
-              <textarea
-                style={styles.textArea}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              ></textarea>
-
-              <div style={styles.actionGrid}>
-                <button
-                  style={styles.primaryButton}
-                  onClick={() => handleCall(selectedContact.phone)}
+            {selectedContact && (
+              <div style={styles.sosCard}>
+                <div
+                  style={{
+                    ...styles.selectedIconBox,
+                    backgroundColor: selectedContact.color,
+                  }}
                 >
-                  📞 Call Now
+                  {selectedContact.icon}
+                </div>
+
+                <h2 style={styles.selectedTitle}>{selectedContact.name}</h2>
+                <p style={styles.selectedType}>{selectedContact.type}</p>
+
+                <div style={styles.phoneBadge}>☎ {selectedContact.phone}</div>
+
+                <label style={styles.label}>Emergency Message</label>
+                <textarea
+                  style={styles.textArea}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                ></textarea>
+
+                <div style={styles.actionGrid}>
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => handleCall(selectedContact.phone)}
+                  >
+                    📞 Call Now
+                  </button>
+
+                  <button
+                    style={styles.locationButton}
+                    onClick={handleShareLocation}
+                  >
+                    📍 Share Location
+                  </button>
+                </div>
+
+                <button style={styles.fullSosButton} onClick={handleSendSOS}>
+                  🚨 Send SOS Alert
                 </button>
 
-                <button
-                  style={styles.locationButton}
-                  onClick={handleShareLocation}
-                >
-                  📍 Share Location
-                </button>
+                <p style={styles.safeNote}>
+                  This interface helps you prepare emergency actions. In a real
+                  emergency, contact official services immediately.
+                </p>
               </div>
-
-              <button style={styles.fullSosButton} onClick={handleSendSOS}>
-                🚨 Send SOS Alert
-              </button>
-
-              <p style={styles.safeNote}>
-                This interface helps you prepare emergency actions. In a real
-                emergency, contact official services immediately.
-              </p>
-            </div>
+            )}
 
             <div style={styles.stepsCard}>
               <h3 style={styles.stepsTitle}>Quick Safety Plan</h3>
@@ -539,6 +682,7 @@ const styles = {
   contactList: {
     display: "grid",
     gap: "16px",
+    marginBottom: "20px",
   },
 
   contactCard: {
@@ -605,6 +749,45 @@ const styles = {
     fontWeight: "900",
     cursor: "pointer",
     boxShadow: "0 12px 24px rgba(230,57,70,0.25)",
+  },
+
+  deleteButton: {
+    border: "none",
+    padding: "8px 12px",
+    borderRadius: "14px",
+    background: "rgba(255,255,255,0.85)",
+    color: "#B83256",
+    fontWeight: "800",
+    fontSize: "12px",
+    cursor: "pointer",
+  },
+
+  addContactBox: {
+    padding: "20px",
+    borderRadius: "26px",
+    background: "rgba(255,255,255,0.5)",
+    border: "1px dashed rgba(109,89,122,0.35)",
+  },
+
+  addContactTitle: {
+    color: "#312244",
+    margin: "0 0 12px 0",
+    fontSize: "16px",
+    fontWeight: "900",
+  },
+
+  input: {
+    width: "100%",
+    padding: "13px",
+    border: "none",
+    outline: "none",
+    borderRadius: "18px",
+    background: "rgba(255,255,255,0.75)",
+    color: "#312244",
+    fontSize: "14px",
+    boxShadow: "inset 0 0 14px rgba(49,34,68,0.06)",
+    boxSizing: "border-box",
+    marginBottom: "10px",
   },
 
   sosCard: {

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import API from "../api/axios";
 
 function MoodTracker() {
   const moods = [
@@ -52,6 +53,58 @@ function MoodTracker() {
   const [rating, setRating] = useState(3);
   const [note, setNote] = useState("");
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [error, setError] = useState("");
+
+  // -----------------------------
+  // Load mood history from backend on mount
+  // -----------------------------
+  useEffect(() => {
+    loadMoodHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadMoodHistory = async () => {
+    try {
+      setLoadingHistory(true);
+
+      const response = await API.get("/moods");
+
+      // Map backend records into the shape the UI expects
+      const mapped = response.data.map((item) => {
+        const moodDetails =
+          moods.find((m) => m.name === item.mood) || {
+            emoji: "🙂",
+            name: item.mood,
+            color: "#CDB4DB",
+          };
+
+        const ratingInfo = ratingLevels.find((r) => r.value === item.rating);
+
+        return {
+          id: item._id,
+          mood: moodDetails,
+          rating: item.rating,
+          ratingText: ratingInfo?.title || `${item.rating}`,
+          note: item.note,
+          date: new Date(item.createdAt).toLocaleDateString(),
+          time: new Date(item.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+      });
+
+      setHistory(mapped);
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load mood history.");
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const getRatingColor = () => {
     switch (rating) {
@@ -87,36 +140,59 @@ function MoodTracker() {
     }
   };
 
-  const saveMood = () => {
+  // -----------------------------
+  // Save mood to backend
+  // -----------------------------
+  const saveMood = async () => {
     if (!selectedMood) {
       alert("Please select your mood first");
       return;
     }
 
-    const ratingInfo = ratingLevels.find((r) => r.value === rating);
+    try {
+      setLoading(true);
+      setError("");
 
-    const newMood = {
-      id: Date.now(),
-      mood: selectedMood,
-      rating: rating,
-      ratingText: ratingInfo?.title,
-      note: note,
-      date: new Date().toLocaleDateString(),
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+      const response = await API.post("/moods", {
+        mood: selectedMood.name,
+        rating: rating,
+        note: note,
+      });
 
-    setHistory([newMood, ...history]);
+      const saved = response.data.moodEntry;
 
-    alert(
-      `${selectedMood.emoji} ${selectedMood.name} mood saved successfully!`
-    );
+      const ratingInfo = ratingLevels.find((r) => r.value === rating);
 
-    setSelectedMood(null);
-    setNote("");
-    setRating(3);
+      const newMood = {
+        id: saved._id,
+        mood: selectedMood,
+        rating: rating,
+        ratingText: ratingInfo?.title,
+        note: saved.note,
+        date: new Date(saved.createdAt).toLocaleDateString(),
+        time: new Date(saved.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setHistory([newMood, ...history]);
+
+      alert(
+        `${selectedMood.emoji} ${selectedMood.name} mood saved successfully!`
+      );
+
+      setSelectedMood(null);
+      setNote("");
+      setRating(3);
+    } catch (err) {
+      console.error(err);
+      alert(
+        err.response?.data?.message || "Failed to save mood. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -136,6 +212,12 @@ function MoodTracker() {
             <span style={styles.dateText}>{new Date().toLocaleDateString()}</span>
           </div>
         </div>
+
+        {error && (
+          <div style={{ color: "red", marginBottom: "15px", textAlign: "center" }}>
+            {error}
+          </div>
+        )}
 
         <div style={styles.topGrid}>
           <div style={styles.mainCard}>
@@ -238,10 +320,12 @@ function MoodTracker() {
               style={{
                 ...styles.saveButton,
                 background: "linear-gradient(135deg,#7C3AED,#A855F7,#EC4899)",
+                opacity: loading ? 0.7 : 1,
               }}
               onClick={saveMood}
+              disabled={loading}
             >
-              Save Mood
+              {loading ? "Saving..." : "Save Mood"}
             </button>
           </div>
 
@@ -291,7 +375,9 @@ function MoodTracker() {
 
             <div style={styles.statsBox}>
               <div style={styles.statItem}>
-                <h3 style={styles.statNumber}>{history.length}</h3>
+                <h3 style={styles.statNumber}>
+                  {loadingHistory ? "..." : history.length}
+                </h3>
                 <p style={styles.statLabel}>Total Records</p>
               </div>
 
@@ -367,10 +453,16 @@ function MoodTracker() {
         <div style={styles.historyCard}>
           <div style={styles.historyHeader}>
             <h2 style={styles.sectionTitle}>Mood History</h2>
-            <span style={styles.recordBadge}>{history.length} records</span>
+            <span style={styles.recordBadge}>
+              {loadingHistory ? "..." : `${history.length} records`}
+            </span>
           </div>
 
-          {history.length === 0 ? (
+          {loadingHistory ? (
+            <div style={styles.emptyBox}>
+              <p style={styles.emptyText}>Loading mood history...</p>
+            </div>
+          ) : history.length === 0 ? (
             <div style={styles.emptyBox}>
               <h3 style={styles.emptyIcon}>📝</h3>
               <p style={styles.emptyText}>No mood records yet</p>

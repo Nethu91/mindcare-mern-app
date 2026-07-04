@@ -1,125 +1,114 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
 
 function Counselor() {
   const navigate = useNavigate();
 
-  const counselors = [
-    {
-      id: 1,
-      name: "Dr. Hasini Wijesinghe",
-      role: "Clinical Psychologist",
-      specialty: "Stress, Anxiety & Depression",
-      experience: "9 Years",
-      rating: 4.9,
-      location: "Colombo",
-      available: "Available Today",
-      image: "👩‍⚕️",
-      color: "#FFAFCC",
-      about:
-        "Supports students and young adults with stress, anxiety, depression, and emotional wellness.",
-    },
-    {
-      id: 2,
-      name: "Mr. Kavindu Jayawardena",
-      role: "Mental Health Counselor",
-      specialty: "Student Counseling & Academic Stress",
-      experience: "6 Years",
-      rating: 4.7,
-      location: "Kandy",
-      available: "Tomorrow",
-      image: "👨‍⚕️",
-      color: "#A8DADC",
-      about:
-        "Provides counseling for university stress, study pressure, confidence issues, and personal problems.",
-    },
-    {
-      id: 3,
-      name: "Ms. Nethmi Fernando",
-      role: "Wellness Therapist",
-      specialty: "Mindfulness & Emotional Wellness",
-      experience: "5 Years",
-      rating: 4.8,
-      location: "Galle",
-      available: "Available Now",
-      image: "👩‍💼",
-      color: "#CDB4DB",
-      about:
-        "Focuses on mindfulness, emotional balance, self-care, and daily mental wellness support.",
-    },
-    {
-      id: 4,
-      name: "Dr. Malith Samarasinghe",
-      role: "Psychiatrist",
-      specialty: "Mental Health Consultation",
-      experience: "10 Years",
-      rating: 4.9,
-      location: "Colombo",
-      available: "This Week",
-      image: "👨‍💼",
-      color: "#FFD166",
-      about:
-        "Offers professional consultation for mental health concerns and emotional difficulties.",
-    },
-    {
-      id: 5,
-      name: "Ms. Chamodi Senanayake",
-      role: "Counseling Psychologist",
-      specialty: "Relationship Issues & Family Support",
-      experience: "7 Years",
-      rating: 4.6,
-      location: "Matara",
-      available: "Available Today",
-      image: "👩‍🏫",
-      color: "#B8C0FF",
-      about:
-        "Helps with relationship concerns, family pressure, communication issues, and personal growth.",
-    },
-    {
-      id: 6,
-      name: "Mr. Tharindu Bandara",
-      role: "Student Counselor",
-      specialty: "University Stress & Self Confidence",
-      experience: "4 Years",
-      rating: 4.5,
-      location: "Online",
-      available: "Available Now",
-      image: "👨‍🏫",
-      color: "#FFC8DD",
-      about:
-        "Specialized in supporting students with confidence, exam stress, and academic pressure.",
-    },
-  ];
+  const [counselors, setCounselors] = useState([]);
+  const [selectedCounselor, setSelectedCounselor] = useState(null);
 
-  const [selectedCounselor, setSelectedCounselor] = useState(counselors[0]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
+
   const [selectedMode, setSelectedMode] = useState("Online");
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
+
+  // Fallback visuals for counselors that don't carry image/color in the DB
+  const avatarPalette = ["#FFAFCC", "#A8DADC", "#CDB4DB", "#FFD166", "#B8C0FF", "#FFC8DD"];
+  const getAvatarColor = (id) => {
+    const str = String(id);
+    let sum = 0;
+    for (let i = 0; i < str.length; i++) sum += str.charCodeAt(i);
+    return avatarPalette[sum % avatarPalette.length];
+  };
+
+  // -----------------------------
+  // Load Counselors from backend
+  // -----------------------------
+  useEffect(() => {
+    loadCounselors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadCounselors = async () => {
+    try {
+      setLoading(true);
+
+      const response = await API.get("/counselors");
+
+      setCounselors(response.data);
+
+      if (response.data.length > 0) {
+        setSelectedCounselor(response.data[0]);
+      }
+
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load counselors.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCounselors = counselors.filter((counselor) => {
     const search = searchTerm.toLowerCase();
 
     return (
-      counselor.name.toLowerCase().includes(search) ||
-      counselor.role.toLowerCase().includes(search) ||
-      counselor.specialty.toLowerCase().includes(search) ||
-      counselor.location.toLowerCase().includes(search)
+      counselor.name?.toLowerCase().includes(search) ||
+      counselor.role?.toLowerCase().includes(search) ||
+      counselor.specialization?.toLowerCase().includes(search) ||
+      counselor.location?.toLowerCase().includes(search)
     );
   });
 
-  const handleBooking = () => {
+  // -----------------------------
+  // Booking -> saves to DB via API
+  // -----------------------------
+  const handleBooking = async () => {
+    if (!selectedCounselor) {
+      alert("Please select a counselor.");
+      return;
+    }
+
     if (!appointmentDate || !appointmentTime) {
       alert("Please select appointment date and time");
       return;
     }
 
-    alert(
-      `Appointment request sent successfully!\n\nCounselor: ${selectedCounselor.name}\nMode: ${selectedMode}\nDate: ${appointmentDate}\nTime: ${appointmentTime}`
-    );
+    try {
+      setBookingLoading(true);
+      setBookingSuccess("");
 
-    setAppointmentDate("");
-    setAppointmentTime("");
+      const response = await API.post("/appointments", {
+        counselorId: selectedCounselor._id,
+        date: appointmentDate,
+        time: appointmentTime,
+        reason: selectedMode,
+      });
+
+      setBookingSuccess(
+        response.data.message || "Appointment booked successfully!"
+      );
+
+      setAppointmentDate("");
+      setAppointmentTime("");
+    } catch (err) {
+      console.error(err);
+      alert(
+        err.response?.data?.message ||
+        "Failed to book appointment. Please try again."
+      );
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   return (
@@ -168,7 +157,15 @@ function Counselor() {
             <h2 style={styles.sectionTitle}>Available Counselors</h2>
 
             <div style={styles.counselorList}>
-              {filteredCounselors.length === 0 ? (
+              {loading ? (
+                <div style={styles.emptyBox}>
+                  <p style={styles.emptyText}>Loading counselors...</p>
+                </div>
+              ) : error ? (
+                <div style={{ textAlign: "center", color: "red" }}>
+                  {error}
+                </div>
+              ) : filteredCounselors.length === 0 ? (
                 <div style={styles.emptyBox}>
                   <h3 style={styles.emptyIcon}>😕</h3>
                   <p style={styles.emptyText}>No counselors found</p>
@@ -176,20 +173,20 @@ function Counselor() {
               ) : (
                 filteredCounselors.map((counselor) => (
                   <button
-                    key={counselor.id}
+                    key={counselor._id}
                     onClick={() => setSelectedCounselor(counselor)}
                     style={{
                       ...styles.counselorCard,
                       border:
-                        selectedCounselor.id === counselor.id
+                        selectedCounselor?._id === counselor._id
                           ? "3px solid #9B5DE5"
                           : "1px solid rgba(255,255,255,0.75)",
                       background:
-                        selectedCounselor.id === counselor.id
+                        selectedCounselor?._id === counselor._id
                           ? "linear-gradient(145deg, #FFFFFF, #F3E8FF)"
                           : "rgba(255,255,255,0.64)",
                       transform:
-                        selectedCounselor.id === counselor.id
+                        selectedCounselor?._id === counselor._id
                           ? "translateY(-5px) scale(1.01)"
                           : "translateY(0)",
                     }}
@@ -197,27 +194,28 @@ function Counselor() {
                     <div
                       style={{
                         ...styles.avatarBox,
-                        backgroundColor: counselor.color,
+                        backgroundColor: getAvatarColor(counselor._id),
                       }}
                     >
-                      {counselor.image}
+                      👩‍⚕️
                     </div>
 
                     <div style={styles.counselorInfo}>
                       <h3 style={styles.counselorName}>{counselor.name}</h3>
                       <p style={styles.counselorRole}>{counselor.role}</p>
-                      <p style={styles.specialty}>{counselor.specialty}</p>
+                      <p style={styles.specialty}>
+                        {counselor.specialization}
+                      </p>
 
                       <div style={styles.miniInfoRow}>
                         <span style={styles.miniBadge}>
-                          ⭐ {counselor.rating}
-                        </span>
-                        <span style={styles.miniBadge}>
                           📍 {counselor.location}
                         </span>
-                        <span style={styles.miniBadge}>
-                          ⏳ {counselor.experience}
-                        </span>
+                        {counselor.experience && (
+                          <span style={styles.miniBadge}>
+                            ⏳ {counselor.experience}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </button>
@@ -227,103 +225,117 @@ function Counselor() {
           </div>
 
           <div style={styles.rightPanel}>
-            <div style={styles.profileCard}>
-              <div
-                style={{
-                  ...styles.profileAvatar,
-                  backgroundColor: selectedCounselor.color,
-                }}
-              >
-                {selectedCounselor.image}
-              </div>
-
-              <h2 style={styles.profileName}>{selectedCounselor.name}</h2>
-              <p style={styles.profileRole}>{selectedCounselor.role}</p>
-
-              <div style={styles.statusBadge}>
-                🟢 {selectedCounselor.available}
-              </div>
-
-              <div style={styles.profileStats}>
-                <div style={styles.statCard}>
-                  <h3 style={styles.statValue}>{selectedCounselor.rating}</h3>
-                  <p style={styles.statLabel}>Rating</p>
+            {selectedCounselor && (
+              <div style={styles.profileCard}>
+                <div
+                  style={{
+                    ...styles.profileAvatar,
+                    backgroundColor: getAvatarColor(selectedCounselor._id),
+                  }}
+                >
+                  👩‍⚕️
                 </div>
 
-                <div style={styles.statCard}>
-                  <h3 style={styles.statValue}>
-                    {selectedCounselor.experience}
-                  </h3>
-                  <p style={styles.statLabel}>Experience</p>
+                <h2 style={styles.profileName}>{selectedCounselor.name}</h2>
+                <p style={styles.profileRole}>{selectedCounselor.role}</p>
+
+                <div style={styles.statusBadge}>
+                  🟢 {selectedCounselor.availability || "Available"}
+                </div>
+
+                <div style={styles.detailBox}>
+                  <h3 style={styles.detailTitle}>Specialized In</h3>
+                  <p style={styles.detailText}>
+                    {selectedCounselor.specialization}
+                  </p>
+                </div>
+
+                <div style={styles.detailBox}>
+                  <h3 style={styles.detailTitle}>About Counselor</h3>
+                  <p style={styles.detailText}>
+                    {selectedCounselor.about || "No description provided."}
+                  </p>
+                </div>
+
+                <div style={styles.detailBox}>
+                  <h3 style={styles.detailTitle}>Session Location</h3>
+                  <p style={styles.detailText}>{selectedCounselor.location}</p>
                 </div>
               </div>
+            )}
 
-              <div style={styles.detailBox}>
-                <h3 style={styles.detailTitle}>Specialized In</h3>
-                <p style={styles.detailText}>{selectedCounselor.specialty}</p>
-              </div>
+            {selectedCounselor && (
+              <div style={styles.bookingCard}>
+                <h2 style={styles.sectionTitle}>Book Session</h2>
 
-              <div style={styles.detailBox}>
-                <h3 style={styles.detailTitle}>About Counselor</h3>
-                <p style={styles.detailText}>{selectedCounselor.about}</p>
-              </div>
-
-              <div style={styles.detailBox}>
-                <h3 style={styles.detailTitle}>Session Location</h3>
-                <p style={styles.detailText}>{selectedCounselor.location}</p>
-              </div>
-            </div>
-
-            <div style={styles.bookingCard}>
-              <h2 style={styles.sectionTitle}>Book Session</h2>
-
-              <div style={styles.modeGrid}>
-                {["Online", "Physical", "Phone Call"].map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setSelectedMode(mode)}
+                {bookingSuccess && (
+                  <p
                     style={{
-                      ...styles.modeButton,
-                      background:
-                        selectedMode === mode
-                          ? "linear-gradient(135deg, #9B5DE5, #F15BB5)"
-                          : "rgba(255,255,255,0.68)",
-                      color: selectedMode === mode ? "#FFFFFF" : "#312244",
+                      color: "#16A34A",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      marginBottom: "12px",
                     }}
                   >
-                    {mode === "Online"
-                      ? "💻 Online"
-                      : mode === "Physical"
-                      ? "🏥 Physical"
-                      : "📞 Phone"}
-                  </button>
-                ))}
+                    {bookingSuccess}
+                  </p>
+                )}
+
+                <div style={styles.modeGrid}>
+                  {["Online", "Physical", "Phone Call"].map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setSelectedMode(mode)}
+                      style={{
+                        ...styles.modeButton,
+                        background:
+                          selectedMode === mode
+                            ? "linear-gradient(135deg, #9B5DE5, #F15BB5)"
+                            : "rgba(255,255,255,0.68)",
+                        color: selectedMode === mode ? "#FFFFFF" : "#312244",
+                      }}
+                    >
+                      {mode === "Online"
+                        ? "💻 Online"
+                        : mode === "Physical"
+                        ? "🏥 Physical"
+                        : "📞 Phone"}
+                    </button>
+                  ))}
+                </div>
+
+                <label style={styles.label}>Appointment Date</label>
+                <input
+                  style={styles.input}
+                  type="date"
+                  value={appointmentDate}
+                  onChange={(e) => setAppointmentDate(e.target.value)}
+                />
+
+                <label style={styles.label}>Appointment Time</label>
+                <input
+                  style={styles.input}
+                  type="time"
+                  value={appointmentTime}
+                  onChange={(e) => setAppointmentTime(e.target.value)}
+                />
+
+                <button
+                  style={{
+                    ...styles.bookButton,
+                    opacity: bookingLoading ? 0.7 : 1,
+                  }}
+                  onClick={handleBooking}
+                  disabled={bookingLoading}
+                >
+                  {bookingLoading ? "Booking..." : "Request Appointment"}
+                </button>
+
+                <p style={styles.safeNote}>
+                  🔒 Your session details are private and confidential.
+                </p>
               </div>
-
-              <label style={styles.label}>Appointment Date</label>
-              <input
-                style={styles.input}
-                type="date"
-                value={appointmentDate}
-                onChange={(e) => setAppointmentDate(e.target.value)}
-              />
-
-              <label style={styles.label}>Appointment Time</label>
-              <input
-                style={styles.input}
-                type="time"
-                value={appointmentTime}
-                onChange={(e) => setAppointmentTime(e.target.value)}
-              />
-
-              <button style={styles.bookButton} onClick={handleBooking}>
-                Request Appointment
-              </button>
-
-              <p style={styles.safeNote}>
-                🔒 Your session details are private and confidential.
-              </p>
-            </div>
+            )}
           </div>
         </div>
 
@@ -703,33 +715,6 @@ const styles = {
     color: "#4A4E69",
     fontWeight: "800",
     marginBottom: "18px",
-  },
-
-  profileStats: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "12px",
-    marginBottom: "16px",
-  },
-
-  statCard: {
-    background: "rgba(255,255,255,0.65)",
-    borderRadius: "22px",
-    padding: "16px",
-    boxShadow: "0 12px 24px rgba(49,34,68,0.09)",
-  },
-
-  statValue: {
-    color: "#312244",
-    margin: "0 0 5px 0",
-    fontSize: "22px",
-    fontWeight: "800",
-  },
-
-  statLabel: {
-    color: "#6D597A",
-    margin: 0,
-    fontSize: "13px",
   },
 
   detailBox: {
