@@ -29,17 +29,24 @@ function Register() {
     setLoading(true);
 
     try {
-      const res = await API.post("/auth/register", {
-        ...formData,
-        age: Number(formData.age),
-      });
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        gender: formData.gender,
+        age: formData.age ? Number(formData.age) : undefined,
+      };
+
+      const res = await API.post("/auth/register", payload);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -81,6 +88,7 @@ function Register() {
           value={formData.password}
           onChange={handleChange}
           required
+          minLength="6"
         />
 
         <input

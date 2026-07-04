@@ -12,15 +12,16 @@ function Dashboard() {
   };
 
   const features = [
-    { title: "Mood Tracker", icon: "😊", path: "/mood" },
-    { title: "Assessment", icon: "📝", path: "/assessment" },
-    { title: "Counselors", icon: "👩‍⚕️", path: "/counselors" },
-    { title: "Appointments", icon: "📅", path: "/appointments" },
-    { title: "Calm Videos", icon: "🎥", path: "/videos" },
-    { title: "Music", icon: "🎧", path: "/music" },
-    { title: "Medication", icon: "💊", path: "/medication" },
-    { title: "Emergency", icon: "🚨", path: "/emergency" },
-  ];
+  { title: "Mood Tracker", icon: "😊", path: "/mood" },
+  { title: "Assessment", icon: "📝", path: "/assessment" },
+  { title: "Counselor", icon: "👩‍⚕️", path: "/counselor" },
+  { title: "Appointments", icon: "📅", path: "/appointments" },
+  { title: "Calm Videos", icon: "🎥", path: "/videos" },
+  { title: "Music", icon: "🎧", path: "/music" },
+  { title: "Medication", icon: "💊", path: "/medication" },
+  { title: "Emergency", icon: "🚨", path: "/emergency" },
+  { title: "AI Chatbot", icon: "🤖", path: "/chatbot" },
+];
 
   return (
     <div className="mobile-container">
