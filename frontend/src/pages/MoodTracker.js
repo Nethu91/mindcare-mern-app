@@ -40,9 +40,52 @@ function MoodTracker() {
     },
   ];
 
+  const ratingLevels = [
+    { value: 1, title: "Very Mild", description: "A gentle feeling, barely noticeable." },
+    { value: 2, title: "Mild", description: "You feel it, but it's manageable." },
+    { value: 3, title: "Moderate", description: "A noticeable feeling affecting your mood." },
+    { value: 4, title: "Strong", description: "A powerful feeling that's hard to ignore." },
+    { value: 5, title: "Very Strong", description: "An intense feeling taking over your mind." },
+  ];
+
   const [selectedMood, setSelectedMood] = useState(null);
+  const [rating, setRating] = useState(3);
   const [note, setNote] = useState("");
   const [history, setHistory] = useState([]);
+
+  const getRatingColor = () => {
+    switch (rating) {
+      case 1:
+        return "#4ADE80";
+      case 2:
+        return "#84CC16";
+      case 3:
+        return "#FACC15";
+      case 4:
+        return "#FB923C";
+      case 5:
+        return "#EF4444";
+      default:
+        return "#8B5CF6";
+    }
+  };
+
+  const getColorForValue = (value) => {
+    switch (value) {
+      case 1:
+        return "#4ADE80";
+      case 2:
+        return "#84CC16";
+      case 3:
+        return "#FACC15";
+      case 4:
+        return "#FB923C";
+      case 5:
+        return "#EF4444";
+      default:
+        return "#8B5CF6";
+    }
+  };
 
   const saveMood = () => {
     if (!selectedMood) {
@@ -50,9 +93,13 @@ function MoodTracker() {
       return;
     }
 
+    const ratingInfo = ratingLevels.find((r) => r.value === rating);
+
     const newMood = {
       id: Date.now(),
       mood: selectedMood,
+      rating: rating,
+      ratingText: ratingInfo?.title,
       note: note,
       date: new Date().toLocaleDateString(),
       time: new Date().toLocaleTimeString([], {
@@ -62,8 +109,14 @@ function MoodTracker() {
     };
 
     setHistory([newMood, ...history]);
+
+    alert(
+      `${selectedMood.emoji} ${selectedMood.name} mood saved successfully!`
+    );
+
     setSelectedMood(null);
     setNote("");
+    setRating(3);
   };
 
   return (
@@ -145,6 +198,35 @@ function MoodTracker() {
               )}
             </div>
 
+            {selectedMood && (
+              <div style={styles.ratingSection}>
+                <h4 style={styles.ratingSectionTitle}>Rate the Intensity</h4>
+
+                <div style={styles.ratingButtons}>
+                  {ratingLevels.map((lvl) => (
+                    <button
+                      key={lvl.value}
+                      onClick={() => setRating(lvl.value)}
+                      style={{
+                        ...styles.ratingButton,
+                        background:
+                          rating === lvl.value
+                            ? getColorForValue(lvl.value)
+                            : "rgba(255,255,255,0.65)",
+                        color: rating === lvl.value ? "#fff" : "#312244",
+                      }}
+                    >
+                      ⭐ {lvl.value}
+                    </button>
+                  ))}
+                </div>
+
+                <p style={styles.ratingSectionCaption}>
+                  {ratingLevels.find((r) => r.value === rating)?.title}
+                </p>
+              </div>
+            )}
+
             <textarea
               style={styles.textArea}
               placeholder="Write your thoughts here..."
@@ -152,27 +234,60 @@ function MoodTracker() {
               onChange={(e) => setNote(e.target.value)}
             ></textarea>
 
-            <button style={styles.saveButton} onClick={saveMood}>
+            <button
+              style={{
+                ...styles.saveButton,
+                background: "linear-gradient(135deg,#7C3AED,#A855F7,#EC4899)",
+              }}
+              onClick={saveMood}
+            >
               Save Mood
             </button>
           </div>
 
           <div style={styles.sideCard}>
-            <h2 style={styles.sectionTitle}>Today Summary</h2>
+            <h2 style={styles.sectionTitle}>Today's Mood</h2>
 
             <div style={styles.summaryMood}>
               {selectedMood ? selectedMood.emoji : "🌸"}
             </div>
 
             <h3 style={styles.summaryTitle}>
-              {selectedMood ? selectedMood.name : "No Mood Selected"}
+              {selectedMood
+                ? `${selectedMood.name} (${
+                    ratingLevels.find((r) => r.value === rating)?.title
+                  })`
+                : "No Mood Selected"}
             </h3>
 
             <p style={styles.summaryText}>
               {selectedMood
                 ? selectedMood.message
-                : "Choose your current feeling and save it with a note."}
+                : "Choose your mood and rate how intense it feels."}
             </p>
+
+            <div
+              style={{
+                background: "#F7F3FF",
+                borderRadius: "18px",
+                padding: "18px",
+                marginBottom: "18px",
+                textAlign: "left",
+              }}
+            >
+              <h4
+                style={{
+                  margin: "0 0 8px",
+                  color: getRatingColor(),
+                }}
+              >
+                ⭐ Intensity
+              </h4>
+
+              <p style={{ margin: 0, color: "#555" }}>
+                {ratingLevels.find((r) => r.value === rating)?.description}
+              </p>
+            </div>
 
             <div style={styles.statsBox}>
               <div style={styles.statItem}>
@@ -182,9 +297,68 @@ function MoodTracker() {
 
               <div style={styles.statItem}>
                 <h3 style={styles.statNumber}>
-                  {history.length > 0 ? history[0].mood.name : "-"}
+                  {history.length > 0 ? `${history[0].mood.name}` : "-"}
                 </h3>
+
                 <p style={styles.statLabel}>Last Mood</p>
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: "20px",
+                background: "#FFF7E8",
+                borderRadius: "18px",
+                padding: "18px",
+                border: "1px solid #FFE5A8",
+              }}
+            >
+              <h4
+                style={{
+                  margin: "0 0 8px",
+                  color: "#B7791F",
+                }}
+              >
+                💡 Daily Reminder
+              </h4>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: "#666",
+                  lineHeight: "24px",
+                }}
+              >
+                Every feeling is temporary. Recording your emotions helps you
+                understand yourself better.
+              </p>
+            </div>
+
+            <div
+              style={{
+                marginTop: "20px",
+                background: "linear-gradient(135deg,#EEF2FF,#F9F5FF)",
+                borderRadius: "20px",
+                padding: "18px",
+                border: "1px solid #DDD6FE",
+              }}
+            >
+              <h3
+                style={{
+                  color: "#6D28D9",
+                  marginBottom: "12px",
+                }}
+              >
+                📊 Mood Guide
+              </h3>
+
+              <div style={{ lineHeight: "30px", color: "#555" }}>
+                <div>😊 Happy → Positive energy</div>
+                <div>😌 Calm → Relaxed mind</div>
+                <div>😔 Sad → Needs support</div>
+                <div>😡 Angry → Take a break</div>
+                <div>😰 Anxious → Breathe slowly</div>
+                <div>🤩 Excited → High motivation</div>
               </div>
             </div>
           </div>
@@ -215,10 +389,48 @@ function MoodTracker() {
                   </div>
 
                   <div style={styles.historyContent}>
-                    <h3 style={styles.historyMood}>{item.mood.name}</h3>
-                    <p style={styles.historyNote}>
-                      {item.note || "No note added"}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <h3 style={styles.historyMood}>{item.mood.name}</h3>
+
+                      <span
+                        style={{
+                          background:
+                            item.rating === 5
+                              ? "#FEE2E2"
+                              : item.rating === 4
+                              ? "#FED7AA"
+                              : item.rating === 3
+                              ? "#FEF3C7"
+                              : item.rating === 2
+                              ? "#DCFCE7"
+                              : "#BBF7D0",
+                          color: "#6D28D9",
+                          padding: "6px 12px",
+                          borderRadius: "14px",
+                          fontSize: "12px",
+                          fontWeight: "700",
+                        }}
+                      >
+                        ⭐ {item.ratingText}
+                      </span>
+                    </div>
+
+                    <p
+                      style={{
+                        color: "#666",
+                        marginTop: "8px",
+                        lineHeight: "24px",
+                      }}
+                    >
+                      {item.note || "No notes were added for this mood."}
                     </p>
+
                     <span style={styles.historyDate}>
                       {item.date} • {item.time}
                     </span>
@@ -427,6 +639,43 @@ const styles = {
     color: "#6D597A",
     margin: 0,
     lineHeight: "1.5",
+  },
+
+  ratingSection: {
+    marginBottom: "20px",
+    padding: "18px",
+    borderRadius: "22px",
+    background: "rgba(255,255,255,0.5)",
+    boxShadow: "inset 0 0 14px rgba(255,255,255,0.6)",
+  },
+
+  ratingSectionTitle: {
+    margin: "0 0 12px",
+    color: "#312244",
+    fontSize: "15px",
+  },
+
+  ratingButtons: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "10px",
+  },
+
+  ratingButton: {
+    flex: 1,
+    padding: "10px 0",
+    border: "none",
+    borderRadius: "14px",
+    fontWeight: "700",
+    cursor: "pointer",
+    transition: "0.25s ease",
+  },
+
+  ratingSectionCaption: {
+    margin: 0,
+    fontSize: "13px",
+    color: "#6D597A",
+    fontWeight: "700",
   },
 
   textArea: {

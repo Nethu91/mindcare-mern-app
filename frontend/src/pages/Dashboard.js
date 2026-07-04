@@ -1,39 +1,90 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import API from "../api/axios";
 import BottomNav from "../components/BottomNav";
+import "./Dashboard.css";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const user = JSON.parse(localStorage.getItem("user"));
 
   // ===========================
   // Reminder States
   // ===========================
-
   const [showReminder, setShowReminder] = useState(false);
   const [appointment, setAppointment] = useState(null);
   const [loadingReminder, setLoadingReminder] = useState(true);
   const [daysUntil, setDaysUntil] = useState(null);
 
   // ===========================
+  // Live Clock
+  // ===========================
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // ===========================
+  // Booking Success Toast
+  // ===========================
+  const [bookingToast, setBookingToast] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.bookingSuccess) {
+      setBookingToast({
+        counselor: location.state.counselorName,
+        date: location.state.date,
+        time: location.state.time,
+      });
+
+      window.history.replaceState({}, document.title);
+
+      const timer = setTimeout(() => {
+        setBookingToast(null);
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
+  // ===========================
+  // Mood Summary
+  // ===========================
+  const [mood, setMood] = useState({
+    emoji: "😊",
+    label: "Calm",
+    description: "Peaceful and relaxed mind.",
+    score: 4,
+    maxScore: 5,
+  });
+
+  // ===========================
   // Logout
   // ===========================
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
   };
-
   // ===========================
-  // Load Upcoming Appointment
+  // Load Dashboard Data
   // ===========================
 
   useEffect(() => {
     loadAppointmentReminder();
+    loadLatestMood();
   }, []);
+
+  // ===========================
+  // Appointment Reminder
+  // ===========================
 
   const loadAppointmentReminder = async () => {
     try {
@@ -41,10 +92,9 @@ function Dashboard() {
 
       const res = await API.get("/appointments/my");
 
-      console.log("Appointments Response:", res.data);
-
       if (!res.data || res.data.length === 0) {
-        setLoadingReminder(false);
+        setShowReminder(false);
+        setAppointment(null);
         return;
       }
 
@@ -53,21 +103,19 @@ function Dashboard() {
 
       const upcoming = res.data
         .filter((item) => {
+          if (item.status === "Cancelled") return false;
+
           const appointmentDate = new Date(item.date);
           appointmentDate.setHours(0, 0, 0, 0);
 
-          console.log("Appointment Date:", appointmentDate);
-          console.log("Today:", today);
-
           return appointmentDate >= today;
         })
-        .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-
-      console.log("Upcoming:", upcoming);
+        .sort((a, b) => {
+          return new Date(a.date) - new Date(b.date);
+        })[0];
 
       if (!upcoming) {
-        console.log("No upcoming appointments found.");
-        setLoadingReminder(false);
+        setShowReminder(false);
         return;
       }
 
@@ -76,320 +124,524 @@ function Dashboard() {
       const appointmentDate = new Date(upcoming.date);
       appointmentDate.setHours(0, 0, 0, 0);
 
-      const diff = appointmentDate.getTime() - today.getTime();
+      const diff =
+        appointmentDate.getTime() -
+        today.getTime();
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const days = Math.floor(
+        diff / (1000 * 60 * 60 * 24)
+      );
 
       setDaysUntil(days);
 
-      if (days <= 7 && days >= 0) {
+      if (days >= 0 && days <= 7) {
         setShowReminder(true);
+      } else {
+        setShowReminder(false);
       }
     } catch (err) {
-      console.log(err);
+      console.error(
+        "Failed to load appointments",
+        err
+      );
     } finally {
       setLoadingReminder(false);
     }
   };
 
   // ===========================
-  // Date Formatter
+  // Latest Mood
+  // ===========================
+
+  const loadLatestMood = async () => {
+    try {
+      const res = await API.get("/mood/latest");
+
+      if (!res.data) return;
+
+      setMood({
+        emoji: res.data.emoji || "😊",
+        label: res.data.label || "Calm",
+        description:
+          res.data.description ||
+          "Peaceful and relaxed mind.",
+        score: res.data.score ?? 4,
+        maxScore: res.data.maxScore ?? 5,
+      });
+    } catch (err) {
+      console.log("No mood found.");
+    }
+  };
+
+  // ===========================
+  // Format Date
   // ===========================
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-GB", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const getReminderLabel = () => {
-    if (daysUntil === 0) {
-      return { text: "🔴 Today's Appointment", color: "#DC2626" };
-    }
-    if (daysUntil === 1) {
-      return { text: "🟣 Tomorrow's Appointment", color: "#7C3AED" };
-    }
-    return { text: "🔵 Upcoming Appointment", color: "#2563EB" };
+    return new Date(date).toLocaleDateString(
+      "en-GB",
+      {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }
+    );
   };
 
   // ===========================
-  // Dashboard Features
+  // Greeting
+  // ===========================
+
+  const getGreeting = () => {
+    const hour = now.getHours();
+
+    if (hour < 12)
+      return "☀️ Good Morning,";
+
+    if (hour < 18)
+      return "🌤 Good Afternoon,";
+
+    return "🌙 Good Evening,";
+  };
+
+  // ===========================
+  // Countdown Text
+  // ===========================
+
+  const getCountdownText = () => {
+    if (daysUntil === null) return "";
+
+    if (daysUntil === 0)
+      return "Today's Appointment";
+
+    if (daysUntil === 1)
+      return "Tomorrow's Appointment";
+
+    return `In ${daysUntil} days`;
+  };
+
+  // ===========================
+  // Reminder Color
+  // ===========================
+
+  const getReminderColor = () => {
+    if (daysUntil === 0)
+      return "#DC2626";
+
+    if (daysUntil === 1)
+      return "#7C3AED";
+
+    return "#2563EB";
+  };
+
+  // ===========================
+  // Features
   // ===========================
 
   const features = [
-    { title: "Mood Tracker", icon: "😊", path: "/mood" },
-    { title: "Assessment", icon: "📝", path: "/assessment" },
-    { title: "Counselor", icon: "👩‍⚕️", path: "/counselor" },
-    { title: "Appointments", icon: "📅", path: "/appointments" },
-    { title: "Calm Videos", icon: "🎥", path: "/calm-videos" },
-    { title: "Music", icon: "🎧", path: "/music" },
-    { title: "Emergency", icon: "🚨", path: "/emergency" },
-    { title: "AI Chatbot", icon: "🤖", path: "/chatbot" },
+    {
+      title: "Mood Tracker",
+      subtitle: "Track your daily mood",
+      icon: "😊",
+      path: "/mood",
+      bg: "#FFF3D6",
+    },
+    {
+      title: "Assessment",
+      subtitle: "Mental health test",
+      icon: "📝",
+      path: "/assessment",
+      bg: "#EFE3FF",
+    },
+    {
+      title: "Counselor",
+      subtitle: "Book a counselor",
+      icon: "👩‍⚕️",
+      path: "/counselor",
+      bg: "#DFF8EA",
+    },
+    {
+      title: "Appointments",
+      subtitle: "Manage sessions",
+      icon: "📅",
+      path: "/appointments",
+      bg: "#FFE4EC",
+    },
+    {
+      title: "Calm Videos",
+      subtitle: "Relax your mind",
+      icon: "🎥",
+      path: "/calm-videos",
+      bg: "#ECE6FF",
+    },
+    {
+      title: "Music",
+      subtitle: "Peaceful music",
+      icon: "🎵",
+      path: "/music",
+      bg: "#DCEFFF",
+    },
+    {
+      title: "Emergency",
+      subtitle: "Need urgent help",
+      icon: "🚨",
+      path: "/emergency",
+      bg: "#FFE2E2",
+    },
+    {
+      title: "AI Chatbot",
+      subtitle: "Talk with AI",
+      icon: "🤖",
+      path: "/chatbot",
+      bg: "#DFFAF6",
+    },
   ];
+return (
+  <div className="dashboard-container">
 
-  return (
-    <>
-      <style>
-        {`
-          @keyframes popup {
-            from {
-              opacity: 0;
-              transform: translateY(-25px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
+    {/* Booking Success Toast */}
+    {bookingToast && (
+      <div className="success-toast">
+        <div className="toast-icon">✅</div>
 
-          @keyframes shake {
-            0% { transform: rotate(0deg) }
-            25% { transform: rotate(8deg) }
-            50% { transform: rotate(-8deg) }
-            75% { transform: rotate(8deg) }
-            100% { transform: rotate(0deg) }
-          }
-        `}
-      </style>
+        <div>
+          <h4>Appointment Booked!</h4>
 
-      <div className="mobile-container">
-        <div className="dashboard-header">
-          <div>
-            <h2>Hello, {user?.name || "User"} 👋</h2>
-            <p className="muted-text">How are you feeling today?</p>
-          </div>
-
-          <button className="small-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-
-        {/* 🔧 TEMPORARY DEBUG LINE — remove after testing */}
-        <p>Show Reminder: {showReminder ? "YES" : "NO"}</p>
-
-        {loadingReminder && (
-          <div
-            style={{
-              background: "#F8F4FF",
-              borderRadius: "18px",
-              padding: "15px",
-              textAlign: "center",
-              marginBottom: "20px",
-              color: "#7C3AED",
-              fontWeight: "600",
-            }}
-          >
-            ⏳ Checking your upcoming appointments...
-          </div>
-        )}
-
-        {/* =========================
-             Appointment Reminder
-        ========================= */}
-
-        {showReminder && appointment && (
-          <div
-            style={{
-              background: "rgba(255,255,255,0.92)",
-              backdropFilter: "blur(20px)",
-              borderRadius: "28px",
-              padding: "20px",
-              marginBottom: "20px",
-              position: "relative",
-              boxShadow: "0 20px 45px rgba(155,93,229,.18)",
-              border: "2px solid #F7D7FF",
-              overflow: "hidden",
-              animation: "popup .5s ease",
-            }}
-          >
-            {/* Decorations */}
-
-            <div
-              style={{
-                position: "absolute",
-                left: "15px",
-                top: "12px",
-                fontSize: "12px",
-              }}
-            >
-              ✨ ⭐ 💖 🌸
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                right: "55px",
-                bottom: "20px",
-                fontSize: "45px",
-              }}
-            >
-              🐰
-            </div>
-
-            {/* Close Button */}
-
-            <button
-              onClick={() => setShowReminder(false)}
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "14px",
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                fontSize: "22px",
-                color: "#777",
-              }}
-            >
-              ✕
-            </button>
-
-            {/* Title */}
-
-            <h2
-              style={{
-                textAlign: "center",
-                color: getReminderLabel().color,
-                marginBottom: "20px",
-              }}
-            >
-              {getReminderLabel().text}
-              <div
-                style={{
-                  fontSize: "13px",
-                  marginTop: "6px",
-                  color: "#777",
-                }}
-              >
-                Don't forget your session 💕
-              </div>
-            </h2>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "15px",
-                alignItems: "center",
-              }}
-            >
-              {/* Cute Alarm */}
-
-              <div
-                style={{
-                  fontSize: "80px",
-                  animation: "shake 2s infinite",
-                }}
-              >
-                ⏰
-              </div>
-
-              {/* Details */}
-
-              <div style={{ flex: 1 }}>
-                <h3
-                  style={{
-                    margin: 0,
-                    color: "#333",
-                  }}
-                >
-                  Hi {user?.name} 💖
-                </h3>
-
-                <p
-                  style={{
-                    color: "#666",
-                    marginTop: "8px",
-                    lineHeight: "24px",
-                  }}
-                >
-                  This is a friendly reminder about your upcoming counselor
-                  appointment.
-                </p>
-
-                <div
-                  style={{
-                    background: "linear-gradient(135deg,#FFF9E6,#FFF3C4)",
-                    border: "1px solid #FFD591",
-                    borderRadius: "14px",
-                    padding: "12px",
-                    marginTop: "10px",
-                  }}
-                >
-                  <p>
-                    👩 Counselor : {appointment?.counselorId?.name || "Counselor"}
-                  </p>
-
-                  <p>
-                    📅 Date :{" "}
-                    {appointment?.date ? formatDate(appointment.date) : "-"}
-                  </p>
-
-                  <p>🕙 Time : {appointment?.time || "-"}</p>
-
-                  <p>📝 Reason : {appointment?.reason || "-"}</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate("/appointments")}
-              style={{
-                width: "100%",
-                marginTop: "20px",
-                padding: "14px",
-                border: "none",
-                borderRadius: "15px",
-                cursor: "pointer",
-                color: "#fff",
-                fontWeight: "bold",
-                fontSize: "16px",
-                background: "linear-gradient(135deg,#7C3AED,#A855F7,#EC4899)",
-              }}
-            >
-              View My Appointments
-            </button>
-
-            <p
-              style={{
-                textAlign: "center",
-                marginTop: "15px",
-                color: "#777",
-                fontSize: "13px",
-              }}
-            >
-              🌸 Stay positive. We're here whenever you need support.
-            </p>
-          </div>
-        )}
-
-        <div className="card calm-card">
-          <h3>Take a mindful moment</h3>
           <p>
-            Your wellbeing matters. Track your mood, complete assessments, and
-            reach support when needed.
+            {bookingToast.counselor}
+            <br />
+            {bookingToast.date} • {bookingToast.time}
           </p>
         </div>
+      </div>
+    )}
 
-        <div className="grid">
-          {features.map((item) => (
-            <div
-              className="feature-card"
-              key={item.title}
-              onClick={() => navigate(item.path)}
+    {/* Header */}
+
+    <div className="dashboard-top">
+
+      <div>
+
+        <h1 className="dashboard-title">
+          {getGreeting()}
+          <br />
+          {user?.name || "User"} 👋
+        </h1>
+
+        <p className="dashboard-subtitle">
+          Take care of your mental wellbeing today.
+        </p>
+
+      </div>
+
+      <div className="dashboard-actions">
+
+        <button
+          className="notification-btn"
+          onClick={() => navigate("/appointments")}
+        >
+
+          🔔
+
+          {showReminder && (
+            <span className="notification-badge">
+              {daysUntil === 0 ? "!" : daysUntil}
+            </span>
+          )}
+
+        </button>
+
+        <button
+          className="logout-btn"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </div>
+
+    {/* Live Date */}
+
+    <div className="live-card">
+
+      <div>
+
+        <h4>📅 Today</h4>
+
+        <p>
+          {now.toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+
+      </div>
+
+      <div>
+
+        <h4>🕒 Time</h4>
+
+        <p>
+          {now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </p>
+
+      </div>
+
+    </div>
+
+    {/* Reminder */}
+
+    {loadingReminder ? (
+
+      <div className="loading-card">
+        Checking appointments...
+      </div>
+
+    ) : (
+      showReminder &&
+      appointment && (
+
+        <div className="appointment-card">
+
+          <button
+            className="close-btn"
+            onClick={() => setShowReminder(false)}
+          >
+            ✕
+          </button>
+
+          <div className="bell-circle">
+
+            🔔
+
+            <span className="bell-count">
+              {daysUntil === 0 ? "!" : daysUntil}
+            </span>
+
+          </div>
+
+          <div className="appointment-right">
+
+            <span
+              style={{
+                color: getReminderColor(),
+                fontWeight: 700,
+              }}
             >
-              <div className="feature-icon">{item.icon}</div>
-              <p>{item.title}</p>
-            </div>
-          ))}
+              {getCountdownText()}
+            </span>
+
+            <h2>
+              Appointment Reminder
+            </h2>
+
+            <p>
+              Counselor :
+              {" "}
+              {appointment.counselorId?.name}
+            </p>
+
+            <p>
+              Date :
+              {" "}
+              {formatDate(appointment.date)}
+            </p>
+
+            <p>
+              Time :
+              {" "}
+              {appointment.time}
+            </p>
+
+            <button
+              className="view-btn"
+              onClick={() =>
+                navigate("/appointments")
+              }
+            >
+              View Appointment
+            </button>
+
+          </div>
+
         </div>
 
-        <BottomNav />
+      )
+    )}
+
+    {/* Mindful Banner */}
+
+    <div className="mindful-card">
+
+      <div className="mindful-left">
+
+        <h2>
+          Take a mindful moment
+        </h2>
+
+        <p>
+          Track your mood, complete assessments,
+          and connect with a professional counselor
+          whenever you need support.
+        </p>
+
       </div>
-    </>
-  );
+
+      <div className="mindful-image">
+        🧘‍♀️
+      </div>
+
+    </div>
+    {/* ===========================
+        Feature Grid
+    =========================== */}
+
+    <div className="feature-grid">
+
+      {features.map((item, index) => (
+
+        <div
+          key={index}
+          className="feature-card-new"
+          style={{ background: item.bg }}
+          onClick={() => navigate(item.path)}
+        >
+
+          <div className="feature-icon-new">
+            {item.icon}
+          </div>
+
+          <div className="feature-content">
+
+            <h3>{item.title}</h3>
+
+            <p>{item.subtitle}</p>
+
+          </div>
+
+          <div className="feature-arrow">
+            →
+          </div>
+
+        </div>
+
+      ))}
+
+    </div>
+
+    {/* ===========================
+        Today's Summary
+    =========================== */}
+
+    <div className="summary-section">
+
+      <div className="summary-header">
+
+        <h2>
+          Today's Summary
+        </h2>
+
+        <button
+          className="history-btn"
+          onClick={() => navigate("/mood")}
+        >
+          View History →
+        </button>
+
+      </div>
+
+      <div className="summary-card">
+
+        {/* Left */}
+
+        <div className="summary-left">
+
+          <div className="summary-emoji">
+            {mood.emoji}
+          </div>
+
+          <div>
+
+            <p className="summary-label">
+              Current Mood
+            </p>
+
+            <h3>
+              {mood.label}
+            </h3>
+
+            <span>
+              {mood.description}
+            </span>
+
+          </div>
+
+        </div>
+
+        {/* Divider */}
+
+        <div className="summary-divider"></div>
+
+        {/* Right */}
+
+        <div className="summary-right">
+
+          <p className="summary-label">
+            Mood Score
+          </p>
+
+          <h2>
+            {mood.score} / {mood.maxScore}
+          </h2>
+
+          <div className="progress">
+
+            <div
+              className="progress-fill"
+              style={{
+                width: `${
+                  (mood.score / mood.maxScore) * 100
+                }%`,
+              }}
+            ></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* ===========================
+        Floating AI
+    =========================== */}
+
+    <button
+      className="floating-ai"
+      onClick={() => navigate("/chatbot")}
+    >
+      🤖
+    </button>
+
+    {/* ===========================
+        Bottom Navigation
+    =========================== */}
+
+    <BottomNav />
+
+  </div>
+);
+
 }
 
 export default Dashboard;
+
