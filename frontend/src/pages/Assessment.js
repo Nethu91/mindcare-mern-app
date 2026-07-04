@@ -65,7 +65,8 @@ function Assessment() {
       setLoading(true);
       setError("");
 
-      const response = await API.post("/assessment", {
+      // FIX: backend route is mounted as "/api/assessments" (plural)
+      const response = await API.post("/assessments", {
         assessmentType,
         answers,
       });
