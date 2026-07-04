@@ -1,0 +1,161 @@
+body{
+    margin:0;
+    padding:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#f4f7fb;
+}
+
+.assessment-page{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px 20px;
+    background:linear-gradient(135deg,#eef2ff,#f8fbff);
+}
+
+.assessment-card{
+    width:100%;
+    max-width:750px;
+    background:#fff;
+    border-radius:20px;
+    padding:35px;
+    box-shadow:0 15px 40px rgba(0,0,0,.12);
+}
+
+.assessment-card h1{
+    text-align:center;
+    margin-bottom:10px;
+    color:#1f2937;
+}
+
+.assessment-card h2{
+    text-align:center;
+    color:#4f46e5;
+}
+
+.assessment-card p{
+    text-align:center;
+    color:#6b7280;
+}
+
+.assessment-types{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+    margin-top:30px;
+}
+
+.type-card{
+    background:#f9fafb;
+    border:2px solid #e5e7eb;
+    border-radius:18px;
+    padding:30px;
+    cursor:pointer;
+    transition:.3s;
+    text-align:center;
+}
+
+.type-card:hover{
+    transform:translateY(-6px);
+    border-color:#6366f1;
+    box-shadow:0 10px 25px rgba(99,102,241,.25);
+}
+
+.progress-bar{
+    width:100%;
+    height:10px;
+    background:#e5e7eb;
+    border-radius:10px;
+    margin:25px 0;
+    overflow:hidden;
+}
+
+.progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,#6366f1,#8b5cf6);
+    border-radius:10px;
+    transition:.4s;
+}
+
+.question{
+    font-size:24px;
+    text-align:center;
+    margin-bottom:25px;
+    color:#111827;
+}
+
+.options{
+    display:grid;
+    gap:15px;
+}
+
+.option{
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:#f3f4f6;
+    cursor:pointer;
+    transition:.3s;
+    font-size:16px;
+}
+
+.option:hover{
+    background:#e0e7ff;
+}
+
+.selected{
+    background:#6366f1 !important;
+    color:white;
+}
+
+.buttons{
+    display:flex;
+    justify-content:space-between;
+    margin-top:35px;
+}
+
+.buttons button{
+    border:none;
+    padding:14px 28px;
+    border-radius:12px;
+    cursor:pointer;
+    background:#6366f1;
+    color:white;
+    font-size:16px;
+    transition:.3s;
+}
+
+.buttons button:hover{
+    background:#4338ca;
+}
+
+.buttons button:disabled{
+    background:#cbd5e1;
+    cursor:not-allowed;
+}
+
+@media(max-width:768px){
+
+.assessment-card{
+    padding:25px;
+}
+
+.assessment-types{
+    grid-template-columns:1fr;
+}
+
+.question{
+    font-size:20px;
+}
+
+.buttons{
+    flex-direction:column;
+    gap:15px;
+}
+
+.buttons button{
+    width:100%;
+}
+
+}
