@@ -1,13 +1,16 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { protect } = require("../middleware/authMiddleware");    
+const { protect } = require("../middleware/authMiddleware");
 
 const User = require("../models/User");
 
 const router = express.Router();
 
+// ===========================
 // REGISTER
+// ===========================
+
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, age, gender } = req.body;
@@ -68,7 +71,10 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// ===========================
 // LOGIN
+// ===========================
+
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -121,25 +127,11 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// GET LOGGED-IN USER PROFILE
-router.get("/profile", protect, async (req, res) => {
-  try {
-    res.status(200).json({
-      message: "Profile fetched successfully",
-      user: req.user,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to fetch profile",
-      error: error.message,
-    });
-  }
-});
-
-module.exports = router;
 // ===========================
 // GET /profile
 // Returns the logged-in user's full profile (minus password)
+// Flat object — matches what Profile.js's loadProfile() expects
+// (res.data.phone, res.data.city, etc.)
 // ===========================
 
 router.get("/profile", protect, async (req, res) => {
@@ -208,3 +200,5 @@ router.put("/profile", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+module.exports = router;
