@@ -55,17 +55,6 @@ function Dashboard() {
   }, [location.state]);
 
   // ===========================
-  // Mood Summary
-  // ===========================
-  const [mood, setMood] = useState({
-    emoji: "😊",
-    label: "Calm",
-    description: "Peaceful and relaxed mind.",
-    score: 4,
-    maxScore: 5,
-  });
-
-  // ===========================
   // Logout
   // ===========================
   const handleLogout = () => {
@@ -79,7 +68,6 @@ function Dashboard() {
 
   useEffect(() => {
     loadAppointmentReminder();
-    loadLatestMood();
   }, []);
 
   // ===========================
@@ -146,30 +134,6 @@ function Dashboard() {
       );
     } finally {
       setLoadingReminder(false);
-    }
-  };
-
-  // ===========================
-  // Latest Mood
-  // ===========================
-
-  const loadLatestMood = async () => {
-    try {
-      const res = await API.get("/mood/latest");
-
-      if (!res.data) return;
-
-      setMood({
-        emoji: res.data.emoji || "😊",
-        label: res.data.label || "Calm",
-        description:
-          res.data.description ||
-          "Peaceful and relaxed mind.",
-        score: res.data.score ?? 4,
-        maxScore: res.data.maxScore ?? 5,
-      });
-    } catch (err) {
-      console.log("No mood found.");
     }
   };
 
@@ -538,90 +502,6 @@ return (
     </div>
 
     {/* ===========================
-        Today's Summary
-    =========================== */}
-
-    <div className="summary-section">
-
-      <div className="summary-header">
-
-        <h2>
-          Today's Summary
-        </h2>
-
-        <button
-          className="history-btn"
-          onClick={() => navigate("/mood")}
-        >
-          View History →
-        </button>
-
-      </div>
-
-      <div className="summary-card">
-
-        {/* Left */}
-
-        <div className="summary-left">
-
-          <div className="summary-emoji">
-            {mood.emoji}
-          </div>
-
-          <div>
-
-            <p className="summary-label">
-              Current Mood
-            </p>
-
-            <h3>
-              {mood.label}
-            </h3>
-
-            <span>
-              {mood.description}
-            </span>
-
-          </div>
-
-        </div>
-
-        {/* Divider */}
-
-        <div className="summary-divider"></div>
-
-        {/* Right */}
-
-        <div className="summary-right">
-
-          <p className="summary-label">
-            Mood Score
-          </p>
-
-          <h2>
-            {mood.score} / {mood.maxScore}
-          </h2>
-
-          <div className="progress">
-
-            <div
-              className="progress-fill"
-              style={{
-                width: `${
-                  (mood.score / mood.maxScore) * 100
-                }%`,
-              }}
-            ></div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    {/* ===========================
         Floating AI
     =========================== */}
 
@@ -644,4 +524,3 @@ return (
 }
 
 export default Dashboard;
-
