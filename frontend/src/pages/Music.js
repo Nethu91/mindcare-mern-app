@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Music() {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
 
   const categories = [
     "All",
@@ -352,6 +353,31 @@ function Music() {
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // ===========================
+  // Responsive (mobile) detection
+  // Uses ResizeObserver on the actual
+  // page container width instead of
+  // window.innerWidth, so it works
+  // correctly inside the locked-width
+  // ".app-screen" phone frame too
+  // (window stays wide on desktop even
+  // though the visible frame is narrow).
+  // ===========================
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+      setIsMobile(width <= 768);
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const filteredTracks = tracks.filter((track) => {
     const categoryMatch =
       selectedCategory === "All" || track.category === selectedCategory;
@@ -385,13 +411,22 @@ function Music() {
   };
 
   return (
-    <div style={styles.page}>
+    <div
+      ref={containerRef}
+      style={{ ...styles.page, padding: isMobile ? "16px" : "35px" }}
+    >
       <div style={styles.circleOne}></div>
       <div style={styles.circleTwo}></div>
       <div style={styles.circleThree}></div>
 
       <div style={styles.container}>
-        <div style={styles.header}>
+        <div
+          style={{
+            ...styles.header,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "flex-start" : "center",
+          }}
+        >
           <div>
             <button
               style={styles.backButton}
@@ -399,29 +434,53 @@ function Music() {
             >
               ← Back to Dashboard
             </button>
-            <h1 style={styles.title}>Calm Music</h1>
+            <h1 style={{ ...styles.title, fontSize: isMobile ? "26px" : "42px" }}>
+              Calm Music
+            </h1>
             <p style={styles.subtitle}>
               Listen to relaxing YouTube music for sleep, focus, meditation,
               nature calm, and stress relief.
             </p>
           </div>
 
-          <div style={styles.headerBadge}>🎧 YouTube Music Library</div>
+          {!isMobile && (
+            <div style={styles.headerBadge}>🎧 YouTube Music Library</div>
+          )}
         </div>
 
-        <div style={styles.heroCard}>
+        <div
+          style={{
+            ...styles.heroCard,
+            flexDirection: isMobile ? "column" : "row",
+            padding: isMobile ? "20px" : "28px",
+            textAlign: isMobile ? "left" : "left",
+          }}
+        >
           <div>
-            <h2 style={styles.heroTitle}>Find music that matches your mood</h2>
+            <h2
+              style={{
+                ...styles.heroTitle,
+                fontSize: isMobile ? "21px" : "28px",
+              }}
+            >
+              Find music that matches your mood
+            </h2>
             <p style={styles.heroText}>
               Choose from 30 calm music sessions. No MP3 files needed. Music
               plays through embedded YouTube player.
             </p>
           </div>
-          <div style={styles.heroIcon}>🎶</div>
+          {!isMobile && <div style={styles.heroIcon}>🎶</div>}
         </div>
 
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
+        <div
+          style={{
+            ...styles.statsGrid,
+            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+            gap: isMobile ? "12px" : "20px",
+          }}
+        >
+          <div style={{ ...styles.statCard, padding: isMobile ? "14px" : "22px" }}>
             <div style={styles.statIcon}>🎵</div>
             <div>
               <h3 style={styles.statNumber}>{tracks.length}</h3>
@@ -429,7 +488,7 @@ function Music() {
             </div>
           </div>
 
-          <div style={styles.statCard}>
+          <div style={{ ...styles.statCard, padding: isMobile ? "14px" : "22px" }}>
             <div style={styles.statIcon}>💜</div>
             <div>
               <h3 style={styles.statNumber}>{favorites.length}</h3>
@@ -437,7 +496,13 @@ function Music() {
             </div>
           </div>
 
-          <div style={styles.statCard}>
+          <div
+            style={{
+              ...styles.statCard,
+              padding: isMobile ? "14px" : "22px",
+              gridColumn: isMobile ? "span 2" : "auto",
+            }}
+          >
             <div style={styles.statIcon}>🌙</div>
             <div>
               <h3 style={styles.statNumber}>
@@ -448,16 +513,29 @@ function Music() {
           </div>
         </div>
 
-        <div style={styles.mainGrid}>
-          <div style={styles.leftPanel}>
-            <div style={styles.panelHeader}>
+        <div
+          style={{
+            ...styles.mainGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "1.35fr 0.9fr",
+            gap: isMobile ? "18px" : "25px",
+          }}
+        >
+          <div style={{ ...styles.leftPanel, padding: isMobile ? "18px" : "30px" }}>
+            <div
+              style={{
+                ...styles.panelHeader,
+                flexDirection: isMobile ? "column" : "row",
+                alignItems: isMobile ? "flex-start" : "center",
+                gap: isMobile ? "12px" : "16px",
+              }}
+            >
               <div>
                 <h2 style={styles.sectionTitle}>Music Library</h2>
                 <p style={styles.sectionSubText}>
                   Search, filter, and select a calm YouTube music session.
                 </p>
               </div>
-              <div style={styles.panelIcon}>🎼</div>
+              {!isMobile && <div style={styles.panelIcon}>🎼</div>}
             </div>
 
             <div style={styles.searchBox}>
@@ -491,12 +569,20 @@ function Music() {
               ))}
             </div>
 
-            <div style={styles.trackList}>
+            <div
+              style={{
+                ...styles.trackList,
+                maxHeight: isMobile ? "none" : "760px",
+              }}
+            >
               {filteredTracks.map((track) => (
                 <div
                   key={track.id}
                   style={{
                     ...styles.trackCard,
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    padding: isMobile ? "16px" : "18px",
                     border:
                       selectedTrack.id === track.id
                         ? "3px solid #9B5DE5"
@@ -511,6 +597,9 @@ function Music() {
                   <div
                     style={{
                       ...styles.trackIcon,
+                      width: isMobile ? "64px" : "78px",
+                      height: isMobile ? "64px" : "78px",
+                      fontSize: isMobile ? "32px" : "40px",
                       backgroundColor: track.color,
                     }}
                   >
@@ -518,7 +607,9 @@ function Music() {
                   </div>
 
                   <div style={styles.trackInfo}>
-                    <h3 style={styles.trackTitle}>{track.title}</h3>
+                    <h3 style={{ ...styles.trackTitle, paddingRight: isMobile ? "36px" : 0 }}>
+                      {track.title}
+                    </h3>
                     <p style={styles.trackArtist}>{track.artist}</p>
                     <div style={styles.trackMetaRow}>
                       <span style={styles.metaBadge}>⏱ {track.duration}</span>
@@ -528,7 +619,12 @@ function Music() {
                   </div>
 
                   <button
-                    style={styles.favoriteButton}
+                    style={{
+                      ...styles.favoriteButton,
+                      position: isMobile ? "absolute" : "static",
+                      top: isMobile ? "16px" : "auto",
+                      right: isMobile ? "16px" : "auto",
+                    }}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite(track.id);
@@ -542,8 +638,8 @@ function Music() {
           </div>
 
           <div style={styles.rightPanel}>
-            <div style={styles.playerCard}>
-              <div style={styles.youtubeBox}>
+            <div style={{ ...styles.playerCard, padding: isMobile ? "18px" : "30px" }}>
+              <div style={{ ...styles.youtubeBox, height: isMobile ? "200px" : "270px" }}>
                 <iframe
                   style={styles.iframe}
                   src={selectedTrack.videoUrl}
@@ -553,7 +649,9 @@ function Music() {
                 ></iframe>
               </div>
 
-              <h2 style={styles.playerTitle}>{selectedTrack.title}</h2>
+              <h2 style={{ ...styles.playerTitle, fontSize: isMobile ? "21px" : "26px" }}>
+                {selectedTrack.title}
+              </h2>
               <p style={styles.playerArtist}>{selectedTrack.artist}</p>
 
               <div style={styles.nowPlayingBadge}>YouTube Music Player</div>
@@ -568,7 +666,12 @@ function Music() {
                 </button>
               </div>
 
-              <div style={styles.playerInfoGrid}>
+              <div
+                style={{
+                  ...styles.playerInfoGrid,
+                  gap: isMobile ? "8px" : "10px",
+                }}
+              >
                 <div style={styles.infoBox}>
                   <span style={styles.infoLabel}>Category</span>
                   <strong style={styles.infoValue}>
@@ -597,7 +700,7 @@ function Music() {
               </button>
             </div>
 
-            <div style={styles.playlistCard}>
+            <div style={{ ...styles.playlistCard, padding: isMobile ? "18px" : "26px" }}>
               <h3 style={styles.playlistTitle}>Suggested Playlist</h3>
 
               <div style={styles.playlistItem}>
@@ -627,8 +730,17 @@ function Music() {
           </div>
         </div>
 
-        <div style={styles.bottomGrid}>
-          <div style={styles.helpCard} onClick={() => navigate("/videos")}>
+        <div
+          style={{
+            ...styles.bottomGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+            gap: isMobile ? "14px" : "20px",
+          }}
+        >
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/videos")}
+          >
             <div style={styles.helpIcon}>🎥</div>
             <h3 style={styles.helpTitle}>Calm Videos</h3>
             <p style={styles.helpText}>
@@ -637,7 +749,10 @@ function Music() {
             <p style={styles.helpLink}>Go to Calm Videos →</p>
           </div>
 
-          <div style={styles.helpCard} onClick={() => navigate("/mood")}>
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/mood")}
+          >
             <div style={styles.helpIcon}>😊</div>
             <h3 style={styles.helpTitle}>Track Mood</h3>
             <p style={styles.helpText}>
@@ -646,7 +761,10 @@ function Music() {
             <p style={styles.helpLink}>Go to Mood Tracker →</p>
           </div>
 
-          <div style={styles.helpCard} onClick={() => navigate("/assessment")}>
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/assessment")}
+          >
             <div style={styles.helpIcon}>📝</div>
             <h3 style={styles.helpTitle}>Self Check</h3>
             <p style={styles.helpText}>
@@ -663,7 +781,6 @@ function Music() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "35px",
     background:
       "linear-gradient(160deg, #F1E8E9 0%, #EFE6EE 45%, #D2CFE1 100%)",
     fontFamily: "Arial, sans-serif",
@@ -712,7 +829,6 @@ const styles = {
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "26px",
     flexWrap: "wrap",
     gap: "16px",
@@ -729,7 +845,6 @@ const styles = {
     boxShadow: "0 10px 24px rgba(49,34,68,0.1)",
   },
   title: {
-    fontSize: "42px",
     color: "#312244",
     margin: "0 0 7px 0",
     fontWeight: "900",
@@ -752,7 +867,6 @@ const styles = {
     background: "rgba(255,255,255,0.55)",
     border: "1px solid rgba(255,255,255,0.75)",
     borderRadius: "32px",
-    padding: "28px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.15)",
     display: "flex",
     justifyContent: "space-between",
@@ -762,7 +876,6 @@ const styles = {
   },
   heroTitle: {
     color: "#312244",
-    fontSize: "28px",
     margin: "0 0 10px 0",
     fontWeight: "900",
   },
@@ -786,15 +899,12 @@ const styles = {
   },
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "20px",
     marginBottom: "25px",
   },
   statCard: {
     display: "flex",
     alignItems: "center",
     gap: "16px",
-    padding: "22px",
     borderRadius: "30px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
@@ -809,6 +919,7 @@ const styles = {
     justifyContent: "center",
     background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
     fontSize: "30px",
+    flexShrink: 0,
   },
   statNumber: {
     color: "#312244",
@@ -824,15 +935,12 @@ const styles = {
   },
   mainGrid: {
     display: "grid",
-    gridTemplateColumns: "1.35fr 0.9fr",
-    gap: "25px",
     marginBottom: "25px",
   },
   leftPanel: {
     background: "rgba(255,255,255,0.54)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
   },
   rightPanel: {
@@ -842,8 +950,6 @@ const styles = {
   panelHeader: {
     display: "flex",
     justifyContent: "space-between",
-    gap: "16px",
-    alignItems: "center",
     marginBottom: "22px",
   },
   sectionTitle: {
@@ -890,6 +996,7 @@ const styles = {
     background: "transparent",
     color: "#312244",
     fontSize: "15px",
+    minWidth: 0,
   },
   categoryRow: {
     display: "flex",
@@ -908,34 +1015,30 @@ const styles = {
   trackList: {
     display: "grid",
     gap: "16px",
-    maxHeight: "760px",
     overflowY: "auto",
     paddingRight: "5px",
   },
   trackCard: {
     display: "flex",
-    alignItems: "center",
     gap: "16px",
-    padding: "18px",
     borderRadius: "28px",
     boxShadow: "0 16px 34px rgba(49,34,68,0.11)",
     cursor: "pointer",
     transition: "0.3s ease",
     position: "relative",
+    boxSizing: "border-box",
   },
   trackIcon: {
-    width: "78px",
-    height: "78px",
     borderRadius: "27px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "40px",
     boxShadow: "0 14px 24px rgba(49,34,68,0.13)",
     flexShrink: 0,
   },
   trackInfo: {
     flex: 1,
+    minWidth: 0,
   },
   trackTitle: {
     color: "#312244",
@@ -971,17 +1074,16 @@ const styles = {
     cursor: "pointer",
     fontSize: "20px",
     boxShadow: "0 10px 20px rgba(49,34,68,0.1)",
+    flexShrink: 0,
   },
   playerCard: {
     background: "rgba(255,255,255,0.54)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
     textAlign: "center",
   },
   youtubeBox: {
-    height: "270px",
     borderRadius: "30px",
     overflow: "hidden",
     marginBottom: "22px",
@@ -997,7 +1099,6 @@ const styles = {
     color: "#312244",
     margin: "0 0 7px 0",
     fontWeight: "900",
-    fontSize: "26px",
   },
   playerArtist: {
     color: "#6D597A",
@@ -1045,13 +1146,13 @@ const styles = {
   playerInfoGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "10px",
     marginBottom: "18px",
   },
   infoBox: {
     background: "rgba(255,255,255,0.7)",
     borderRadius: "18px",
     padding: "13px",
+    minWidth: 0,
   },
   infoLabel: {
     display: "block",
@@ -1063,6 +1164,7 @@ const styles = {
   infoValue: {
     color: "#312244",
     fontSize: "14px",
+    wordBreak: "break-word",
   },
   primaryButton: {
     width: "100%",
@@ -1077,7 +1179,6 @@ const styles = {
     boxShadow: "0 18px 35px rgba(155,93,229,0.35)",
   },
   playlistCard: {
-    padding: "26px",
     borderRadius: "32px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
@@ -1101,17 +1202,15 @@ const styles = {
   },
   bottomGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "20px",
   },
   helpCard: {
-    padding: "25px",
     borderRadius: "30px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
     textAlign: "center",
     cursor: "pointer",
+    boxSizing: "border-box",
   },
   helpIcon: {
     width: "58px",

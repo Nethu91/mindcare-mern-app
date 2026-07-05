@@ -219,7 +219,7 @@ function MoodTracker() {
           </div>
         )}
 
-        <div style={styles.topGrid}>
+        <div className="responsive-grid" style={styles.topGrid}>
           <div style={styles.mainCard}>
             <h2 style={styles.sectionTitle}>Select Your Mood</h2>
 

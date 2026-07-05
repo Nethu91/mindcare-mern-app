@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 
 function CalmVideos() {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
 
   const videoCategories = [
     "All",
@@ -98,6 +99,31 @@ function CalmVideos() {
   const [selectedVideo, setSelectedVideo] = useState(videos[0]);
 
   // ===========================
+  // Responsive (mobile) detection
+  // Uses ResizeObserver on the actual
+  // page container width instead of
+  // window.innerWidth, so it works
+  // correctly inside the locked-width
+  // ".app-screen" phone frame too
+  // (window stays wide on desktop even
+  // though the visible frame is narrow).
+  // ===========================
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+      setIsMobile(width <= 768);
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // ===========================
   // Favorites (persisted to backend)
   // ===========================
 
@@ -171,13 +197,22 @@ function CalmVideos() {
   };
 
   return (
-    <div style={styles.page}>
+    <div
+      ref={containerRef}
+      style={{ ...styles.page, padding: isMobile ? "16px" : "35px" }}
+    >
       <div style={styles.circleOne}></div>
       <div style={styles.circleTwo}></div>
       <div style={styles.circleThree}></div>
 
       <div style={styles.container}>
-        <div style={styles.header}>
+        <div
+          style={{
+            ...styles.header,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "flex-start" : "center",
+          }}
+        >
           <div>
             <button
               style={styles.backButton}
@@ -186,18 +221,26 @@ function CalmVideos() {
               ← Back to Dashboard
             </button>
 
-            <h1 style={styles.title}>Calm Videos</h1>
+            <h1 style={{ ...styles.title, fontSize: isMobile ? "26px" : "42px" }}>
+              Calm Videos
+            </h1>
             <p style={styles.subtitle}>
               Watch relaxing videos for breathing, meditation, sleep, and stress
               relief.
             </p>
           </div>
 
-          <div style={styles.headerBadge}>🎥 Calm Library</div>
+          {!isMobile && <div style={styles.headerBadge}>🎥 Calm Library</div>}
         </div>
 
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
+        <div
+          style={{
+            ...styles.statsGrid,
+            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+            gap: isMobile ? "12px" : "20px",
+          }}
+        >
+          <div style={{ ...styles.statCard, padding: isMobile ? "14px" : "22px" }}>
             <div style={styles.statIcon}>🎬</div>
             <div>
               <h3 style={styles.statNumber}>{videos.length}</h3>
@@ -205,7 +248,7 @@ function CalmVideos() {
             </div>
           </div>
 
-          <div style={styles.statCard}>
+          <div style={{ ...styles.statCard, padding: isMobile ? "14px" : "22px" }}>
             <div style={styles.statIcon}>💜</div>
             <div>
               <h3 style={styles.statNumber}>
@@ -215,7 +258,13 @@ function CalmVideos() {
             </div>
           </div>
 
-          <div style={styles.statCard}>
+          <div
+            style={{
+              ...styles.statCard,
+              padding: isMobile ? "14px" : "22px",
+              gridColumn: isMobile ? "span 2" : "auto",
+            }}
+          >
             <div style={styles.statIcon}>🧘</div>
             <div>
               <h3 style={styles.statNumber}>
@@ -226,8 +275,14 @@ function CalmVideos() {
           </div>
         </div>
 
-        <div style={styles.mainGrid}>
-          <div style={styles.leftPanel}>
+        <div
+          style={{
+            ...styles.mainGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "1.35fr 0.9fr",
+            gap: isMobile ? "18px" : "25px",
+          }}
+        >
+          <div style={{ ...styles.leftPanel, padding: isMobile ? "18px" : "30px" }}>
             <h2 style={styles.sectionTitle}>Video Categories</h2>
             <p style={styles.sectionSubText}>
               Select a category and choose a session.
@@ -259,6 +314,9 @@ function CalmVideos() {
                   key={video.id}
                   style={{
                     ...styles.videoCard,
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    padding: isMobile ? "16px" : "18px",
                     border:
                       selectedVideo.id === video.id
                         ? "3px solid #9B5DE5"
@@ -273,6 +331,9 @@ function CalmVideos() {
                   <div
                     style={{
                       ...styles.videoThumb,
+                      width: isMobile ? "64px" : "82px",
+                      height: isMobile ? "64px" : "82px",
+                      fontSize: isMobile ? "32px" : "42px",
                       backgroundColor: video.color,
                     }}
                   >
@@ -294,6 +355,9 @@ function CalmVideos() {
                     style={{
                       ...styles.favoriteButton,
                       opacity: savingFavoriteId === video.id ? 0.5 : 1,
+                      position: isMobile ? "absolute" : "static",
+                      top: isMobile ? "16px" : "auto",
+                      right: isMobile ? "16px" : "auto",
                     }}
                     disabled={savingFavoriteId === video.id}
                     onClick={(e) => {
@@ -309,8 +373,8 @@ function CalmVideos() {
           </div>
 
           <div style={styles.rightPanel}>
-            <div style={styles.playerCard}>
-              <div style={styles.videoPlayer}>
+            <div style={{ ...styles.playerCard, padding: isMobile ? "18px" : "30px" }}>
+              <div style={{ ...styles.videoPlayer, height: isMobile ? "200px" : "245px" }}>
                 <iframe
                   style={styles.iframe}
                   src={selectedVideo.videoUrl}
@@ -320,12 +384,20 @@ function CalmVideos() {
                 ></iframe>
               </div>
 
-              <h2 style={styles.playerTitle}>{selectedVideo.title}</h2>
+              <h2 style={{ ...styles.playerTitle, fontSize: isMobile ? "21px" : "26px" }}>
+                {selectedVideo.title}
+              </h2>
               <p style={styles.playerDescription}>
                 {selectedVideo.description}
               </p>
 
-              <div style={styles.playerInfoGrid}>
+              <div
+                style={{
+                  ...styles.playerInfoGrid,
+                  gridTemplateColumns: isMobile ? "1fr 1fr 1fr" : "repeat(3, 1fr)",
+                  gap: isMobile ? "8px" : "10px",
+                }}
+              >
                 <div style={styles.infoBox}>
                   <span style={styles.infoLabel}>Category</span>
                   <strong style={styles.infoValue}>
@@ -360,7 +432,7 @@ function CalmVideos() {
               </button>
             </div>
 
-            <div style={styles.tipCard}>
+            <div style={{ ...styles.tipCard, padding: isMobile ? "18px" : "25px" }}>
               <div style={styles.tipIcon}>💡</div>
               <h3 style={styles.tipTitle}>Calm Tip</h3>
               <p style={styles.tipText}>
@@ -371,8 +443,17 @@ function CalmVideos() {
           </div>
         </div>
 
-        <div style={styles.bottomGrid}>
-          <div style={styles.helpCard} onClick={() => navigate("/mood")}>
+        <div
+          style={{
+            ...styles.bottomGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+            gap: isMobile ? "14px" : "20px",
+          }}
+        >
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/mood")}
+          >
             <div style={styles.helpIcon}>😊</div>
             <h3 style={styles.helpTitle}>Track Your Mood</h3>
             <p style={styles.helpText}>
@@ -381,7 +462,10 @@ function CalmVideos() {
             <p style={styles.helpLink}>Go to Mood Tracker →</p>
           </div>
 
-          <div style={styles.helpCard} onClick={() => navigate("/assessment")}>
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/assessment")}
+          >
             <div style={styles.helpIcon}>📝</div>
             <h3 style={styles.helpTitle}>Self Assessment</h3>
             <p style={styles.helpText}>
@@ -390,7 +474,10 @@ function CalmVideos() {
             <p style={styles.helpLink}>Go to Assessment →</p>
           </div>
 
-          <div style={styles.helpCard} onClick={() => navigate("/counselor")}>
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/counselor")}
+          >
             <div style={styles.helpIcon}>👩‍⚕️</div>
             <h3 style={styles.helpTitle}>Need Support?</h3>
             <p style={styles.helpText}>
@@ -407,7 +494,6 @@ function CalmVideos() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "35px",
     background:
       "linear-gradient(160deg, #F1E8E9 0%, #EFE6EE 45%, #D2CFE1 100%)",
     fontFamily: "Arial, sans-serif",
@@ -461,7 +547,6 @@ const styles = {
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "26px",
     flexWrap: "wrap",
     gap: "16px",
@@ -480,7 +565,6 @@ const styles = {
   },
 
   title: {
-    fontSize: "42px",
     color: "#312244",
     margin: "0 0 7px 0",
     fontWeight: "900",
@@ -504,8 +588,6 @@ const styles = {
 
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "20px",
     marginBottom: "25px",
   },
 
@@ -513,7 +595,6 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "16px",
-    padding: "22px",
     borderRadius: "30px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
@@ -529,6 +610,7 @@ const styles = {
     justifyContent: "center",
     background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
     fontSize: "30px",
+    flexShrink: 0,
   },
 
   statNumber: {
@@ -547,8 +629,6 @@ const styles = {
 
   mainGrid: {
     display: "grid",
-    gridTemplateColumns: "1.35fr 0.9fr",
-    gap: "25px",
     marginBottom: "25px",
   },
 
@@ -556,7 +636,6 @@ const styles = {
     background: "rgba(255,255,255,0.54)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
   },
 
@@ -601,29 +680,26 @@ const styles = {
 
   videoCard: {
     display: "flex",
-    alignItems: "center",
     gap: "16px",
-    padding: "18px",
     borderRadius: "28px",
     boxShadow: "0 16px 34px rgba(49,34,68,0.11)",
     cursor: "pointer",
     transition: "0.3s ease",
     position: "relative",
+    boxSizing: "border-box",
   },
 
   videoThumb: {
-    width: "82px",
-    height: "82px",
     borderRadius: "28px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "42px",
     flexShrink: 0,
   },
 
   videoInfo: {
     flex: 1,
+    minWidth: 0,
   },
 
   videoTitle: {
@@ -631,6 +707,7 @@ const styles = {
     fontSize: "19px",
     margin: "0 0 6px 0",
     fontWeight: "900",
+    paddingRight: "36px",
   },
 
   videoDescription: {
@@ -663,19 +740,18 @@ const styles = {
     borderRadius: "16px",
     cursor: "pointer",
     fontSize: "20px",
+    flexShrink: 0,
   },
 
   playerCard: {
     background: "rgba(255,255,255,0.54)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
     textAlign: "center",
   },
 
   videoPlayer: {
-    height: "245px",
     borderRadius: "32px",
     overflow: "hidden",
     marginBottom: "22px",
@@ -693,7 +769,6 @@ const styles = {
     color: "#312244",
     margin: "0 0 8px 0",
     fontWeight: "900",
-    fontSize: "26px",
   },
 
   playerDescription: {
@@ -704,8 +779,6 @@ const styles = {
 
   playerInfoGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "10px",
     marginBottom: "18px",
   },
 
@@ -713,6 +786,7 @@ const styles = {
     background: "rgba(255,255,255,0.7)",
     borderRadius: "18px",
     padding: "13px",
+    minWidth: 0,
   },
 
   infoLabel: {
@@ -726,6 +800,7 @@ const styles = {
   infoValue: {
     color: "#312244",
     fontSize: "14px",
+    wordBreak: "break-word",
   },
 
   primaryButton: {
@@ -742,7 +817,6 @@ const styles = {
   },
 
   tipCard: {
-    padding: "25px",
     borderRadius: "30px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
@@ -770,18 +844,16 @@ const styles = {
 
   bottomGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "20px",
   },
 
   helpCard: {
-    padding: "25px",
     borderRadius: "30px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
     textAlign: "center",
     cursor: "pointer",
+    boxSizing: "border-box",
   },
 
   helpIcon: {

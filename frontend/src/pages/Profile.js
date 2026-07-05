@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 
 function Profile() {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
 
   const savedUser = JSON.parse(localStorage.getItem("user"));
 
@@ -26,6 +27,31 @@ function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedMood, setSelectedMood] = useState("Calm");
+
+  // ===========================
+  // Responsive (mobile) detection
+  // Uses ResizeObserver on the actual
+  // page container width instead of
+  // window.innerWidth, so it works
+  // correctly inside the locked-width
+  // ".app-screen" phone frame too
+  // (window stays wide on desktop even
+  // though the visible frame is narrow).
+  // ===========================
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+      setIsMobile(width <= 768);
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // ===========================
   // Load real profile from backend
@@ -170,13 +196,22 @@ function Profile() {
   };
 
   return (
-    <div style={styles.page}>
+    <div
+      ref={containerRef}
+      style={{ ...styles.page, padding: isMobile ? "16px" : "35px" }}
+    >
       <div style={styles.circleOne}></div>
       <div style={styles.circleTwo}></div>
       <div style={styles.circleThree}></div>
 
       <div style={styles.container}>
-        <div style={styles.header}>
+        <div
+          style={{
+            ...styles.header,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "flex-start" : "center",
+          }}
+        >
           <div>
             <button
               style={styles.backButton}
@@ -185,23 +220,33 @@ function Profile() {
               ← Back to Dashboard
             </button>
 
-            <h1 style={styles.title}>My Profile</h1>
+            <h1 style={{ ...styles.title, fontSize: isMobile ? "26px" : "42px" }}>
+              My Profile
+            </h1>
             <p style={styles.subtitle}>
               Manage your personal details, wellness preferences, support plan,
               and MindCare journey.
             </p>
           </div>
 
-          <div style={styles.headerBadge}>👤 Personal Wellness Space</div>
+          {!isMobile && (
+            <div style={styles.headerBadge}>👤 Personal Wellness Space</div>
+          )}
         </div>
 
         {loadingProfile && (
           <div style={styles.loadingPill}>⏳ Loading your profile...</div>
         )}
 
-        <div style={styles.mainGrid}>
-          <div style={styles.leftPanel}>
-            <div style={styles.profileCard}>
+        <div
+          style={{
+            ...styles.mainGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "0.85fr 1.55fr",
+            gap: isMobile ? "18px" : "25px",
+          }}
+        >
+          <div style={{ ...styles.leftPanel, gap: isMobile ? "18px" : "25px" }}>
+            <div style={{ ...styles.profileCard, padding: isMobile ? "20px" : "30px" }}>
               <div style={styles.avatarWrapper}>
                 <div style={styles.avatar}>👩‍💻</div>
                 <div style={styles.onlineDot}></div>
@@ -240,7 +285,7 @@ function Profile() {
               </button>
             </div>
 
-            <div style={styles.moodCard}>
+            <div style={{ ...styles.moodCard, padding: isMobile ? "18px" : "25px" }}>
               <h3 style={styles.smallTitle}>How do you feel now?</h3>
 
               <div style={styles.moodGrid}>
@@ -264,9 +309,16 @@ function Profile() {
             </div>
           </div>
 
-          <div style={styles.rightPanel}>
-            <div style={styles.formCard}>
-              <div style={styles.cardHeader}>
+          <div style={{ ...styles.rightPanel, gap: isMobile ? "18px" : "25px" }}>
+            <div style={{ ...styles.formCard, padding: isMobile ? "18px" : "30px" }}>
+              <div
+                style={{
+                  ...styles.cardHeader,
+                  flexDirection: isMobile ? "column" : "row",
+                  alignItems: isMobile ? "flex-start" : "center",
+                  gap: isMobile ? "12px" : "16px",
+                }}
+              >
                 <div>
                   <h2 style={styles.sectionTitle}>Personal Information</h2>
                   <p style={styles.sectionSubText}>
@@ -274,10 +326,15 @@ function Profile() {
                   </p>
                 </div>
 
-                <div style={styles.cardIcon}>🪪</div>
+                {!isMobile && <div style={styles.cardIcon}>🪪</div>}
               </div>
 
-              <div style={styles.formGrid}>
+              <div
+                style={{
+                  ...styles.formGrid,
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                }}
+              >
                 <div>
                   <label style={styles.label}>Full Name</label>
                   <input
@@ -357,9 +414,18 @@ function Profile() {
               )}
             </div>
 
-            <div style={styles.statsGrid}>
+            <div
+              style={{
+                ...styles.statsGrid,
+                gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+                gap: isMobile ? "12px" : "16px",
+              }}
+            >
               {wellnessStats.map((stat) => (
-                <div key={stat.title} style={styles.statCard}>
+                <div
+                  key={stat.title}
+                  style={{ ...styles.statCard, padding: isMobile ? "14px" : "18px" }}
+                >
                   <div
                     style={{
                       ...styles.statIcon,
@@ -377,16 +443,29 @@ function Profile() {
               ))}
             </div>
 
-            <div style={styles.supportGrid}>
-              <div style={styles.supportCard}>
-                <div style={styles.cardHeader}>
+            <div
+              style={{
+                ...styles.supportGrid,
+                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                gap: isMobile ? "18px" : "25px",
+              }}
+            >
+              <div style={{ ...styles.supportCard, padding: isMobile ? "18px" : "30px" }}>
+                <div
+                  style={{
+                    ...styles.cardHeader,
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    gap: isMobile ? "12px" : "16px",
+                  }}
+                >
                   <div>
                     <h2 style={styles.sectionTitle}>Emergency Contact</h2>
                     <p style={styles.sectionSubText}>
                       Trusted person for urgent support.
                     </p>
                   </div>
-                  <div style={styles.cardIcon}>🚨</div>
+                  {!isMobile && <div style={styles.cardIcon}>🚨</div>}
                 </div>
 
                 <label style={styles.label}>Contact Name</label>
@@ -417,15 +496,22 @@ function Profile() {
                 </button>
               </div>
 
-              <div style={styles.supportCard}>
-                <div style={styles.cardHeader}>
+              <div style={{ ...styles.supportCard, padding: isMobile ? "18px" : "30px" }}>
+                <div
+                  style={{
+                    ...styles.cardHeader,
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    gap: isMobile ? "12px" : "16px",
+                  }}
+                >
                   <div>
                     <h2 style={styles.sectionTitle}>Wellness Preferences</h2>
                     <p style={styles.sectionSubText}>
                       Personalize your MindCare support.
                     </p>
                   </div>
-                  <div style={styles.cardIcon}>🌿</div>
+                  {!isMobile && <div style={styles.cardIcon}>🌿</div>}
                 </div>
 
                 <label style={styles.label}>Wellness Goal</label>
@@ -460,8 +546,15 @@ function Profile() {
           </div>
         </div>
 
-        <div style={styles.achievementCard}>
-          <div style={styles.cardHeader}>
+        <div style={{ ...styles.achievementCard, padding: isMobile ? "18px" : "30px" }}>
+          <div
+            style={{
+              ...styles.cardHeader,
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "flex-start" : "center",
+              gap: isMobile ? "12px" : "16px",
+            }}
+          >
             <div>
               <h2 style={styles.sectionTitle}>Wellness Achievements</h2>
               <p style={styles.sectionSubText}>
@@ -469,10 +562,16 @@ function Profile() {
               </p>
             </div>
 
-            <div style={styles.cardIcon}>🏆</div>
+            {!isMobile && <div style={styles.cardIcon}>🏆</div>}
           </div>
 
-          <div style={styles.achievementGrid}>
+          <div
+            style={{
+              ...styles.achievementGrid,
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+              gap: isMobile ? "14px" : "18px",
+            }}
+          >
             {achievements.map((item) => (
               <div key={item.id} style={styles.achievementItem}>
                 <div style={styles.achievementIcon}>{item.icon}</div>
@@ -483,8 +582,17 @@ function Profile() {
           </div>
         </div>
 
-        <div style={styles.bottomGrid}>
-          <div style={styles.helpCard} onClick={() => navigate("/mood")}>
+        <div
+          style={{
+            ...styles.bottomGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+            gap: isMobile ? "14px" : "20px",
+          }}
+        >
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/mood")}
+          >
             <div style={styles.helpIcon}>😊</div>
             <h3 style={styles.helpTitle}>Mood Tracker</h3>
             <p style={styles.helpText}>
@@ -493,7 +601,10 @@ function Profile() {
             <p style={styles.helpLink}>Go to Mood Tracker →</p>
           </div>
 
-          <div style={styles.helpCard} onClick={() => navigate("/assessment")}>
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/assessment")}
+          >
             <div style={styles.helpIcon}>📝</div>
             <h3 style={styles.helpTitle}>Assessment</h3>
             <p style={styles.helpText}>
@@ -502,7 +613,10 @@ function Profile() {
             <p style={styles.helpLink}>Go to Assessment →</p>
           </div>
 
-          <div style={styles.helpCard} onClick={() => navigate("/emergency")}>
+          <div
+            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
+            onClick={() => navigate("/emergency")}
+          >
             <div style={styles.helpIcon}>🚨</div>
             <h3 style={styles.helpTitle}>Emergency Support</h3>
             <p style={styles.helpText}>
@@ -519,7 +633,6 @@ function Profile() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "35px",
     background:
       "linear-gradient(160deg, #F1E8E9 0%, #EFE6EE 45%, #D2CFE1 100%)",
     fontFamily: "Arial, sans-serif",
@@ -573,7 +686,6 @@ const styles = {
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "26px",
     flexWrap: "wrap",
     gap: "16px",
@@ -592,7 +704,6 @@ const styles = {
   },
 
   title: {
-    fontSize: "42px",
     color: "#312244",
     margin: "0 0 7px 0",
     fontWeight: "900",
@@ -626,26 +737,21 @@ const styles = {
 
   mainGrid: {
     display: "grid",
-    gridTemplateColumns: "0.85fr 1.55fr",
-    gap: "25px",
     marginBottom: "25px",
   },
 
   leftPanel: {
     display: "grid",
-    gap: "25px",
   },
 
   rightPanel: {
     display: "grid",
-    gap: "25px",
   },
 
   profileCard: {
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
     textAlign: "center",
   },
@@ -759,7 +865,6 @@ const styles = {
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "25px",
     boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
   },
 
@@ -788,15 +893,12 @@ const styles = {
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
   },
 
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
-    gap: "16px",
     marginBottom: "22px",
   },
 
@@ -829,7 +931,6 @@ const styles = {
 
   formGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
     gap: "16px",
   },
 
@@ -884,15 +985,12 @@ const styles = {
 
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: "16px",
   },
 
   statCard: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    padding: "18px",
     borderRadius: "26px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
@@ -926,15 +1024,12 @@ const styles = {
 
   supportGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "25px",
   },
 
   supportCard: {
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
     boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
   },
 
@@ -955,15 +1050,12 @@ const styles = {
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     borderRadius: "34px",
-    padding: "30px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
     marginBottom: "25px",
+    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
   },
 
   achievementGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "18px",
   },
 
   achievementItem: {
@@ -994,18 +1086,16 @@ const styles = {
 
   bottomGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "20px",
   },
 
   helpCard: {
-    padding: "25px",
     borderRadius: "30px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
     boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
     textAlign: "center",
     cursor: "pointer",
+    boxSizing: "border-box",
   },
 
   helpIcon: {

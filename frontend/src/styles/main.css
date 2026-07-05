@@ -565,3 +565,65 @@ body {
     max-width: 82%;
   }
 }
+/* =========================================
+   Mobile-width lock
+   Keeps the app fixed at a phone-sized width
+   regardless of the actual browser window size.
+========================================= */
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #ECECEC; /* the area outside the "phone" on wide screens */
+  display: flex;
+  justify-content: center;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.app-shell {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background: #ECECEC;
+}
+
+.app-screen {
+  width: 100%;
+  max-width: 480px;   /* adjust this number to change the "phone" width */
+  min-height: 100vh;
+  background: #ffffff;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow-x: hidden;
+}
+/* =========================================
+   IMPORTANT: this replaces the earlier
+   "@media (max-width: 600px)" block.
+   Media queries check the BROWSER window size,
+   which stays wide on desktop even though our
+   .app-screen div is narrow. Container queries
+   check the actual width of .app-screen itself,
+   which is what we actually want here.
+========================================= */
+
+.app-screen {
+  container-type: inline-size;
+  container-name: app-screen;
+}
+
+@container app-screen (max-width: 600px) {
+  .responsive-grid,
+  .responsive-grid-2,
+  .responsive-grid-3,
+  .responsive-grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+}
