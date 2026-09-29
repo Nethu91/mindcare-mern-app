@@ -1,7 +1,38 @@
 import React, { useState } from "react";
 import API from "../api/axios";
 import { PHQ9, GAD7, OPTIONS } from "../data/assessmentData";
+import bgImage from "../assets/assessment-bg.jpeg";
 import "../styles/assessment.css";
+
+// Same wallpaper approach as the Mood Tracker
+function Background() {
+  return (
+    <>
+      <div
+        className="assessment-bg-blur"
+        style={{ backgroundImage: `url(${bgImage})` }}
+      />
+      <div className="assessment-bg-phone">
+        <div
+          className="assessment-bg-phone-image"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.15)), url(${bgImage})`,
+          }}
+        />
+      </div>
+    </>
+  );
+}
+
+// Risk colours softened to sit with the pastel palette
+const riskColor = (level) =>
+  level === "Minimal"
+    ? "#3fae86"
+    : level === "Mild"
+    ? "#e0a92f"
+    : level === "Moderate"
+    ? "#ee8442"
+    : "#dd4a6c";
 
 function Assessment() {
   const [assessmentType, setAssessmentType] = useState("");
@@ -45,7 +76,6 @@ function Assessment() {
       alert("Please select an answer.");
       return;
     }
-
     setCurrentQuestion((prev) => prev + 1);
   };
 
@@ -65,7 +95,7 @@ function Assessment() {
       setLoading(true);
       setError("");
 
-      // FIX: backend route is mounted as "/api/assessments" (plural)
+      // backend route is mounted as "/api/assessments" (plural)
       const response = await API.post("/assessments", {
         assessmentType,
         answers,
@@ -74,8 +104,7 @@ function Assessment() {
       setResult(response.data.assessment);
     } catch (err) {
       setError(
-        err.response?.data?.message ||
-        "Failed to submit assessment."
+        err.response?.data?.message || "Failed to submit assessment."
       );
     } finally {
       setLoading(false);
@@ -99,32 +128,24 @@ function Assessment() {
       ? ((currentQuestion + 1) / questions.length) * 100
       : 0;
 
-  // ===========================
   // Assessment Selection Screen
-  // ===========================
   if (!started) {
     return (
       <div className="assessment-page">
+        <Background />
         <div className="assessment-card">
-
           <h1>Mental Health Assessment</h1>
 
-          <p>
-            Choose the assessment you want to complete.
-          </p>
+          <p>Choose the assessment you want to complete.</p>
 
           <div className="assessment-types">
-
             <div
               className="type-card"
               onClick={() => startAssessment("PHQ-9")}
             >
+              <div className="type-icon">🧠</div>
               <h2>PHQ-9</h2>
-
-              <p>
-                Depression Screening
-              </p>
-
+              <p>Depression Screening</p>
               <span>9 Questions</span>
             </div>
 
@@ -132,47 +153,30 @@ function Assessment() {
               className="type-card"
               onClick={() => startAssessment("GAD-7")}
             >
+              <div className="type-icon">💗</div>
               <h2>GAD-7</h2>
-
-              <p>
-                Anxiety Screening
-              </p>
-
+              <p>Anxiety Screening</p>
               <span>7 Questions</span>
             </div>
-
           </div>
         </div>
       </div>
     );
   }
 
-  // ===========================
   // Result Screen
-  // ===========================
   if (result) {
     return (
       <div className="assessment-page">
+        <Background />
         <div className="assessment-card">
-
-          <h1>Assessment Completed ✅</h1>
+          <h1>Assessment Completed</h1>
 
           <h2>{assessmentType}</h2>
 
-          <h3>Score : {result.score}</h3>
+          <h3 className="result-score">Score : {result.score}</h3>
 
-          <h2
-            style={{
-              color:
-                result.riskLevel === "Minimal"
-                  ? "#22c55e"
-                  : result.riskLevel === "Mild"
-                  ? "#facc15"
-                  : result.riskLevel === "Moderate"
-                  ? "#f97316"
-                  : "#ef4444",
-            }}
-          >
+          <h2 style={{ color: riskColor(result.riskLevel) }}>
             {result.riskLevel}
           </h2>
 
@@ -181,34 +185,24 @@ function Assessment() {
           <button onClick={restartAssessment}>
             Take Another Assessment
           </button>
-
         </div>
       </div>
     );
   }
 
-  // ===========================
   // Question Screen
-  // ===========================
-
   return (
     <div className="assessment-page">
+      <Background />
 
       <div className="assessment-card">
-
         <h2>{assessmentType}</h2>
 
         {loading && (
-          <p style={{ color: "#6366f1", fontWeight: "bold" }}>
-            Saving Assessment...
-          </p>
+          <p className="assessment-status">Saving Assessment...</p>
         )}
 
-        {error && (
-          <p style={{ color: "red" }}>
-            {error}
-          </p>
-        )}
+        {error && <p className="assessment-error">{error}</p>}
 
         <p>
           Question {currentQuestion + 1} of {questions.length}
@@ -217,9 +211,7 @@ function Assessment() {
         <div className="progress-bar">
           <div
             className="progress-fill"
-            style={{
-              width: `${progress}%`,
-            }}
+            style={{ width: `${progress}%` }}
           />
         </div>
 
@@ -228,9 +220,7 @@ function Assessment() {
         </h3>
 
         <div className="options">
-
           {OPTIONS.map((option) => (
-
             <button
               key={option.value}
               className={
@@ -242,13 +232,10 @@ function Assessment() {
             >
               {option.label}
             </button>
-
           ))}
-
         </div>
 
         <div className="buttons">
-
           <button
             onClick={previousQuestion}
             disabled={currentQuestion === 0}
@@ -257,19 +244,12 @@ function Assessment() {
           </button>
 
           {currentQuestion < questions.length - 1 ? (
-            <button onClick={nextQuestion}>
-              Next
-            </button>
+            <button onClick={nextQuestion}>Next</button>
           ) : (
-            <button onClick={submitAssessment}>
-              Finish Assessment
-            </button>
+            <button onClick={submitAssessment}>Finish Assessment</button>
           )}
-
         </div>
-
       </div>
-
     </div>
   );
 }

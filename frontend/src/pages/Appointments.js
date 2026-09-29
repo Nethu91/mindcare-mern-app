@@ -199,7 +199,7 @@ function Appointments() {
           <div style={styles.headerBadge}>📅 Session Planner</div>
         </div>
 
-        <div className="responsive-grid-3" style={styles.statsGrid}>
+        <div style={styles.statsGrid}>
           <div style={styles.statCard}>
             <div style={styles.statIcon}>📌</div>
             <div>
@@ -225,7 +225,7 @@ function Appointments() {
           </div>
         </div>
 
-        <div className="responsive-grid" style={styles.mainGrid}>
+        <div style={styles.mainGrid}>
           <div style={styles.bookingPanel}>
             <div style={styles.panelHeader}>
               <div>
@@ -391,7 +391,7 @@ function Appointments() {
                       </span>
                     </div>
 
-                    <div className="responsive-grid-3" style={styles.appointmentInfoGrid}>
+                    <div style={styles.appointmentInfoGrid}>
                       <div style={styles.infoBox}>
                         <span style={styles.infoLabel}>Session Type</span>
                         <strong style={styles.infoValue}>{item.reason}</strong>
@@ -442,7 +442,7 @@ function Appointments() {
           </div>
         </div>
 
-        <div className="responsive-grid-3" style={styles.bottomGrid}>
+        <div style={styles.bottomGrid}>
           <div
             style={styles.helpCard}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

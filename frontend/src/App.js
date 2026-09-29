@@ -5,6 +5,7 @@ import "./styles/main.css";
 import Splash from "./pages/Splash";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyOtp from "./pages/VerifyOtp";
 
 // Protected Pages
 import Dashboard from "./pages/Dashboard";
@@ -35,6 +36,7 @@ function App() {
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
 
             {/* Protected Routes */}
 

@@ -141,7 +141,7 @@ function Counselor() {
           <div style={styles.heroIcon}>🧠</div>
         </div>
 
-        <div className="responsive-grid" style={styles.mainGrid}>
+        <div style={styles.mainGrid}>
           <div style={styles.leftPanel}>
             <div style={styles.searchBox}>
               <span style={styles.searchIcon}>🔍</span>
@@ -339,7 +339,7 @@ function Counselor() {
           </div>
         </div>
 
-        <div className="responsive-grid-3" style={styles.bottomGrid}>
+        <div style={styles.bottomGrid}>
           <div style={styles.supportCard} onClick={() => navigate("/mood")}>
             <div style={styles.supportTopRow}>
               <div style={styles.supportIcon}>🌿</div>

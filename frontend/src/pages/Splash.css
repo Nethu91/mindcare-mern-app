@@ -1,0 +1,171 @@
+/* ===========================
+   Reusable calm background
+   Add className="calm-bg" to any page's outer div to reuse it later
+=========================== */
+:root {
+  --cream-1: #f7eee0;
+  --cream-2: #f0e2cf;
+  --glow: rgba(255, 246, 220, 0.95);
+  --gold: #d9b77e;
+  --ink: #5f4b3b;
+  --ink-soft: #8a7665;
+}
+
+.calm-bg {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 38%, var(--glow) 0%, rgba(255, 246, 220, 0) 55%),
+    linear-gradient(180deg, var(--cream-1) 0%, var(--cream-2) 100%);
+}
+
+/* ===========================
+   Splash layout
+=========================== */
+.splash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  animation: splashFade 0.8s ease both;
+}
+
+.moon-phases {
+  width: 200px;
+  margin-bottom: 26px;
+  fill: rgba(255, 252, 240, 0.95);
+  filter: drop-shadow(0 0 6px rgba(217, 183, 126, 0.55));
+}
+
+.moon-phases .full-moon {
+  fill: #fffaf0;
+  filter: drop-shadow(0 0 10px rgba(255, 236, 190, 0.9));
+}
+
+/* Soft glowing rings behind the logo */
+.logo-halo {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-halo::before,
+.logo-halo::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(217, 183, 126, 0.45);
+}
+
+.logo-halo::before {
+  inset: -14px;
+  animation: pulse 3.2s ease-in-out infinite;
+}
+
+.logo-halo::after {
+  inset: -32px;
+  border-color: rgba(217, 183, 126, 0.22);
+  animation: pulse 3.2s ease-in-out 0.8s infinite;
+}
+
+/* Logo has a dark background, so it sits inside a round badge */
+.logo-badge {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #060618;
+  box-shadow:
+    0 0 0 4px rgba(255, 250, 235, 0.9),
+    0 12px 40px rgba(120, 80, 160, 0.35),
+    0 0 60px rgba(255, 236, 190, 0.8);
+  animation: float 4s ease-in-out infinite;
+}
+
+.logo-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.splash-title {
+  margin: 44px 0 6px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--ink);
+}
+
+.splash-tagline {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+  letter-spacing: 0.4px;
+}
+
+.splash-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 40px;
+}
+
+.splash-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: dot 1.2s ease-in-out infinite;
+}
+
+.splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+.splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ===========================
+   Sparkles
+=========================== */
+.sparkle {
+  position: absolute;
+  fill: #fffaf0;
+  filter: drop-shadow(0 0 5px rgba(217, 183, 126, 0.9));
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.sp-1 { top: 9%;  left: 18%; width: 14px; }
+.sp-2 { top: 16%; right: 14%; width: 20px; animation-delay: 0.9s; }
+.sp-3 { bottom: 20%; left: 12%; width: 16px; animation-delay: 1.6s; }
+.sp-4 { bottom: 12%; right: 20%; width: 12px; animation-delay: 0.4s; }
+
+/* ===========================
+   Animations
+=========================== */
+@keyframes splashFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.9; }
+  50%      { transform: scale(1.05); opacity: 0.4; }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50%      { opacity: 1;    transform: scale(1.1); }
+}
+
+@keyframes dot {
+  0%, 100% { transform: translateY(0);  opacity: 0.4; }
+  50%      { transform: translateY(-6px); opacity: 1; }
+}

@@ -4,6 +4,9 @@ const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// ===========================
+// Create mood entry
+// ===========================
 router.post("/", protect, async (req, res) => {
   try {
     const { mood, rating, note, tags } = req.body;
@@ -34,6 +37,9 @@ router.post("/", protect, async (req, res) => {
   }
 });
 
+// ===========================
+// Get all mood entries
+// ===========================
 router.get("/", protect, async (req, res) => {
   try {
     const moods = await Mood.find({ userId: req.user._id }).sort({
@@ -49,9 +55,35 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
+// ===========================
+// Get latest mood entry
+// NOTE: must stay above "/:id" routes
+// Returns 200 + null when the user has no moods yet (no 404 in the console)
+// ===========================
+router.get("/latest", protect, async (req, res) => {
+  try {
+    const latestMood = await Mood.findOne({ userId: req.user._id }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json(latestMood || null);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch latest mood",
+      error: error.message,
+    });
+  }
+});
+
+// ===========================
+// Get mood summary
+// ===========================
 router.get("/summary", protect, async (req, res) => {
   try {
-    const moods = await Mood.find({ userId: req.user._id });
+    // Sorted newest first so index 0 is really the latest entry
+    const moods = await Mood.find({ userId: req.user._id }).sort({
+      createdAt: -1,
+    });
 
     const totalEntries = moods.length;
 
@@ -63,7 +95,7 @@ router.get("/summary", protect, async (req, res) => {
     res.status(200).json({
       totalEntries,
       averageRating: Number(averageRating.toFixed(2)),
-      latestMood: moods.length > 0 ? moods[moods.length - 1].mood : null,
+      latestMood: totalEntries > 0 ? moods[0].mood : null,
     });
   } catch (error) {
     res.status(500).json({
@@ -73,6 +105,9 @@ router.get("/summary", protect, async (req, res) => {
   }
 });
 
+// ===========================
+// Delete mood entry
+// ===========================
 router.delete("/:id", protect, async (req, res) => {
   try {
     const mood = await Mood.findOne({

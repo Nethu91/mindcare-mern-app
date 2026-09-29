@@ -32,8 +32,25 @@ const userSchema = new mongoose.Schema(
     },
 
     // ===========================
+    // Email verification (OTP)
+    // Default is TRUE so users who registered before this feature
+    // keep working. New registrations explicitly set it to false.
+    // ===========================
+
+    isVerified: {
+      type: Boolean,
+      default: true,
+    },
+
+    // select:false -> never returned by normal queries (safer).
+    // Use .select("+otpHash +otpExpires +otpAttempts +otpLastSentAt") when needed.
+    otpHash: { type: String, select: false },
+    otpExpires: { type: Date, select: false },
+    otpAttempts: { type: Number, default: 0, select: false },
+    otpLastSentAt: { type: Date, select: false },
+
+    // ===========================
     // Profile fields
-    // (added to support the Profile page)
     // ===========================
 
     phone: {

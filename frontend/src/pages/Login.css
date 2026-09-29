@@ -1,0 +1,205 @@
+/* ===========================
+   Peach lotus background
+=========================== */
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 22%, #fff3d2 0%, rgba(255, 243, 210, 0) 50%),
+    linear-gradient(180deg, #fbe4d0 0%, #f6d0b8 55%, #f0bfa6 100%);
+}
+
+/* Lotus flowers */
+.lotus {
+  position: absolute;
+  pointer-events: none;
+}
+
+.petal-out {
+  fill: rgba(255, 249, 238, 0.55);
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1;
+}
+
+.petal-in {
+  fill: rgba(255, 233, 200, 0.65);
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 0.8;
+}
+
+.lotus-core {
+  fill: #fff4d0;
+  filter: drop-shadow(0 0 8px rgba(255, 226, 150, 0.95));
+}
+
+.lotus-main {
+  width: 360px;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 30px rgba(255, 236, 190, 0.9));
+}
+
+.lotus-l1 { width: 150px; top: 17%; left: -55px;  opacity: 0.6; }
+.lotus-r1 { width: 140px; top: 11%; right: -50px; opacity: 0.6; }
+.lotus-l2 { width: 130px; top: 58%; left: -60px;  opacity: 0.45; }
+.lotus-r2 { width: 120px; top: 66%; right: -55px; opacity: 0.45; }
+
+/* ===========================
+   Content
+=========================== */
+.login-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 22px;
+}
+
+.login-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #060618;
+  box-shadow:
+    0 0 0 3px rgba(255, 250, 235, 0.95),
+    0 8px 28px rgba(120, 80, 160, 0.35),
+    0 0 40px rgba(255, 236, 190, 0.9);
+}
+
+.login-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.login-title {
+  margin: 20px 0 4px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #6b4a3a;
+}
+
+.login-subtitle {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: #8f6c5a;
+  text-align: center;
+}
+
+/* Frosted glass card */
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  box-sizing: border-box;
+  padding: 24px 20px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 16px 40px rgba(180, 110, 80, 0.2);
+}
+
+.login-label {
+  display: block;
+  margin: 0 0 6px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a5644;
+}
+
+.login-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+  padding: 13px 16px;
+  font-size: 15px;
+  color: #5b3f31;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(217, 160, 130, 0.45);
+  border-radius: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-input::placeholder {
+  color: #b99a88;
+}
+
+.login-input:focus {
+  border-color: #d08a68;
+  box-shadow: 0 0 0 3px rgba(208, 138, 104, 0.2);
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap .login-input {
+  padding-right: 64px;
+}
+
+.toggle-pass {
+  position: absolute;
+  top: 0;
+  right: 12px;
+  height: 46px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b0704f;
+  cursor: pointer;
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #d99672 0%, #bf7455 100%);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(191, 116, 85, 0.35);
+  transition: transform 0.15s, opacity 0.2s;
+}
+
+.login-btn:active {
+  transform: scale(0.98);
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-error {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #b3261e;
+  background: rgba(255, 226, 222, 0.85);
+  border-radius: 10px;
+}
+
+.login-footer {
+  margin: 22px 0 0;
+  font-size: 14px;
+  color: #7a5644;
+}
+
+.login-footer a {
+  color: #b0603e;
+  font-weight: 700;
+  text-decoration: none;
+}

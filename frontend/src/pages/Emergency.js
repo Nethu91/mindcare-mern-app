@@ -195,7 +195,7 @@ function Emergency() {
           </button>
         </div>
 
-        <div className="responsive-grid-3" style={styles.statsGrid}>
+        <div style={styles.statsGrid}>
           <div style={styles.statCard}>
             <div style={styles.statIcon}>📞</div>
             <div>
@@ -223,7 +223,7 @@ function Emergency() {
           </div>
         </div>
 
-        <div className="responsive-grid" style={styles.mainGrid}>
+        <div style={styles.mainGrid}>
           <div style={styles.leftPanel}>
             <div style={styles.panelHeader}>
               <div>
@@ -370,7 +370,7 @@ function Emergency() {
                   onChange={(e) => setMessage(e.target.value)}
                 ></textarea>
 
-                <div className="responsive-grid-2" style={styles.actionGrid}>
+                <div style={styles.actionGrid}>
                   <button
                     style={styles.primaryButton}
                     onClick={() => handleCall(selectedContact.phone)}
@@ -410,7 +410,7 @@ function Emergency() {
           </div>
         </div>
 
-        <div className="responsive-grid-3" style={styles.bottomGrid}>
+        <div style={styles.bottomGrid}>
           <div style={styles.helpCard} onClick={() => navigate("/counselor")}>
             <div style={styles.helpIcon}>👩‍⚕️</div>
             <h3 style={styles.helpTitle}>Counselor Support</h3>

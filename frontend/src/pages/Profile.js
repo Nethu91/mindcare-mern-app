@@ -1,6 +1,57 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import bgImage from "../assets/profile-bg.jpeg";
+
+// Same wallpaper approach as the Assessment / Mood Tracker pages
+function Background() {
+  return (
+    <>
+      {/* blurred wallpaper (desktop sides) */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: "blur(28px)",
+          transform: "scale(1.15)",
+        }}
+      />
+
+      {/* sharp wallpaper, phone-width column */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "100vh",
+          zIndex: 1,
+          display: "flex",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "480px",
+            height: "100%",
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.18)), url(${bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center top",
+            backgroundRepeat: "no-repeat",
+            boxShadow: "0 0 40px rgba(38,48,90,0.18)",
+          }}
+        />
+      </div>
+    </>
+  );
+}
 
 function Profile() {
   const navigate = useNavigate();
@@ -102,7 +153,7 @@ function Profile() {
       title: "Assessments",
       value: "06",
       icon: "📝",
-      color: "#CDB4DB",
+      color: "#B7DED6",
     },
     {
       title: "Meditations",
@@ -200,9 +251,7 @@ function Profile() {
       ref={containerRef}
       style={{ ...styles.page, padding: isMobile ? "16px" : "35px" }}
     >
-      <div style={styles.circleOne}></div>
-      <div style={styles.circleTwo}></div>
-      <div style={styles.circleThree}></div>
+      <Background />
 
       <div style={styles.container}>
         <div
@@ -297,9 +346,9 @@ function Profile() {
                       ...styles.moodButton,
                       background:
                         selectedMood === mood
-                          ? "linear-gradient(135deg, #9B5DE5, #F15BB5)"
+                          ? "linear-gradient(135deg, #3B4A8C, #4DB6AC)"
                           : "rgba(255,255,255,0.7)",
-                      color: selectedMood === mood ? "#FFFFFF" : "#312244",
+                      color: selectedMood === mood ? "#FFFFFF" : "#26305A",
                     }}
                   >
                     {mood}
@@ -630,50 +679,21 @@ function Profile() {
   );
 }
 
+// Shared glass effect for all cards
+const glass = {
+  background: "rgba(255,255,255,0.62)",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  border: "1px solid rgba(255,255,255,0.78)",
+};
+
 const styles = {
   page: {
     minHeight: "100vh",
-    background:
-      "linear-gradient(160deg, #F1E8E9 0%, #EFE6EE 45%, #D2CFE1 100%)",
+    background: "#EFEBDD",
     fontFamily: "Arial, sans-serif",
     position: "relative",
     overflowX: "hidden",
-  },
-
-  circleOne: {
-    position: "absolute",
-    width: "270px",
-    height: "270px",
-    borderRadius: "50%",
-    background: "#FFAFCC",
-    top: "70px",
-    right: "80px",
-    opacity: "0.34",
-    filter: "blur(5px)",
-  },
-
-  circleTwo: {
-    position: "absolute",
-    width: "310px",
-    height: "310px",
-    borderRadius: "50%",
-    background: "#B8C0FF",
-    bottom: "90px",
-    left: "60px",
-    opacity: "0.33",
-    filter: "blur(5px)",
-  },
-
-  circleThree: {
-    position: "absolute",
-    width: "190px",
-    height: "190px",
-    borderRadius: "50%",
-    background: "#A8DADC",
-    top: "360px",
-    left: "45%",
-    opacity: "0.24",
-    filter: "blur(6px)",
   },
 
   container: {
@@ -696,21 +716,21 @@ const styles = {
     padding: "10px 16px",
     borderRadius: "18px",
     background: "rgba(255,255,255,0.65)",
-    color: "#6D597A",
+    color: "#4F6272",
     fontWeight: "800",
     cursor: "pointer",
     marginBottom: "12px",
-    boxShadow: "0 10px 24px rgba(49,34,68,0.1)",
+    boxShadow: "0 10px 24px rgba(38,48,90,0.1)",
   },
 
   title: {
-    color: "#312244",
+    color: "#26305A",
     margin: "0 0 7px 0",
     fontWeight: "900",
   },
 
   subtitle: {
-    color: "#6D597A",
+    color: "#4F6272",
     fontSize: "16px",
     margin: 0,
     lineHeight: "1.5",
@@ -720,18 +740,18 @@ const styles = {
     padding: "13px 22px",
     borderRadius: "22px",
     background: "rgba(255,255,255,0.55)",
-    boxShadow: "0 12px 25px rgba(49,34,68,0.12)",
+    boxShadow: "0 12px 25px rgba(38,48,90,0.12)",
     color: "#4A4E69",
     fontWeight: "800",
   },
 
   loadingPill: {
-    background: "#F8F4FF",
+    background: "#F1F6F5",
     borderRadius: "18px",
     padding: "14px",
     textAlign: "center",
     marginBottom: "20px",
-    color: "#7C3AED",
+    color: "#3B4A8C",
     fontWeight: "700",
   },
 
@@ -749,10 +769,9 @@ const styles = {
   },
 
   profileCard: {
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
+    ...glass,
     borderRadius: "34px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
+    boxShadow: "0 25px 60px rgba(38,48,90,0.16)",
     textAlign: "center",
   },
 
@@ -767,12 +786,12 @@ const styles = {
     width: "130px",
     height: "130px",
     borderRadius: "42px",
-    background: "linear-gradient(135deg, #CDB4DB, #FFC8DD)",
+    background: "linear-gradient(135deg, #B7DED6, #EAD7F0)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontSize: "62px",
-    boxShadow: "0 20px 40px rgba(49,34,68,0.18)",
+    boxShadow: "0 20px 40px rgba(38,48,90,0.18)",
   },
 
   onlineDot: {
@@ -787,14 +806,14 @@ const styles = {
   },
 
   profileName: {
-    color: "#312244",
+    color: "#26305A",
     margin: "0 0 7px 0",
     fontSize: "26px",
     fontWeight: "900",
   },
 
   profileRole: {
-    color: "#6D597A",
+    color: "#4F6272",
     margin: "0 0 14px 0",
     fontWeight: "800",
   },
@@ -804,7 +823,7 @@ const styles = {
     padding: "9px 16px",
     borderRadius: "18px",
     background: "rgba(255,255,255,0.75)",
-    color: "#9B5DE5",
+    color: "#3B4A8C",
     fontWeight: "900",
     marginBottom: "18px",
   },
@@ -824,14 +843,14 @@ const styles = {
 
   quickLabel: {
     display: "block",
-    color: "#8D7D99",
+    color: "#7A8794",
     fontSize: "12px",
     fontWeight: "800",
     marginBottom: "5px",
   },
 
   quickValue: {
-    color: "#312244",
+    color: "#26305A",
     fontSize: "15px",
   },
 
@@ -840,13 +859,13 @@ const styles = {
     padding: "15px",
     border: "none",
     borderRadius: "23px",
-    background: "linear-gradient(135deg, #9B5DE5, #F15BB5)",
+    background: "linear-gradient(135deg, #3B4A8C, #4DB6AC)",
     color: "#FFFFFF",
     fontSize: "15px",
     fontWeight: "900",
     cursor: "pointer",
     marginBottom: "12px",
-    boxShadow: "0 18px 35px rgba(155,93,229,0.35)",
+    boxShadow: "0 18px 35px rgba(59,74,140,0.3)",
   },
 
   logoutButton: {
@@ -862,14 +881,13 @@ const styles = {
   },
 
   moodCard: {
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
+    ...glass,
     borderRadius: "34px",
-    boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
+    boxShadow: "0 20px 45px rgba(38,48,90,0.13)",
   },
 
   smallTitle: {
-    color: "#312244",
+    color: "#26305A",
     margin: "0 0 16px 0",
     fontSize: "21px",
     fontWeight: "900",
@@ -890,10 +908,9 @@ const styles = {
   },
 
   formCard: {
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
+    ...glass,
     borderRadius: "34px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
+    boxShadow: "0 25px 60px rgba(38,48,90,0.16)",
   },
 
   cardHeader: {
@@ -903,14 +920,14 @@ const styles = {
   },
 
   sectionTitle: {
-    color: "#312244",
+    color: "#26305A",
     margin: "0 0 7px 0",
     fontSize: "24px",
     fontWeight: "900",
   },
 
   sectionSubText: {
-    color: "#6D597A",
+    color: "#4F6272",
     margin: 0,
     lineHeight: "1.5",
     fontSize: "14px",
@@ -924,8 +941,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     fontSize: "32px",
-    background: "linear-gradient(135deg, #CDB4DB, #FFC8DD)",
-    boxShadow: "0 15px 30px rgba(49,34,68,0.15)",
+    background: "linear-gradient(135deg, #B7DED6, #EAD7F0)",
+    boxShadow: "0 15px 30px rgba(38,48,90,0.15)",
     flexShrink: 0,
   },
 
@@ -936,7 +953,7 @@ const styles = {
 
   label: {
     display: "block",
-    color: "#312244",
+    color: "#26305A",
     fontWeight: "800",
     margin: "0 0 8px 0",
   },
@@ -948,9 +965,9 @@ const styles = {
     outline: "none",
     borderRadius: "20px",
     background: "rgba(255,255,255,0.72)",
-    color: "#312244",
+    color: "#26305A",
     fontSize: "15px",
-    boxShadow: "inset 0 0 16px rgba(49,34,68,0.07)",
+    boxShadow: "inset 0 0 16px rgba(38,48,90,0.07)",
     boxSizing: "border-box",
   },
 
@@ -963,9 +980,9 @@ const styles = {
     outline: "none",
     borderRadius: "22px",
     background: "rgba(255,255,255,0.72)",
-    color: "#312244",
+    color: "#26305A",
     fontSize: "15px",
-    boxShadow: "inset 0 0 16px rgba(49,34,68,0.07)",
+    boxShadow: "inset 0 0 16px rgba(38,48,90,0.07)",
     boxSizing: "border-box",
     marginBottom: "14px",
   },
@@ -988,13 +1005,12 @@ const styles = {
   },
 
   statCard: {
+    ...glass,
     display: "flex",
     alignItems: "center",
     gap: "12px",
     borderRadius: "26px",
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    boxShadow: "0 18px 38px rgba(49,34,68,0.12)",
+    boxShadow: "0 18px 38px rgba(38,48,90,0.12)",
   },
 
   statIcon: {
@@ -1009,14 +1025,14 @@ const styles = {
   },
 
   statValue: {
-    color: "#312244",
+    color: "#26305A",
     margin: "0 0 4px 0",
     fontSize: "24px",
     fontWeight: "900",
   },
 
   statText: {
-    color: "#6D597A",
+    color: "#4F6272",
     margin: 0,
     fontSize: "12px",
     fontWeight: "800",
@@ -1027,10 +1043,9 @@ const styles = {
   },
 
   supportCard: {
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
+    ...glass,
     borderRadius: "34px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
+    boxShadow: "0 25px 60px rgba(38,48,90,0.16)",
   },
 
   callButton: {
@@ -1047,11 +1062,10 @@ const styles = {
   },
 
   achievementCard: {
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
+    ...glass,
     borderRadius: "34px",
     marginBottom: "25px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
+    boxShadow: "0 25px 60px rgba(38,48,90,0.16)",
   },
 
   achievementGrid: {
@@ -1063,7 +1077,7 @@ const styles = {
     borderRadius: "26px",
     padding: "22px",
     textAlign: "center",
-    boxShadow: "0 14px 28px rgba(49,34,68,0.09)",
+    boxShadow: "0 14px 28px rgba(38,48,90,0.09)",
   },
 
   achievementIcon: {
@@ -1072,13 +1086,13 @@ const styles = {
   },
 
   achievementTitle: {
-    color: "#312244",
+    color: "#26305A",
     margin: "0 0 8px 0",
     fontWeight: "900",
   },
 
   achievementText: {
-    color: "#6D597A",
+    color: "#4F6272",
     margin: 0,
     lineHeight: "1.5",
     fontSize: "14px",
@@ -1089,10 +1103,9 @@ const styles = {
   },
 
   helpCard: {
+    ...glass,
     borderRadius: "30px",
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
+    boxShadow: "0 20px 45px rgba(38,48,90,0.13)",
     textAlign: "center",
     cursor: "pointer",
     boxSizing: "border-box",
@@ -1103,7 +1116,7 @@ const styles = {
     height: "58px",
     margin: "0 auto 14px auto",
     borderRadius: "20px",
-    background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
+    background: "linear-gradient(135deg, #E6F4F1, #FFFFFF)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -1111,13 +1124,13 @@ const styles = {
   },
 
   helpTitle: {
-    color: "#312244",
+    color: "#26305A",
     margin: "0 0 8px 0",
     fontWeight: "900",
   },
 
   helpText: {
-    color: "#6D597A",
+    color: "#4F6272",
     lineHeight: "1.6",
     margin: 0,
     fontSize: "14px",
@@ -1125,7 +1138,7 @@ const styles = {
 
   helpLink: {
     margin: "14px 0 0 0",
-    color: "#9B5DE5",
+    color: "#3B4A8C",
     fontSize: "13px",
     fontWeight: "900",
   },
