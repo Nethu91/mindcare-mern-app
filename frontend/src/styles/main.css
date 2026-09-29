@@ -1,3 +1,8 @@
+/* =========================================
+   Theme variables (light = default)
+   body.dark-mode overrides them (see bottom of file)
+========================================= */
+
 :root {
   --primary: #4a90d9;
   --secondary: #5bbfba;
@@ -9,6 +14,12 @@
   --danger: #ff6b6b;
   --purple: #9b5de5;
   --pink: #f15bb5;
+
+  /* Theme-switch variables */
+  --bg-main: #f7f8fc;
+  --bg-card: #ffffff;
+  --text-primary: #1f1f39;
+  --text-secondary: #5b5b6e;
 }
 
 * {
@@ -21,6 +32,7 @@ body {
   background: linear-gradient(180deg, #f1e8e9 0%, #d2cfe1 100%);
   color: var(--text);
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .mobile-container {
@@ -627,3 +639,253 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* =========================================================
+   DARK MODE
+   ThemeContext adds the class "dark-mode" to <body>.
+   Everything below only applies when that class is present.
+   Kept at the END of the file so it wins over the light styles.
+========================================================= */
+
+body.dark-mode {
+  --bg-main: #121212;
+  --bg-card: #1e1e2e;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
+
+  /* remap the older variables too, so existing components follow the theme */
+  --text: #ffffff;
+  --muted: #a0a0b0;
+  --card: #1e1e2e;
+
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
+
+/* ---------- App shell ---------- */
+
+body.dark-mode .app-shell {
+  background: #0b0b12;
+}
+
+body.dark-mode .app-screen {
+  background: var(--bg-main);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+}
+
+body.dark-mode .mobile-container {
+  background: linear-gradient(180deg, #16161f 0%, #1c1b2b 100%);
+}
+
+/* ---------- Generic cards / inputs / buttons ---------- */
+
+body.dark-mode .card,
+body.dark-mode .feature-card {
+  background: rgba(30, 30, 46, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+body.dark-mode .calm-card {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 30, 46, 0.9),
+    rgba(26, 46, 52, 0.9)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .input {
+  background: #262638;
+  border: 1px solid #3a3a52;
+  color: var(--text-primary);
+}
+
+body.dark-mode .input::placeholder {
+  color: #7d7d92;
+}
+
+body.dark-mode .small-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #8ec1ff;
+}
+
+body.dark-mode .error-text {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff9a9a;
+}
+
+body.dark-mode .link-text,
+body.dark-mode .center-text a {
+  color: #8ec1ff;
+}
+
+/* ---------- Bottom navigation ---------- */
+
+body.dark-mode .bottom-nav {
+  background: rgba(30, 30, 46, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+body.dark-mode .bottom-nav-link {
+  color: #b9a9d6;
+}
+
+body.dark-mode .bottom-nav-link.active {
+  color: #ffffff;
+}
+
+/* ---------- AI Chatbot ---------- */
+
+body.dark-mode .chatbot-warning {
+  background: rgba(30, 30, 46, 0.85);
+  color: var(--text-secondary);
+}
+
+body.dark-mode .chat-suggestions button {
+  background: rgba(38, 38, 56, 0.95);
+  color: var(--text-primary);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .chat-suggestions button:hover {
+  background: linear-gradient(135deg, #2f2f48, #262638);
+}
+
+body.dark-mode .premium-chat-box {
+  background: rgba(24, 24, 36, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .mini-avatar {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .bot-bubble {
+  background: #2a2a40;
+  color: var(--text-primary);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .typing-bubble {
+  background: #2a2a40;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .premium-input-area input {
+  background: #262638;
+  color: var(--text-primary);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .premium-input-area input::placeholder {
+  color: #7d7d92;
+}
+
+/* ---------- Dashboard page (Dashboard.css) ---------- */
+
+/* Phone wallpaper gets a dark tint instead of the light one */
+body.dark-mode .dashboard-container::after {
+  background:
+    linear-gradient(rgba(10, 10, 18, 0.62), rgba(10, 10, 18, 0.8)),
+    url("../assets/home-bg.jpeg") center top / cover no-repeat;
+}
+
+body.dark-mode .dashboard-container::before {
+  filter: blur(28px) brightness(0.35);
+}
+
+body.dark-mode .dashboard-title,
+body.dark-mode .mindful-left h2,
+body.dark-mode .appointment-right h2,
+body.dark-mode .feature-content h3,
+body.dark-mode .summary-header h2,
+body.dark-mode .summary-left h3,
+body.dark-mode .summary-right h2,
+body.dark-mode .success-toast h4,
+body.dark-mode .live-card h4 {
+  color: var(--text-primary);
+}
+
+body.dark-mode .dashboard-subtitle,
+body.dark-mode .live-card p,
+body.dark-mode .mindful-left p,
+body.dark-mode .appointment-right p,
+body.dark-mode .feature-content p,
+body.dark-mode .summary-label,
+body.dark-mode .summary-left span,
+body.dark-mode .success-toast p {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .live-card,
+body.dark-mode .appointment-card,
+body.dark-mode .summary-card {
+  background: rgba(30, 30, 46, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .mindful-card {
+  background: rgba(44, 38, 74, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Feature cards have their pastel colour set inline (style={{ background }}),
+   so !important is needed to override it. */
+body.dark-mode .feature-card-new {
+  background: #232336 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .feature-card-new:hover {
+  box-shadow: 0 18px 32px rgba(168, 85, 247, 0.25);
+}
+
+body.dark-mode .feature-icon-new {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .success-toast {
+  background: #232336;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .loading-card {
+  background: rgba(76, 58, 130, 0.5);
+  color: #d8c8ff;
+}
+
+body.dark-mode .close-btn {
+  color: var(--text-primary);
+}
+
+body.dark-mode .logout-btn {
+  background: rgba(38, 38, 56, 0.95);
+  color: #c4a4ff;
+}
+
+body.dark-mode .history-btn {
+  color: #c4a4ff;
+}
+
+body.dark-mode .summary-divider {
+  background: #3a3a52;
+}
+
+body.dark-mode .progress {
+  background: #34344c;
+}
+
+/* NOTE: .notification-btn, .bell-circle and .summary-emoji are left light on purpose.
+   Their images use mix-blend-mode: multiply to hide the white jpeg background,
+   which only looks right on a light circle. */

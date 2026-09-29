@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import BottomNav from "../components/BottomNav";
-
+import botAvatar from "../assets/Bot avatar.jpeg";
+import chatBg from "../assets/Chat bg.jpeg";
 function Chatbot() {
   const [messages, setMessages] = useState([
     {
@@ -83,9 +84,19 @@ function Chatbot() {
   }, [messages, typing]);
 
   return (
-    <div className="mobile-container chatbot-page">
+    <div
+      className="mobile-container chatbot-page"
+      style={{
+        backgroundImage: `url(${chatBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <div className="chatbot-header">
-        <div className="bot-avatar">🤖</div>
+        <div className="bot-avatar">
+          <img src={botAvatar} alt="MindCare AI" style={styles.headerAvatarImg} />
+        </div>
         <div>
           <h2>MindCare AI</h2>
           <p>Calm support assistant</p>
@@ -114,7 +125,11 @@ function Chatbot() {
                 : "message-row bot-row"
             }
           >
-            {message.sender === "bot" && <div className="mini-avatar">🧠</div>}
+            {message.sender === "bot" && (
+              <div className="mini-avatar">
+                <img src={botAvatar} alt="Bot" style={styles.miniAvatarImg} />
+              </div>
+            )}
 
             <div
               className={
@@ -130,7 +145,9 @@ function Chatbot() {
 
         {typing && (
           <div className="message-row bot-row">
-            <div className="mini-avatar">🧠</div>
+            <div className="mini-avatar">
+              <img src={botAvatar} alt="Bot" style={styles.miniAvatarImg} />
+            </div>
             <div className="typing-bubble">
               <span></span>
               <span></span>
@@ -160,5 +177,22 @@ function Chatbot() {
     </div>
   );
 }
+
+const styles = {
+  headerAvatarImg: {
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    objectFit: "cover",
+    display: "block",
+  },
+  miniAvatarImg: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    objectFit: "cover",
+    display: "block",
+  },
+};
 
 export default Chatbot;

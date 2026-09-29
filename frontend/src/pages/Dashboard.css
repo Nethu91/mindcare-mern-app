@@ -73,12 +73,19 @@
   align-items: flex-end;
 }
 
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ===========================
    Buttons
 =========================== */
 
 .notification-btn,
-.logout-btn {
+.logout-btn,
+.theme-toggle {
   border: none;
   cursor: pointer;
 }
@@ -86,11 +93,23 @@
 .notification-btn {
   width: 46px;
   height: 46px;
+  padding: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.85);
   position: relative;
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+/* Bell image (multiply hides the white jpeg background) */
+.notification-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  display: block;
 }
 
 .notification-badge {
@@ -107,6 +126,33 @@
   display:flex;
   align-items:center;
   justify-content:center;
+}
+
+/* Dark / Light mode toggle */
+.theme-toggle {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+  transition: transform .3s;
+}
+
+.theme-toggle:hover {
+  transform: rotate(20deg) scale(1.08);
+}
+
+.theme-toggle:active {
+  transform: scale(.94);
+}
+
+body.dark-mode .theme-toggle {
+  background: rgba(38, 38, 56, 0.95);
 }
 
 .logout-btn{
@@ -192,13 +238,21 @@
 .bell-circle{
   width:72px;
   height:72px;
+  flex-shrink:0;
   border-radius:50%;
   background:#f3e8ff;
   display:flex;
   align-items:center;
   justify-content:center;
   position:relative;
-  font-size:34px;
+}
+
+.bell-img{
+  width:46px;
+  height:46px;
+  object-fit:contain;
+  mix-blend-mode:multiply;
+  display:block;
 }
 
 .bell-count{
@@ -272,7 +326,16 @@
 }
 
 .mindful-image{
-  font-size:60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.mindful-img{
+  width:110px;
+  height:110px;
+  object-fit:cover;
+  border-radius:20px;
 }
 
 /* ===========================
@@ -307,12 +370,21 @@
 .feature-icon-new {
   width: 56px;
   height: 56px;
+  flex-shrink: 0;
   border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  overflow: hidden;
   background: rgba(255,255,255,.55);
+}
+
+.feature-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* tall images crop, not stretch */
+  border-radius: 12px;
+  display: block;
 }
 
 .feature-content {
@@ -389,12 +461,22 @@
 .summary-emoji {
   width: 60px;
   height: 60px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: #fff3d6;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 30px;
+  overflow: hidden;
+}
+
+.summary-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  display: block;
 }
 
 .summary-label {
@@ -486,6 +568,8 @@
   bottom: 90px;
   width: 58px;
   height: 58px;
+  padding: 0;
+  overflow: hidden;
   border: none;
   border-radius: 50%;
   background: linear-gradient(135deg,#7c3aed,#a855f7);
@@ -494,6 +578,14 @@
   cursor: pointer;
   box-shadow: 0 16px 34px rgba(124,58,237,.35);
   transition: transform .3s;
+}
+
+.floating-ai-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 .floating-ai:hover {
@@ -550,8 +642,9 @@ text-align:center;
 gap:18px;
 }
 
-.mindful-image{
-font-size:72px;
+.mindful-img{
+width:120px;
+height:120px;
 }
 
 /* On a real phone the blurred layer is not needed */

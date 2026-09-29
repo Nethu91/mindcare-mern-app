@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import calmImg from "../assets/Calm support.jpeg";
+import bookingImg from "../assets/Easy booking.jpeg";
+import guidanceImg from "../assets/rusted guidance.jpeg";
 
 function Counselor() {
   const navigate = useNavigate();
@@ -19,6 +22,17 @@ function Counselor() {
   const [selectedMode, setSelectedMode] = useState("Online");
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
+
+  // -----------------------------
+  // Responsive: track screen width
+  // -----------------------------
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Fallback visuals for counselors that don't carry image/color in the DB
   const avatarPalette = ["#FFAFCC", "#A8DADC", "#CDB4DB", "#FFD166", "#B8C0FF", "#FFC8DD"];
@@ -112,7 +126,7 @@ function Counselor() {
   };
 
   return (
-    <div style={styles.page}>
+    <div style={{ ...styles.page, padding: isMobile ? "18px" : "35px" }}>
       <div style={styles.circleOne}></div>
       <div style={styles.circleTwo}></div>
       <div style={styles.circleThree}></div>
@@ -120,7 +134,9 @@ function Counselor() {
       <div style={styles.container}>
         <div style={styles.header}>
           <div>
-            <h1 style={styles.title}>Counselor Support</h1>
+            <h1 style={{ ...styles.title, fontSize: isMobile ? "30px" : "40px" }}>
+              Counselor Support
+            </h1>
             <p style={styles.subtitle}>
               Connect with Sri Lankan counselors and get emotional support.
             </p>
@@ -129,7 +145,14 @@ function Counselor() {
           <div style={styles.headerBadge}>💬 Private & Safe</div>
         </div>
 
-        <div style={styles.heroCard}>
+        <div
+          style={{
+            ...styles.heroCard,
+            flexDirection: isMobile ? "column" : "row",
+            textAlign: isMobile ? "center" : "left",
+            padding: isMobile ? "22px" : "28px",
+          }}
+        >
           <div>
             <h2 style={styles.heroTitle}>Need someone to talk to?</h2>
             <p style={styles.heroText}>
@@ -141,8 +164,18 @@ function Counselor() {
           <div style={styles.heroIcon}>🧠</div>
         </div>
 
-        <div style={styles.mainGrid}>
-          <div style={styles.leftPanel}>
+        <div
+          style={{
+            ...styles.mainGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "1.45fr 1fr",
+          }}
+        >
+          <div
+            style={{
+              ...styles.leftPanel,
+              padding: isMobile ? "20px" : "28px",
+            }}
+          >
             <div style={styles.searchBox}>
               <span style={styles.searchIcon}>🔍</span>
               <input
@@ -226,7 +259,12 @@ function Counselor() {
 
           <div style={styles.rightPanel}>
             {selectedCounselor && (
-              <div style={styles.profileCard}>
+              <div
+                style={{
+                  ...styles.profileCard,
+                  padding: isMobile ? "20px" : "28px",
+                }}
+              >
                 <div
                   style={{
                     ...styles.profileAvatar,
@@ -265,7 +303,12 @@ function Counselor() {
             )}
 
             {selectedCounselor && (
-              <div style={styles.bookingCard}>
+              <div
+                style={{
+                  ...styles.bookingCard,
+                  padding: isMobile ? "20px" : "28px",
+                }}
+              >
                 <h2 style={styles.sectionTitle}>Book Session</h2>
 
                 {bookingSuccess && (
@@ -339,10 +382,18 @@ function Counselor() {
           </div>
         </div>
 
-        <div style={styles.bottomGrid}>
+        {/* Bottom cards: stacked vertically on mobile, 3 across on desktop */}
+        <div
+          style={{
+            ...styles.bottomGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          }}
+        >
           <div style={styles.supportCard} onClick={() => navigate("/mood")}>
             <div style={styles.supportTopRow}>
-              <div style={styles.supportIcon}>🌿</div>
+              <div style={styles.supportIcon}>
+                <img src={calmImg} alt="Calm support" style={styles.supportImg} />
+              </div>
               <span style={styles.supportBadge}>Wellness</span>
             </div>
 
@@ -363,7 +414,9 @@ function Counselor() {
             onClick={() => navigate("/appointments")}
           >
             <div style={styles.supportTopRow}>
-              <div style={styles.supportIcon}>📅</div>
+              <div style={styles.supportIcon}>
+                <img src={bookingImg} alt="Easy booking" style={styles.supportImg} />
+              </div>
               <span style={styles.supportBadge}>Booking</span>
             </div>
 
@@ -384,7 +437,9 @@ function Counselor() {
             onClick={() => navigate("/assessment")}
           >
             <div style={styles.supportTopRow}>
-              <div style={styles.supportIcon}>🤝</div>
+              <div style={styles.supportIcon}>
+                <img src={guidanceImg} alt="Trusted guidance" style={styles.supportImg} />
+              </div>
               <span style={styles.supportBadge}>Guidance</span>
             </div>
 
@@ -414,6 +469,7 @@ const styles = {
     fontFamily: "Arial, sans-serif",
     position: "relative",
     overflowX: "hidden",
+    boxSizing: "border-box",
   },
 
   circleOne: {
@@ -571,6 +627,7 @@ const styles = {
 
   searchInput: {
     flex: 1,
+    minWidth: 0,
     border: "none",
     outline: "none",
     background: "transparent",
@@ -617,6 +674,7 @@ const styles = {
 
   counselorInfo: {
     flex: 1,
+    minWidth: 0,
   },
 
   counselorName: {
@@ -833,15 +891,24 @@ const styles = {
   },
 
   supportIcon: {
-    width: "58px",
-    height: "58px",
-    borderRadius: "20px",
+    width: "72px",
+    height: "72px",
+    borderRadius: "22px",
     background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "32px",
+    overflow: "hidden",
+    padding: "6px",
+    boxSizing: "border-box",
     boxShadow: "0 12px 24px rgba(49,34,68,0.12)",
+  },
+
+  supportImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    mixBlendMode: "multiply",
   },
 
   supportBadge: {

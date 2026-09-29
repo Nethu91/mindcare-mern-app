@@ -1,8 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../api/axios";
 import BottomNav from "../components/BottomNav";
+import { ThemeContext } from "../context/ThemeContext";
 import "./Dashboard.css";
+
+// Asset imports match the exact file names and extensions in src/assets/
+import mindfulImg from "../assets/Mindful banner.jpeg";
+import moodImg from "../assets/Mood Tracker.jpeg";
+import assessmentImg from "../assets/Assessment.jpeg";
+import counselorImg from "../assets/Counselor.jpeg";
+import appointmentsImg from "../assets/Appointments.jpeg";
+import calmImg from "../assets/Calm Videos.jpeg";
+import musicImg from "../assets/Music.jpeg";
+import emergencyImg from "../assets/Emergency.jpeg";
+import aiImg from "../assets/AI Chatbot.jpeg";
+import bellImg from "../assets/bell.jpeg";
+import summaryImg from "../assets/summary.jpeg";
 
 // Safely read the logged-in user (avoids a crash if localStorage is empty/corrupt)
 const getStoredUser = () => {
@@ -34,6 +48,11 @@ function Dashboard() {
   const location = useLocation();
 
   const user = getStoredUser();
+
+  // ===========================
+  // Theme (light / dark)
+  // ===========================
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
   // ===========================
   // Reminder States
@@ -256,106 +275,95 @@ function Dashboard() {
     {
       title: "Mood Tracker",
       subtitle: "Track your daily mood",
-      icon: "😊",
+      icon: moodImg,
       path: "/mood",
       bg: "#FFF3D6",
     },
     {
       title: "Assessment",
       subtitle: "Mental health test",
-      icon: "📝",
+      icon: assessmentImg,
       path: "/assessment",
       bg: "#EFE3FF",
     },
     {
       title: "Counselor",
       subtitle: "Book a counselor",
-      icon: "👩‍⚕️",
+      icon: counselorImg,
       path: "/counselor",
       bg: "#DFF8EA",
     },
     {
       title: "Appointments",
       subtitle: "Manage sessions",
-      icon: "📅",
+      icon: appointmentsImg,
       path: "/appointments",
       bg: "#FFE4EC",
     },
     {
       title: "Calm Videos",
       subtitle: "Relax your mind",
-      icon: "🎥",
+      icon: calmImg,
       path: "/calm-videos",
       bg: "#ECE6FF",
     },
     {
       title: "Music",
       subtitle: "Peaceful music",
-      icon: "🎵",
+      icon: musicImg,
       path: "/music",
-      bg: "#DCEFFF",
+      bg: "#E3F2FD",
     },
     {
       title: "Emergency",
-      subtitle: "Need urgent help",
-      icon: "🚨",
+      subtitle: "Helpline support",
+      icon: emergencyImg,
       path: "/emergency",
-      bg: "#FFE2E2",
-    },
-    {
-      title: "AI Chatbot",
-      subtitle: "Talk with AI",
-      icon: "🤖",
-      path: "/chatbot",
-      bg: "#DFFAF6",
+      bg: "#FFEBEE",
     },
   ];
 
   return (
     <div className="dashboard-container">
-      {/* Booking Success Toast */}
-      {bookingToast && (
-        <div className="success-toast">
-          <div className="toast-icon">✅</div>
-
-          <div>
-            <h4>Appointment Booked!</h4>
-
-            <p>
-              {bookingToast.counselor}
-              <br />
-              {bookingToast.date} • {bookingToast.time}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
+      {/* Top Bar */}
       <div className="dashboard-top">
         <div>
           <h1 className="dashboard-title">
-            {getGreeting()}
-            <br />
-            {user?.name || "User"} 👋
+            {getGreeting()} <br />
+            {user?.name || "Friend"}
           </h1>
-
-          <p className="dashboard-subtitle">
-            Take care of your mental wellbeing today.
-          </p>
+          <p className="dashboard-subtitle">How are you feeling today?</p>
         </div>
 
         <div className="dashboard-actions">
-          <button
-            className="notification-btn"
-            onClick={() => navigate("/appointments")}
-          >
-            🔔
-            {showReminder && (
-              <span className="notification-badge">
-                {daysUntil === 0 ? "!" : daysUntil}
-              </span>
-            )}
-          </button>
+          <div className="action-row">
+            {/* Dark / Light mode toggle */}
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label="Toggle dark mode"
+              title={
+                theme === "light"
+                  ? "Switch to dark mode"
+                  : "Switch to light mode"
+              }
+            >
+              {theme === "light" ? "🌙" : "☀️"}
+            </button>
+
+            <button
+              className="notification-btn"
+              onClick={() => navigate("/appointments")}
+              title="View Appointments"
+            >
+              <img
+                src={bellImg}
+                alt="Notifications"
+                className="notification-img"
+              />
+              {showReminder && <span className="notification-badge">1</span>}
+            </button>
+          </div>
 
           <button className="logout-btn" onClick={handleLogout}>
             Logout
@@ -363,147 +371,108 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Live Date */}
-      <div className="live-card">
-        <div>
-          <h4>📅 Today</h4>
-          <p>{formatDate(now)}</p>
-        </div>
-
-        <div>
-          <h4>🕒 Time</h4>
-          <p>
-            {now.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-        </div>
-      </div>
-
-      {/* Reminder */}
-      {loadingReminder ? (
-        <div className="loading-card">Checking appointments...</div>
-      ) : (
-        showReminder &&
-        appointment && (
-          <div className="appointment-card">
-            <button
-              className="close-btn"
-              onClick={() => setShowReminder(false)}
-            >
-              ✕
-            </button>
-
-            <div className="bell-circle">
-              🔔
-              <span className="bell-count">
-                {daysUntil === 0 ? "!" : daysUntil}
-              </span>
-            </div>
-
-            <div className="appointment-right">
-              <span
-                style={{
-                  color: getReminderColor(),
-                  fontWeight: 700,
-                }}
-              >
-                {getCountdownText()}
-              </span>
-
-              <h2>Appointment Reminder</h2>
-
-              <p>Counselor : {appointment.counselorId?.name || "N/A"}</p>
-
-              <p>Date : {formatDate(appointment.date)}</p>
-
-              <p>Time : {appointment.time}</p>
-
-              <button
-                className="view-btn"
-                onClick={() => navigate("/appointments")}
-              >
-                View Appointment
-              </button>
-            </div>
+      {/* Booking Success Notification */}
+      {bookingToast && (
+        <div className="success-toast">
+          <span className="toast-icon">✅</span>
+          <div>
+            <h4>Appointment Confirmed!</h4>
+            <p>
+              With {bookingToast.counselor} on {bookingToast.date} at{" "}
+              {bookingToast.time}
+            </p>
           </div>
-        )
+        </div>
+      )}
+
+      {/* Upcoming Appointment Card */}
+      {!loadingReminder && showReminder && appointment && (
+        <div className="appointment-card">
+          <button className="close-btn" onClick={() => setShowReminder(false)}>
+            ✕
+          </button>
+
+          <div className="bell-circle">
+            <img src={bellImg} alt="Bell" className="bell-img" />
+            <span className="bell-count">1</span>
+          </div>
+
+          <div className="appointment-right">
+            <span
+              style={{
+                color: getReminderColor(),
+                fontWeight: 700,
+                fontSize: "12px",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              {getCountdownText()}
+            </span>
+
+            <h2>Upcoming Session</h2>
+
+            <p>
+              <strong>Counselor:</strong> {appointment.counselorName}
+            </p>
+            <p>
+              <strong>Date:</strong> {formatDate(appointment.date)}
+            </p>
+            <p>
+              <strong>Time:</strong> {appointment.time}
+            </p>
+
+            <button
+              className="view-btn"
+              onClick={() => navigate("/appointments")}
+            >
+              View Details
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Mindful Banner */}
       <div className="mindful-card">
         <div className="mindful-left">
-          <h2>Take a mindful moment</h2>
-
+          <h2>Daily Mindfulness</h2>
           <p>
-            Track your mood, complete assessments, and connect with a
-            professional counselor whenever you need support.
+            Take a deep breath. Focus on the present moment and care for your
+            mind.
           </p>
         </div>
-
-        <div className="mindful-image">🧘‍♀️</div>
+        <div className="mindful-image">
+          <img src={mindfulImg} alt="Mindfulness" className="mindful-img" />
+        </div>
       </div>
 
-      {/* ===========================
-          Feature Grid
-      =========================== */}
-      <div className="feature-grid">
-        {features.map((item) => (
-          <div
-            key={item.path}
-            className="feature-card-new"
-            style={{ background: item.bg }}
-            onClick={() => navigate(item.path)}
-          >
-            <div className="feature-icon-new">{item.icon}</div>
-
-            <div className="feature-content">
-              <h3>{item.title}</h3>
-              <p>{item.subtitle}</p>
-            </div>
-
-            <div className="feature-arrow">→</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ===========================
-          Today's Summary
-      =========================== */}
+      {/* Latest Mood Summary */}
       <div className="summary-section">
         <div className="summary-header">
-          <h2>Today's Summary</h2>
-
+          <h2>Latest Mood Log</h2>
           <button className="history-btn" onClick={() => navigate("/mood")}>
-            View History →
+            History &gt;
           </button>
         </div>
 
         {mood ? (
           <div className="summary-card">
-            {/* Left */}
             <div className="summary-left">
               <div className="summary-emoji">{mood.emoji}</div>
-
               <div>
-                <p className="summary-label">Current Mood</p>
+                <p className="summary-label">Status</p>
                 <h3>{mood.label}</h3>
                 <span>{mood.description}</span>
               </div>
             </div>
 
-            {/* Divider */}
             <div className="summary-divider"></div>
 
-            {/* Right */}
             <div className="summary-right">
-              <p className="summary-label">Mood Score</p>
-
+              <p className="summary-label">Intensity</p>
               <h2>
                 {mood.score} / {mood.maxScore}
               </h2>
-
               <div className="progress">
                 <div
                   className="progress-fill"
@@ -513,41 +482,59 @@ function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="summary-card">
+          <div
+            className="summary-card"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/mood")}
+          >
             <div className="summary-left">
-              <div className="summary-emoji">📝</div>
-
-              <div>
-                <p className="summary-label">Current Mood</p>
-                <h3>No mood logged yet</h3>
-                <span>Log how you feel to see your summary here.</span>
+              <div className="summary-emoji">
+                <img src={summaryImg} alt="Summary" className="summary-img" />
               </div>
-            </div>
-
-            <div className="summary-divider"></div>
-
-            <div className="summary-right">
-              <button
-                className="view-btn"
-                onClick={() => navigate("/mood")}
-              >
-                Log your mood
-              </button>
+              <div>
+                <h3>No mood logged yet</h3>
+                <span>Click here to track your mood today!</span>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* ===========================
-          Floating AI
-      =========================== */}
-      <button className="floating-ai" onClick={() => navigate("/chatbot")}>
-        🤖
+      {/* Feature Navigation Grid */}
+      <div className="feature-grid">
+        {features.map((item, index) => (
+          <div
+            key={index}
+            className="feature-card-new"
+            onClick={() => navigate(item.path)}
+          >
+            <div
+              className="feature-icon-new"
+              style={{ backgroundColor: item.bg }}
+            >
+              <img src={item.icon} alt={item.title} className="feature-img" />
+            </div>
+
+            <div className="feature-content">
+              <h3>{item.title}</h3>
+              <p>{item.subtitle}</p>
+            </div>
+
+            <span className="feature-arrow">&rsaquo;</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Floating AI Chatbot Button */}
+      <button
+        className="floating-ai"
+        onClick={() => navigate("/chatbot")}
+        title="AI Mental Health Companion"
+      >
+        <img src={aiImg} alt="AI Assistant" className="floating-ai-img" />
       </button>
 
-      {/* ===========================
-          Bottom Navigation
-      =========================== */}
+      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );

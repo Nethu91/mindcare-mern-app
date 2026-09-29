@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import meditationImg from "../assets/Meditation.jpeg";
 
 function Emergency() {
   const navigate = useNavigate();
@@ -410,27 +411,16 @@ function Emergency() {
           </div>
         </div>
 
+        {/* Only the Breathing Practice tab, full width like the cards above */}
         <div style={styles.bottomGrid}>
-          <div style={styles.helpCard} onClick={() => navigate("/counselor")}>
-            <div style={styles.helpIcon}>👩‍⚕️</div>
-            <h3 style={styles.helpTitle}>Counselor Support</h3>
-            <p style={styles.helpText}>
-              Connect with a counselor if you need emotional support.
-            </p>
-            <p style={styles.helpLink}>Go to Counselors →</p>
-          </div>
-
-          <div style={styles.helpCard} onClick={() => navigate("/music")}>
-            <div style={styles.helpIcon}>🎧</div>
-            <h3 style={styles.helpTitle}>Calm Music</h3>
-            <p style={styles.helpText}>
-              Listen to calming music to reduce panic and stress.
-            </p>
-            <p style={styles.helpLink}>Go to Music →</p>
-          </div>
-
           <div style={styles.helpCard} onClick={() => navigate("/meditation")}>
-            <div style={styles.helpIcon}>🧘‍♀️</div>
+            <div style={styles.helpIcon}>
+              <img
+                src={meditationImg}
+                alt="Breathing practice"
+                style={styles.helpImg}
+              />
+            </div>
             <h3 style={styles.helpTitle}>Breathing Practice</h3>
             <p style={styles.helpText}>
               Use guided breathing to calm your body and mind.
@@ -954,14 +944,15 @@ const styles = {
     fontSize: "14px",
   },
 
+  // Single full-width tab
   bottomGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
+    gridTemplateColumns: "1fr",
     gap: "20px",
   },
 
   helpCard: {
-    padding: "25px",
+    padding: "30px 25px",
     borderRadius: "30px",
     background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(255,255,255,0.78)",
@@ -971,15 +962,20 @@ const styles = {
   },
 
   helpIcon: {
-    width: "58px",
-    height: "58px",
-    margin: "0 auto 14px auto",
-    borderRadius: "20px",
+    width: "120px",
+    height: "120px",
+    margin: "0 auto 16px auto",
+    borderRadius: "32px",
+    overflow: "hidden",
     background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "32px",
+    boxShadow: "0 14px 28px rgba(49,34,68,0.15)",
+  },
+
+  helpImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
   },
 
   helpTitle: {

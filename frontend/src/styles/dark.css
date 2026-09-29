@@ -1,0 +1,65 @@
+/* =========================================================
+   GLOBAL DARK MODE  (works for every page / component)
+
+   How it works:
+   - ThemeContext adds the attribute data-theme="dark" on <html>.
+   - The whole app is colour-inverted (light -> dark) with a CSS filter.
+   - Photos, videos and icons are inverted a second time so they
+     keep their original colours.
+========================================================= */
+
+html {
+  transition: filter 0.3s ease;
+}
+
+html[data-theme="dark"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ---------- Keep media in their original colours ---------- */
+
+html[data-theme="dark"] img,
+html[data-theme="dark"] video,
+html[data-theme="dark"] iframe,
+html[data-theme="dark"] canvas,
+html[data-theme="dark"] picture {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ---------- Icon chips (bell, summary icon, theme toggle) ----------
+   These images use mix-blend-mode: multiply to hide their white jpeg
+   background, so the WHOLE chip is re-inverted instead of just the image. */
+
+html[data-theme="dark"] .notification-btn,
+html[data-theme="dark"] .bell-circle,
+html[data-theme="dark"] .summary-emoji,
+html[data-theme="dark"] .theme-toggle {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html[data-theme="dark"] .notification-btn img,
+html[data-theme="dark"] .bell-circle img,
+html[data-theme="dark"] .summary-emoji img {
+  filter: none;
+}
+
+/* ---------- Dashboard wallpaper (CSS background image) ----------
+   Re-inverted, and dimmed a little so it is not too bright at night. */
+
+html[data-theme="dark"] .dashboard-container::after {
+  filter: brightness(0.55) invert(1) hue-rotate(180deg);
+}
+
+html[data-theme="dark"] .dashboard-container::before {
+  filter: blur(28px) brightness(0.55) invert(1) hue-rotate(180deg);
+}
+
+/* ---------- Floating AI button (image inside a coloured circle) ---------- */
+
+html[data-theme="dark"] .floating-ai {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html[data-theme="dark"] .floating-ai img {
+  filter: none;
+}

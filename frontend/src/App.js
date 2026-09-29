@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useContext } from "react";
+import { ThemeContext } from "./context/ThemeContext";
 import "./styles/main.css";
 
 // Public Pages
@@ -24,11 +26,12 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
+  const { theme } = useContext(ThemeContext);
+
   return (
     <BrowserRouter>
-      {/* app-shell + app-screen lock every page to a fixed mobile width,
-          regardless of the actual browser window size */}
-      <div className="app-shell">
+      {/* Dynamic theme class for app shell */}
+      <div className={`app-shell ${theme}`}>
         <div className="app-screen">
           <Routes>
 
@@ -39,7 +42,6 @@ function App() {
             <Route path="/verify-otp" element={<VerifyOtp />} />
 
             {/* Protected Routes */}
-
             <Route
               path="/dashboard"
               element={
