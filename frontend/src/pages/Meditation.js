@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Meditation() {
+function Meditation({ breathing = false }) {
   const navigate = useNavigate();
 
   const categories = [
@@ -179,15 +179,19 @@ function Meditation() {
     );
   };
 
-  const startMeditation = () => {
-    setTimerRunning(true);
-    setBreathPhase("Breathe In");
+  useEffect(() => {
+    if (!timerRunning) return;
+    const phases = ["Breathe In", "Hold", "Breathe Out", "Relax"];
+    let step = 0;
+    setBreathPhase(phases[step]);
+    const timer = setInterval(() => {
+      step = (step + 1) % phases.length;
+      setBreathPhase(phases[step]);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [timerRunning, selectedSession.id]);
 
-    setTimeout(() => setBreathPhase("Hold"), 3000);
-    setTimeout(() => setBreathPhase("Breathe Out"), 6000);
-    setTimeout(() => setBreathPhase("Relax"), 9000);
-  };
-
+  const startMeditation = () => setTimerRunning(true);
   const stopMeditation = () => {
     setTimerRunning(false);
     setBreathPhase("Breathe In");
@@ -217,7 +221,7 @@ function Meditation() {
               ← Back to Dashboard
             </button>
 
-            <h1 style={styles.title}>Meditation</h1>
+            <h1 style={styles.title}>{breathing ? "Breathing Practice" : "Meditation"}</h1>
             <p style={styles.subtitle}>
               Practice guided meditation, breathing, mindfulness, sleep calm,
               and stress relief.
@@ -439,7 +443,7 @@ function Meditation() {
             <p style={styles.helpLink}>Go to Music →</p>
           </div>
 
-          <div style={styles.helpCard} onClick={() => navigate("/videos")}>
+          <div style={styles.helpCard} onClick={() => navigate("/calm-videos")}>
             <div style={styles.helpIcon}>🎥</div>
             <h3 style={styles.helpTitle}>Guided Videos</h3>
             <p style={styles.helpText}>

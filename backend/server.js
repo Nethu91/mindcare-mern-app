@@ -30,6 +30,8 @@ app.use("/api/resources", resourceRoutes);
 app.use("/api/medications", medicationRoutes);
 app.use("/api/emergency", emergencyRoutes);
 
+app.use("/api/wellbeing", require("./routes/wellbeingRoutes"));
+
 app.get("/", (req, res) => {
   res.send("MindCare API is running successfully");
 });
@@ -39,3 +41,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+app.use((err, req, res, next) => { console.error(err.message); res.status(500).json({message:"Request failed. Please try again."}); });

@@ -22,7 +22,12 @@ import Chatbot from "./pages/Chatbot";
 import Emergency from "./pages/Emergency";
 import Profile from "./pages/Profile";
 
+import Journal from "./pages/Journal";
+import Notifications from "./pages/Notifications";
+import MeditationCenters from "./pages/MeditationCenters";
+
 // Components
+import NotificationBell from "./components/NotificationBell";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -33,7 +38,31 @@ function App() {
       {/* Dynamic theme class for app shell */}
       <div className={`app-shell ${theme}`}>
         <div className="app-screen">
+          <NotificationBell />
           <Routes>
+            <Route
+              path="/breathing"
+              element={
+                <ProtectedRoute>
+                  <Meditation breathing />
+                </ProtectedRoute>
+              }
+            />
+            {[
+              ["/journal", Journal],
+              ["/notifications", Notifications],
+              ["/meditation-centers", MeditationCenters],
+            ].map(([path, Page]) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute>
+                    <Page />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
 
             {/* Public Routes */}
             <Route path="/" element={<Splash />} />
@@ -140,7 +169,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
           </Routes>
         </div>
       </div>

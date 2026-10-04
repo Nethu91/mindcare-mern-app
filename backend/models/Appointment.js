@@ -14,6 +14,12 @@ const appointmentSchema = new mongoose.Schema(
       required: true,
     },
 
+    type: {
+      type: String,
+      enum: ["Online", "Physical", "Phone Call"],
+      default: null, // Existing appointments did not record a session type.
+    },
+
     date: {
       type: String,
       required: true,

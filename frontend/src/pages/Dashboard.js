@@ -15,6 +15,7 @@ import calmImg from "../assets/Calm Videos.jpeg";
 import musicImg from "../assets/Music.jpeg";
 import emergencyImg from "../assets/Emergency.jpeg";
 import aiImg from "../assets/AI Chatbot.jpeg";
+import meditationImg from "../assets/Meditation.jpeg";
 import bellImg from "../assets/bell.jpeg";
 import summaryImg from "../assets/summary.jpeg";
 
@@ -177,7 +178,7 @@ function Dashboard() {
     // ---------- Latest Mood ----------
     const loadLatestMood = async () => {
       try {
-        const res = await API.get("/mood/latest");
+        const res = await API.get("/moods/latest");
         if (ignore) return;
 
         // Backend may return 200 with null when there is no mood yet
@@ -272,6 +273,9 @@ function Dashboard() {
   // Features
   // ===========================
   const features = [
+    {title:"Breathing Practice",subtitle:"Guided breathing & mindfulness",icon:meditationImg,path:"/breathing",bg:"#E3F5F2"},
+    {title:"Meditation Centers",subtitle:"Find peaceful spaces near you",icon:meditationImg,path:"/meditation-centers",bg:"#EFE3FF"},
+    {title:"My Journal",subtitle:"Write your thoughts & reflections",icon:summaryImg,path:"/journal",bg:"#FFE4EC"},
     {
       title: "Mood Tracker",
       subtitle: "Track your daily mood",
@@ -353,7 +357,7 @@ function Dashboard() {
 
             <button
               className="notification-btn"
-              onClick={() => navigate("/appointments")}
+              onClick={() => navigate("/notifications")}
               title="View Appointments"
             >
               <img
@@ -361,7 +365,7 @@ function Dashboard() {
                 alt="Notifications"
                 className="notification-img"
               />
-              {showReminder && <span className="notification-badge">1</span>}
+
             </button>
           </div>
 

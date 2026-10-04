@@ -13,22 +13,6 @@ const useUid = () => {
   return ref.current;
 };
 
-const mix = (h, t, a) => {
-  const p = (n) => parseInt(h.slice(n, n + 2), 16);
-  const q = (n) => parseInt(t.slice(n, n + 2), 16);
-  const c = (n) =>
-    Math.round(p(n) + (q(n) - p(n)) * a)
-      .toString(16)
-      .padStart(2, "0");
-  return `#${c(1)}${c(3)}${c(5)}`;
-};
-
-const paletteFromHex = (hex) => ({
-  light: mix(hex, "#ffffff", 0.55),
-  mid: hex,
-  dark: mix(hex, "#000000", 0.25),
-});
-
 const PALETTES = {
   Happy: { light: "#FFE58A", mid: "#FFB92E", dark: "#E27A0B" },
   Calm: { light: "#D6F6F2", mid: "#84D4E0", dark: "#3E9FBF" },

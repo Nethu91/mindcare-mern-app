@@ -10,7 +10,11 @@ const router = express.Router();
 
 router.post("/", protect, async (req, res) => {
   try {
-    const { counselorId, date, time, reason } = req.body;
+    const { counselorId, date, time, reason, type = "Online" } = req.body;
+
+    if (!["Online", "Physical", "Phone Call"].includes(type)) {
+      return res.status(400).json({success: false, message: "Session type must be Online, Physical or Phone Call"});
+    }
 
     if (!counselorId || !date || !time) {
       return res.status(400).json({
@@ -22,6 +26,7 @@ router.post("/", protect, async (req, res) => {
     const appointment = await Appointment.create({
       userId: req.user._id,
       counselorId,
+      type,
       date: new Date(date),
       time,
       reason,

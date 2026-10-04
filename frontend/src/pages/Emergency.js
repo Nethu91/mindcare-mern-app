@@ -413,7 +413,7 @@ function Emergency() {
 
         {/* Only the Breathing Practice tab, full width like the cards above */}
         <div style={styles.bottomGrid}>
-          <div style={styles.helpCard} onClick={() => navigate("/meditation")}>
+          <div style={styles.helpCard} onClick={() => navigate("/breathing")}>
             <div style={styles.helpIcon}>
               <img
                 src={meditationImg}
@@ -425,7 +425,7 @@ function Emergency() {
             <p style={styles.helpText}>
               Use guided breathing to calm your body and mind.
             </p>
-            <p style={styles.helpLink}>Go to Meditation →</p>
+            <p style={styles.helpLink}>Go to Breathing Practice →</p>
           </div>
         </div>
       </div>
