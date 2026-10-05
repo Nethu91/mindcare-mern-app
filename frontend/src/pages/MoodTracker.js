@@ -586,6 +586,144 @@ function MoodMeter({ value, onChange, mood }) {
 }
 
 /* ============================================================
+   WEEKLY CHART (real-time, built from history)
+   ============================================================ */
+
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const MAX_BAR = 110;
+
+const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+function WeeklyChart({ history }) {
+  // "now" refreshes every minute so "today" moves on after midnight
+  const [now, setNow] = useState(new Date());
+  const [active, setActive] = useState(null);
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  const today = startOfDay(now);
+  const todayIdx = (today.getDay() + 6) % 7; // Monday = 0
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - todayIdx);
+
+  const days = DAY_LABELS.map((label) => ({ label, ratings: [] }));
+
+  history.forEach((h) => {
+    if (!h.createdAt) return;
+    const idx = Math.round((startOfDay(new Date(h.createdAt)) - monday) / 86400000);
+    if (idx >= 0 && idx < 7) days[idx].ratings.push(h.rating);
+  });
+
+  const data = days.map((d) => ({
+    ...d,
+    count: d.ratings.length,
+    avg: d.ratings.length
+      ? d.ratings.reduce((a, b) => a + b, 0) / d.ratings.length
+      : 0,
+  }));
+
+  const total = data.reduce((s, d) => s + d.count, 0);
+  const weekAvg = total
+    ? (data.reduce((s, d) => s + d.avg * d.count, 0) / total).toFixed(1)
+    : "-";
+
+  return (
+    <div style={{ ...glass, borderRadius: 28, padding: 20, marginBottom: 18 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 14,
+        }}
+      >
+        <h2 style={{ ...styles.sectionTitle, margin: 0 }}>This Week</h2>
+        <span style={styles.recordBadge2}>
+          Avg {weekAvg} · {total} entries
+        </span>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: 8,
+          height: MAX_BAR + 50,
+        }}
+      >
+        {data.map((d, i) => {
+          const isToday = i === todayIdx;
+          const h = d.count ? Math.max((d.avg / 5) * MAX_BAR, 18) : 10;
+          return (
+            <div
+              key={d.label}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                cursor: "pointer",
+              }}
+              onClick={() => setActive(active === i ? null : i)}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#7C3AED",
+                  height: 16,
+                  opacity: d.count && (isToday || active === i) ? 1 : 0,
+                  transition: "opacity 0.3s",
+                }}
+              >
+                {d.avg.toFixed(1)}
+              </span>
+              <div
+                title={`${d.label}: ${d.count} entries`}
+                style={{
+                  width: "100%",
+                  height: h,
+                  borderRadius: 12,
+                  background: isToday
+                    ? "linear-gradient(180deg,#A855F7,#7C3AED)"
+                    : d.count
+                    ? "#DDD0FB"
+                    : "#EFEAFB",
+                  transition: "height 0.7s cubic-bezier(0.34,1.56,0.64,1)",
+                }}
+              />
+              <span
+                style={{
+                  marginTop: 8,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: isToday ? "#7C3AED" : "#9b8fb0",
+                }}
+              >
+                {d.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {active !== null && (
+        <p style={{ margin: "12px 0 0", fontSize: 13, color: "#5b4a6b", textAlign: "center" }}>
+          <b>{DAY_LABELS[active]}</b> ·{" "}
+          {data[active].count
+            ? `${data[active].count} entries, avg intensity ${data[active].avg.toFixed(1)} / 5`
+            : "No entries"}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
    MAIN COMPONENT
    ============================================================ */
 
@@ -653,6 +791,7 @@ function MoodTracker() {
 
         return {
           id: item._id,
+          createdAt: item.createdAt,
           mood: moodDetails,
           rating: item.rating,
           ratingText: ratingInfo?.title || `${item.rating}`,
@@ -698,6 +837,7 @@ function MoodTracker() {
 
       const newMood = {
         id: saved._id,
+        createdAt: saved.createdAt,
         mood: selectedMood,
         rating: rating,
         ratingText: ratingInfo?.title,
@@ -972,6 +1112,9 @@ function MoodTracker() {
             </div>
           </div>
         </div>
+
+        {/* Weekly summary graph (updates in real time from history) */}
+        <WeeklyChart history={history} />
 
         <div style={styles.historyCard}>
           <div style={styles.historyHeader}>
@@ -1411,6 +1554,15 @@ const styles = {
     fontWeight: "700",
     fontSize: "13px",
     marginBottom: "18px",
+  },
+
+  recordBadge2: {
+    background: "rgba(255,255,255,0.75)",
+    padding: "6px 12px",
+    borderRadius: "20px",
+    color: "#5b4a6b",
+    fontWeight: "700",
+    fontSize: "12px",
   },
 
   emptyBox: {
