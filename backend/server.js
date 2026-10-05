@@ -13,13 +13,14 @@ const resourceRoutes = require("./routes/resourceRoutes");
 const medicationRoutes = require("./routes/medicationRoutes");
 const emergencyRoutes = require("./routes/emergencyRoutes");
 
-
 const app = express();
 
 connectDB();
 
 app.use(cors());
-app.use(express.json());
+
+// 5mb so the profile photo (base64) is never rejected
+app.use(express.json({ limit: "5mb" }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/moods", moodRoutes);
@@ -36,9 +37,23 @@ app.get("/", (req, res) => {
   res.send("MindCare API is running successfully");
 });
 
+// Error handler (must come after the routes, before listen)
+app.use((err, req, res, next) => {
+  console.error(err.message);
+
+  if (err.type === "entity.too.large") {
+    return res
+      .status(413)
+      .json({ message: "That image is too large. Please choose a smaller one." });
+  }
+
+  res.status(err.status || 500).json({
+    message: "Request failed. Please try again.",
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-app.use((err, req, res, next) => { console.error(err.message); res.status(500).json({message:"Request failed. Please try again."}); });

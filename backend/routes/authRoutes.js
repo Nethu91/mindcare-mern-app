@@ -22,6 +22,8 @@ const generateToken = (user) =>
     expiresIn: "7d",
   });
 
+// Also returns the customization fields, so the dashboard greeting /
+// profile picture is correct right after login.
 const formatUser = (user) => ({
   id: user._id,
   name: user.name,
@@ -29,6 +31,13 @@ const formatUser = (user) => ({
   age: user.age,
   gender: user.gender,
   role: user.role,
+  nickname: user.nickname,
+  photo: user.photo,
+  avatarHair: user.avatarHair,
+  avatarHairColor: user.avatarHairColor,
+  avatarSkin: user.avatarSkin,
+  avatarGlasses: user.avatarGlasses,
+  avatarBg: user.avatarBg,
 });
 
 // Creates a fresh OTP on the user document and emails it
@@ -290,6 +299,7 @@ router.get("/profile", protect, async (req, res) => {
 
 // ===========================
 // PUT /profile
+// (personal info + customization: nickname, bio, photo, avatar)
 // ===========================
 
 router.put("/profile", protect, async (req, res) => {
@@ -305,6 +315,15 @@ router.put("/profile", protect, async (req, res) => {
       goal,
       reminderTime,
       preferredSupport,
+      // customization
+      nickname,
+      bio,
+      photo,
+      avatarHair,
+      avatarHairColor,
+      avatarSkin,
+      avatarGlasses,
+      avatarBg,
     } = req.body;
 
     const user = await User.findById(req.user.id);
@@ -316,7 +335,7 @@ router.put("/profile", protect, async (req, res) => {
     if (name !== undefined) user.name = name;
     if (phone !== undefined) user.phone = phone;
     if (city !== undefined) user.city = city;
-    if (age !== undefined) user.age = age;
+    if (age !== undefined) user.age = age === "" ? undefined : age;
     if (gender !== undefined) user.gender = gender;
     if (emergencyName !== undefined) user.emergencyName = emergencyName;
     if (emergencyPhone !== undefined) user.emergencyPhone = emergencyPhone;
@@ -324,6 +343,16 @@ router.put("/profile", protect, async (req, res) => {
     if (reminderTime !== undefined) user.reminderTime = reminderTime;
     if (preferredSupport !== undefined)
       user.preferredSupport = preferredSupport;
+
+    // customization (photo = "" is allowed, it clears the photo)
+    if (nickname !== undefined) user.nickname = nickname;
+    if (bio !== undefined) user.bio = bio;
+    if (photo !== undefined) user.photo = photo;
+    if (avatarHair !== undefined) user.avatarHair = avatarHair;
+    if (avatarHairColor !== undefined) user.avatarHairColor = avatarHairColor;
+    if (avatarSkin !== undefined) user.avatarSkin = avatarSkin;
+    if (avatarGlasses !== undefined) user.avatarGlasses = !!avatarGlasses;
+    if (avatarBg !== undefined) user.avatarBg = avatarBg;
 
     await user.save();
 
@@ -333,7 +362,7 @@ router.put("/profile", protect, async (req, res) => {
     res.json(updatedUser);
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: err.message || "Server error" });
   }
 });
 

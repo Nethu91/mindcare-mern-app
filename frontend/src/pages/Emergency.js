@@ -1,10 +1,68 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
-import meditationImg from "../assets/Meditation.jpeg";
+// Same background used on the Mood / Music pages.
+// Adjust the path if needed.
+import moodBg from "../assets/mood-bg.jpeg";
+
+/* =====================================================
+   3D EMOJI (Microsoft Fluent 3D set)
+   Falls back to the normal emoji if the image can't load.
+   ===================================================== */
+const EMOJI_CDN =
+  "https://cdn.jsdelivr.net/npm/@lobehub/fluent-emoji-3d@latest/assets/";
+
+const toCode = (emoji, keepFe0f) =>
+  Array.from(emoji)
+    .map((c) => c.codePointAt(0).toString(16))
+    .filter((h) => keepFe0f || h !== "fe0f")
+    .join("-");
+
+function Emoji3D({ e, size = 32, style }) {
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    setAttempt(0);
+  }, [e]);
+
+  if (attempt > 1) {
+    return (
+      <span
+        style={{
+          fontSize: size * 0.85,
+          lineHeight: 1,
+          display: "inline-block",
+          filter: "drop-shadow(0 6px 8px rgba(59,53,82,0.28))",
+          ...style,
+        }}
+      >
+        {e}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={`${EMOJI_CDN}${toCode(e, attempt === 1)}.webp`}
+      width={size}
+      height={size}
+      alt={e}
+      draggable={false}
+      onError={() => setAttempt((a) => a + 1)}
+      style={{
+        objectFit: "contain",
+        display: "block",
+        flexShrink: 0,
+        filter: "drop-shadow(0 7px 8px rgba(59,53,82,0.28))",
+        ...style,
+      }}
+    />
+  );
+}
 
 function Emergency() {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
 
   const safetySteps = [
     "Move to a safe and quiet place if possible.",
@@ -15,10 +73,10 @@ function Emergency() {
   ];
 
   const iconPalette = [
-    { icon: "🧠", color: "#CDB4DB" },
-    { icon: "🚑", color: "#FFAFCC" },
-    { icon: "🚓", color: "#B8C0FF" },
-    { icon: "🤝", color: "#A8DADC" },
+    { icon: "🧠", color: "#D9C6E6" },
+    { icon: "🚑", color: "#FFC4D8" },
+    { icon: "🚓", color: "#C9CFFF" },
+    { icon: "🤝", color: "#BFE3E6" },
   ];
 
   const [contacts, setContacts] = useState([]);
@@ -31,14 +89,41 @@ function Emergency() {
   const [locationShared, setLocationShared] = useState(false);
   const [sosSent, setSosSent] = useState(false);
 
+  // Live location sharing
+  const [shareToken, setShareToken] = useState(null);
+  const watchIdRef = useRef(null);
+  const lastSentRef = useRef(0);
+
   // Add personal contact form
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newRelationship, setNewRelationship] = useState("");
   const [addingContact, setAddingContact] = useState(false);
 
+  // Responsive detection based on the real container width
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      setIsMobile(entries[0].contentRect.width <= 768);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Stop watching the GPS if the user leaves this page
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
+
   // -----------------------------
-  // Load helplines (static) + personal contacts (DB) from backend
+  // Load helplines (static) + personal contacts (DB)
   // -----------------------------
   useEffect(() => {
     loadContacts();
@@ -63,21 +148,26 @@ function Emergency() {
         icon: iconPalette[index % iconPalette.length].icon,
         color: iconPalette[index % iconPalette.length].color,
         isPersonal: false,
+        canRemove: false,
       }));
 
       const personalContacts = personalRes.data.map((c, index) => ({
         id: c._id,
         name: c.name,
-        type: c.relationship || "Personal Support",
+        type:
+          c.source === "profile"
+            ? "Emergency Contact (from Profile)"
+            : c.relationship || "Personal Support",
         phone: c.phone,
         available: "Saved Contact",
         icon: "🤝",
         color: iconPalette[(index + 3) % iconPalette.length].color,
         isPersonal: true,
+        // contacts that come from the Profile page are edited there
+        canRemove: c.source !== "profile",
       }));
 
       const combined = [...helplineContacts, ...personalContacts];
-
       setContacts(combined);
 
       if (combined.length > 0) {
@@ -94,28 +184,127 @@ function Emergency() {
     window.location.href = `tel:${phone}`;
   };
 
-  const handleShareLocation = () => {
-    setLocationShared(true);
-    alert("Location sharing enabled for emergency support.");
+  // -----------------------------
+  // LIVE LOCATION
+  // -----------------------------
+  const getPosition = () =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        return reject(new Error("Geolocation not supported."));
+      }
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+      });
+    });
+
+  const startLocationShare = async () => {
+    try {
+      const pos = await getPosition();
+      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+
+      const res = await API.post("/emergency/location/start", {
+        lat,
+        lng,
+        accuracy,
+      });
+
+      setShareToken(res.data.token);
+      setLocationShared(true);
+
+      // keep sending live updates (max once every 8 seconds)
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (p) => {
+          const now = Date.now();
+          if (now - lastSentRef.current < 8000) return;
+          lastSentRef.current = now;
+
+          API.put("/emergency/location/update", {
+            lat: p.coords.latitude,
+            lng: p.coords.longitude,
+            accuracy: p.coords.accuracy,
+          }).catch(console.error);
+        },
+        (err) => console.error(err),
+        { enableHighAccuracy: true, maximumAge: 5000 }
+      );
+
+      return res.data.token;
+    } catch (err) {
+      console.error(err);
+      alert(
+        "Couldn't get your location. Please allow location permission (the site must use HTTPS)."
+      );
+      return null;
+    }
   };
 
-  const handleSendSOS = () => {
-    if (!selectedContact) {
-      alert("Please select a contact first.");
+  const stopLocationShare = async () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+
+    try {
+      await API.post("/emergency/location/stop");
+    } catch (err) {
+      console.error(err);
+    }
+
+    setLocationShared(false);
+    setShareToken(null);
+  };
+
+  const handleShareLocation = () => {
+    if (locationShared) stopLocationShare();
+    else startLocationShare();
+  };
+
+  // -----------------------------
+  // SOS (SMS or WhatsApp with live tracking link)
+  // -----------------------------
+  const handleSendSOS = async (channel = "sms") => {
+    // SOS goes to a personal contact (selected one, or the first saved one)
+    const target = selectedContact?.isPersonal
+      ? selectedContact
+      : contacts.find((c) => c.isPersonal);
+
+    if (!target) {
+      alert(
+        "Please add a trusted contact first, or tap Call on an emergency helpline."
+      );
       return;
     }
 
+    let token = shareToken;
+    if (!token) token = await startLocationShare();
+
+    const link = token ? `${window.location.origin}/track/${token}` : "";
+    const text = `${message}${link ? `\n\nMy live location: ${link}` : ""}`;
+
+    const digits = target.phone.replace(/\D/g, "");
+    const intl = digits.startsWith("0") ? `94${digits.slice(1)}` : digits;
+
     setSosSent(true);
-    alert(
-      `SOS Alert Prepared!\n\nContact: ${selectedContact.name}\nPhone: ${selectedContact.phone}\nMessage: ${message}`
-    );
+
+    if (channel === "whatsapp") {
+      window.open(
+        `https://wa.me/${intl}?text=${encodeURIComponent(text)}`,
+        "_blank"
+      );
+    } else {
+      window.location.href = `sms:${target.phone}?&body=${encodeURIComponent(
+        text
+      )}`;
+    }
   };
 
-  // -----------------------------
-  // Add a personal emergency contact -> saves to DB
-  // -----------------------------
   const handleAddContact = async () => {
-    if (!newName || !newPhone) {
+    if (!newName.trim() || !newPhone.trim()) {
       alert("Please enter a name and phone number.");
       return;
     }
@@ -136,9 +325,7 @@ function Emergency() {
       await loadContacts();
     } catch (err) {
       console.error(err);
-      alert(
-        err.response?.data?.message || "Failed to add emergency contact."
-      );
+      alert(err.response?.data?.message || "Failed to add emergency contact.");
     } finally {
       setAddingContact(false);
     }
@@ -157,13 +344,23 @@ function Emergency() {
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.circleOne}></div>
-      <div style={styles.circleTwo}></div>
-      <div style={styles.circleThree}></div>
-
+    <div
+      ref={containerRef}
+      style={{
+        ...styles.page,
+        padding: isMobile ? "16px" : "35px",
+        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)), url(${moodBg})`,
+      }}
+    >
       <div style={styles.container}>
-        <div style={styles.header}>
+        {/* HEADER */}
+        <div
+          style={{
+            ...styles.header,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "flex-start" : "center",
+          }}
+        >
           <div>
             <button
               style={styles.backButton}
@@ -172,51 +369,92 @@ function Emergency() {
               ← Back to Dashboard
             </button>
 
-            <h1 style={styles.title}>Emergency Support</h1>
+            <h1 style={{ ...styles.title, fontSize: isMobile ? "28px" : "44px" }}>
+              Emergency Support
+            </h1>
             <p style={styles.subtitle}>
               Get quick help, contact emergency services, and follow safety
               steps during urgent situations.
             </p>
           </div>
 
-          <div style={styles.headerBadge}>🚨 Safe Help Center</div>
+          {!isMobile && (
+            <div style={styles.headerBadge}>
+              <Emoji3D e="🚨" size={30} />
+              <span>Safe Help Center</span>
+            </div>
+          )}
         </div>
 
-        <div style={styles.alertCard}>
+        {/* ALERT */}
+        <div
+          style={{
+            ...styles.alertCard,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "stretch" : "center",
+            padding: isMobile ? "22px" : "30px",
+          }}
+        >
           <div>
-            <h2 style={styles.alertTitle}>Need urgent support?</h2>
+            <h2 style={{ ...styles.alertTitle, fontSize: isMobile ? "23px" : "30px" }}>
+              Need urgent support?
+            </h2>
             <p style={styles.alertText}>
               If you feel unsafe or in immediate danger, contact emergency
               services or a trusted person now.
             </p>
           </div>
 
-          <button style={styles.sosButton} onClick={handleSendSOS}>
-            🚨 Send SOS
+          <button
+            style={{
+              ...styles.sosButton,
+              width: isMobile ? "100%" : "auto",
+            }}
+            onClick={() => handleSendSOS("sms")}
+          >
+            <Emoji3D e="🚨" size={28} />
+            Send SOS
           </button>
         </div>
 
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>📞</div>
+        {/* STATS */}
+        <div
+          style={{
+            ...styles.statsGrid,
+            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+            gap: isMobile ? "12px" : "20px",
+          }}
+        >
+          <div style={{ ...styles.statCard, padding: isMobile ? "14px" : "22px" }}>
+            <div style={styles.statIcon}>
+              <Emoji3D e="📞" size={40} />
+            </div>
             <div>
               <h3 style={styles.statNumber}>{contacts.length}</h3>
               <p style={styles.statText}>Emergency Contacts</p>
             </div>
           </div>
 
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>📍</div>
+          <div style={{ ...styles.statCard, padding: isMobile ? "14px" : "22px" }}>
+            <div style={styles.statIcon}>
+              <Emoji3D e="📍" size={40} />
+            </div>
             <div>
-              <h3 style={styles.statNumber}>
-                {locationShared ? "On" : "Off"}
-              </h3>
+              <h3 style={styles.statNumber}>{locationShared ? "On" : "Off"}</h3>
               <p style={styles.statText}>Location Sharing</p>
             </div>
           </div>
 
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>🛡️</div>
+          <div
+            style={{
+              ...styles.statCard,
+              padding: isMobile ? "14px" : "22px",
+              gridColumn: isMobile ? "span 2" : "auto",
+            }}
+          >
+            <div style={styles.statIcon}>
+              <Emoji3D e="🛡️" size={40} />
+            </div>
             <div>
               <h3 style={styles.statNumber}>{sosSent ? "Sent" : "Ready"}</h3>
               <p style={styles.statText}>SOS Status</p>
@@ -224,8 +462,16 @@ function Emergency() {
           </div>
         </div>
 
-        <div style={styles.mainGrid}>
-          <div style={styles.leftPanel}>
+        {/* MAIN */}
+        <div
+          style={{
+            ...styles.mainGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "1.25fr 1fr",
+            gap: isMobile ? "18px" : "25px",
+          }}
+        >
+          {/* CONTACTS */}
+          <div style={{ ...styles.leftPanel, padding: isMobile ? "18px" : "30px" }}>
             <div style={styles.panelHeader}>
               <div>
                 <h2 style={styles.sectionTitle}>Emergency Contacts</h2>
@@ -234,81 +480,104 @@ function Emergency() {
                 </p>
               </div>
 
-              <div style={styles.panelIcon}>📞</div>
+              {!isMobile && (
+                <div style={styles.panelIcon}>
+                  <Emoji3D e="📞" size={42} />
+                </div>
+              )}
             </div>
 
             <div style={styles.contactList}>
               {loading ? (
-                <p style={{ color: "#6D597A", textAlign: "center" }}>
+                <p style={{ color: "#5A5478", textAlign: "center" }}>
                   Loading contacts...
                 </p>
               ) : (
-                contacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    style={{
-                      ...styles.contactCard,
-                      border:
-                        selectedContact?.id === contact.id
-                          ? "3px solid #E63946"
-                          : "1px solid rgba(255,255,255,0.75)",
-                      background:
-                        selectedContact?.id === contact.id
-                          ? "linear-gradient(145deg, #FFFFFF, #FFE5EC)"
-                          : "rgba(255,255,255,0.64)",
-                    }}
-                    onClick={() => setSelectedContact(contact)}
-                  >
+                contacts.map((contact) => {
+                  const active = selectedContact?.id === contact.id;
+                  return (
                     <div
+                      key={contact.id}
                       style={{
-                        ...styles.contactIcon,
-                        backgroundColor: contact.color,
+                        ...styles.contactCard,
+                        flexWrap: "wrap",
+                        padding: isMobile ? "14px" : "18px",
+                        border: active
+                          ? "2px solid rgba(255,255,255,0.95)"
+                          : "1px solid rgba(255,255,255,0.55)",
+                        background: active
+                          ? "linear-gradient(145deg, rgba(255,255,255,0.8), rgba(255,214,222,0.6))"
+                          : "rgba(255,255,255,0.36)",
+                        boxShadow: active
+                          ? "0 18px 38px rgba(240,140,150,0.35), inset 0 2px 4px rgba(255,255,255,0.8)"
+                          : "0 12px 28px rgba(59,53,82,0.1), inset 0 1px 2px rgba(255,255,255,0.6)",
                       }}
+                      onClick={() => setSelectedContact(contact)}
                     >
-                      {contact.icon}
-                    </div>
-
-                    <div style={styles.contactInfo}>
-                      <h3 style={styles.contactName}>{contact.name}</h3>
-                      <p style={styles.contactType}>{contact.type}</p>
-
-                      <div style={styles.metaRow}>
-                        <span style={styles.metaBadge}>☎ {contact.phone}</span>
-                        <span style={styles.metaBadge}>
-                          ⏰ {contact.available}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <button
-                        style={styles.callButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCall(contact.phone);
+                      <div
+                        style={{
+                          ...styles.contactIcon,
+                          width: isMobile ? "60px" : "78px",
+                          height: isMobile ? "60px" : "78px",
+                          background: `radial-gradient(circle at 30% 25%, #FFFFFF 0%, ${contact.color} 75%)`,
                         }}
                       >
-                        Call
-                      </button>
+                        <Emoji3D e={contact.icon} size={isMobile ? 40 : 54} />
+                      </div>
 
-                      {contact.isPersonal && (
+                      <div style={{ ...styles.contactInfo, flex: "1 1 140px" }}>
+                        <h3 style={styles.contactName}>{contact.name}</h3>
+                        <p style={styles.contactType}>{contact.type}</p>
+
+                        <div style={styles.metaRow}>
+                          <span style={styles.metaBadge}>
+                            <Emoji3D e="☎️" size={15} style={styles.metaEmoji} />
+                            {contact.phone}
+                          </span>
+                          <span style={styles.metaBadge}>
+                            <Emoji3D e="⏰" size={15} style={styles.metaEmoji} />
+                            {contact.available}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: isMobile ? "row" : "column",
+                          gap: "8px",
+                          width: isMobile ? "100%" : "auto",
+                        }}
+                      >
                         <button
-                          style={styles.deleteButton}
+                          style={{ ...styles.callButton, flex: isMobile ? 1 : "none" }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteContact(contact.id);
+                            handleCall(contact.phone);
                           }}
                         >
-                          Remove
+                          Call
                         </button>
-                      )}
+
+                        {contact.canRemove && (
+                          <button
+                            style={{ ...styles.deleteButton, flex: isMobile ? 1 : "none" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteContact(contact.id);
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
-            {/* Add personal contact form */}
+            {/* Add personal contact */}
             <div style={styles.addContactBox}>
               <h3 style={styles.addContactTitle}>Add a Trusted Contact</h3>
 
@@ -347,22 +616,26 @@ function Emergency() {
             </div>
           </div>
 
+          {/* SOS + STEPS */}
           <div style={styles.rightPanel}>
             {selectedContact && (
-              <div style={styles.sosCard}>
+              <div style={{ ...styles.sosCard, padding: isMobile ? "20px" : "30px" }}>
                 <div
                   style={{
                     ...styles.selectedIconBox,
-                    backgroundColor: selectedContact.color,
+                    background: `radial-gradient(circle at 30% 25%, #FFFFFF 0%, ${selectedContact.color} 75%)`,
                   }}
                 >
-                  {selectedContact.icon}
+                  <Emoji3D e={selectedContact.icon} size={74} />
                 </div>
 
                 <h2 style={styles.selectedTitle}>{selectedContact.name}</h2>
                 <p style={styles.selectedType}>{selectedContact.type}</p>
 
-                <div style={styles.phoneBadge}>☎ {selectedContact.phone}</div>
+                <div style={styles.phoneBadge}>
+                  <Emoji3D e="☎️" size={18} style={styles.metaEmoji} />
+                  {selectedContact.phone}
+                </div>
 
                 <label style={styles.label}>Emergency Message</label>
                 <textarea
@@ -371,34 +644,54 @@ function Emergency() {
                   onChange={(e) => setMessage(e.target.value)}
                 ></textarea>
 
-                <div style={styles.actionGrid}>
+                <div
+                  style={{
+                    ...styles.actionGrid,
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  }}
+                >
                   <button
                     style={styles.primaryButton}
                     onClick={() => handleCall(selectedContact.phone)}
                   >
-                    📞 Call Now
+                    <Emoji3D e="📞" size={22} />
+                    Call Now
                   </button>
 
-                  <button
-                    style={styles.locationButton}
-                    onClick={handleShareLocation}
-                  >
-                    📍 Share Location
+                  <button style={styles.locationButton} onClick={handleShareLocation}>
+                    <Emoji3D e="📍" size={22} />
+                    {locationShared ? "Stop Sharing" : "Share Location"}
                   </button>
                 </div>
 
-                <button style={styles.fullSosButton} onClick={handleSendSOS}>
-                  🚨 Send SOS Alert
+                <button
+                  style={styles.fullSosButton}
+                  onClick={() => handleSendSOS("sms")}
+                >
+                  <Emoji3D e="🚨" size={24} />
+                  Send SOS via SMS
+                </button>
+
+                <button
+                  style={{
+                    ...styles.locationButton,
+                    width: "100%",
+                    marginTop: "12px",
+                  }}
+                  onClick={() => handleSendSOS("whatsapp")}
+                >
+                  💬 Send SOS via WhatsApp
                 </button>
 
                 <p style={styles.safeNote}>
-                  This interface helps you prepare emergency actions. In a real
-                  emergency, contact official services immediately.
+                  SOS opens your SMS / WhatsApp with your message and a live
+                  location link. In a real emergency, contact official services
+                  immediately.
                 </p>
               </div>
             )}
 
-            <div style={styles.stepsCard}>
+            <div style={{ ...styles.stepsCard, padding: isMobile ? "18px" : "26px" }}>
               <h3 style={styles.stepsTitle}>Quick Safety Plan</h3>
 
               {safetySteps.map((step, index) => (
@@ -410,74 +703,53 @@ function Emergency() {
             </div>
           </div>
         </div>
-
-        {/* Only the Breathing Practice tab, full width like the cards above */}
-        <div style={styles.bottomGrid}>
-          <div style={styles.helpCard} onClick={() => navigate("/breathing")}>
-            <div style={styles.helpIcon}>
-              <img
-                src={meditationImg}
-                alt="Breathing practice"
-                style={styles.helpImg}
-              />
-            </div>
-            <h3 style={styles.helpTitle}>Breathing Practice</h3>
-            <p style={styles.helpText}>
-              Use guided breathing to calm your body and mind.
-            </p>
-            <p style={styles.helpLink}>Go to Breathing Practice →</p>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
+/* =====================================================
+   THEME — from mood-bg.jpeg (teal-grey → lavender → peach).
+   Emergency actions use a soft coral-rose so they still
+   stand out without clashing with the pastel background.
+   ===================================================== */
+const glass = {
+  background: "rgba(255,255,255,0.34)",
+  border: "1px solid rgba(255,255,255,0.6)",
+  backdropFilter: "blur(18px) saturate(140%)",
+  WebkitBackdropFilter: "blur(18px) saturate(140%)",
+  boxShadow:
+    "0 24px 55px rgba(59,53,82,0.16), inset 0 2px 4px rgba(255,255,255,0.65)",
+};
+
+const coral = "linear-gradient(135deg, #E8707E 0%, #F08C98 50%, #F5B0A0 100%)";
+const coralShadow =
+  "0 14px 28px rgba(232,112,126,0.38), inset 0 2px 4px rgba(255,255,255,0.5)";
+
+const iconCircle = {
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background:
+    "radial-gradient(circle at 30% 25%, #FFFFFF 0%, rgba(225,214,245,0.9) 100%)",
+  boxShadow:
+    "0 12px 24px rgba(59,53,82,0.15), inset 0 2px 4px rgba(255,255,255,0.9)",
+  flexShrink: 0,
+};
+
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "35px",
-    background:
-      "linear-gradient(160deg, #F1E8E9 0%, #EFE6EE 45%, #D2CFE1 100%)",
-    fontFamily: "Arial, sans-serif",
+    backgroundSize: "cover",
+    backgroundPosition: "center top",
+    backgroundRepeat: "no-repeat",
+    backgroundAttachment: "fixed",
+    backgroundColor: "#CFC8DC",
+    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     position: "relative",
     overflowX: "hidden",
-  },
-
-  circleOne: {
-    position: "absolute",
-    width: "270px",
-    height: "270px",
-    borderRadius: "50%",
-    background: "#FFAFCC",
-    top: "70px",
-    right: "80px",
-    opacity: "0.34",
-    filter: "blur(5px)",
-  },
-
-  circleTwo: {
-    position: "absolute",
-    width: "310px",
-    height: "310px",
-    borderRadius: "50%",
-    background: "#B8C0FF",
-    bottom: "90px",
-    left: "60px",
-    opacity: "0.33",
-    filter: "blur(5px)",
-  },
-
-  circleThree: {
-    position: "absolute",
-    width: "190px",
-    height: "190px",
-    borderRadius: "50%",
-    background: "#A8DADC",
-    top: "360px",
-    left: "45%",
-    opacity: "0.24",
-    filter: "blur(6px)",
+    boxSizing: "border-box",
   },
 
   container: {
@@ -490,148 +762,142 @@ const styles = {
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "26px",
     flexWrap: "wrap",
     gap: "16px",
   },
 
   backButton: {
-    border: "none",
-    padding: "10px 16px",
+    border: "1px solid rgba(255,255,255,0.65)",
+    padding: "10px 18px",
     borderRadius: "18px",
-    background: "rgba(255,255,255,0.65)",
-    color: "#6D597A",
-    fontWeight: "800",
+    background: "rgba(255,255,255,0.45)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    color: "#4A4468",
+    fontWeight: "700",
     cursor: "pointer",
-    marginBottom: "12px",
-    boxShadow: "0 10px 24px rgba(49,34,68,0.1)",
+    marginBottom: "14px",
+    boxShadow:
+      "0 10px 24px rgba(59,53,82,0.12), inset 0 1px 2px rgba(255,255,255,0.8)",
   },
 
   title: {
-    fontSize: "42px",
-    color: "#312244",
-    margin: "0 0 7px 0",
-    fontWeight: "900",
+    color: "#2F2A45",
+    margin: "0 0 8px 0",
+    fontWeight: "800",
+    letterSpacing: "-0.5px",
+    textShadow: "0 2px 14px rgba(255,255,255,0.45)",
   },
 
   subtitle: {
-    color: "#6D597A",
+    color: "#4A4468",
     fontSize: "16px",
     margin: 0,
-    lineHeight: "1.5",
+    lineHeight: "1.55",
+    maxWidth: "560px",
   },
 
   headerBadge: {
-    padding: "13px 22px",
-    borderRadius: "22px",
-    background: "rgba(255,255,255,0.55)",
-    boxShadow: "0 12px 25px rgba(49,34,68,0.12)",
-    color: "#4A4E69",
-    fontWeight: "800",
+    ...glass,
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px 22px",
+    borderRadius: "24px",
+    color: "#3B3552",
+    fontWeight: "700",
   },
 
   alertCard: {
-    background: "linear-gradient(135deg, rgba(255,143,171,0.55), rgba(255,255,255,0.65))",
-    border: "1px solid rgba(255,255,255,0.8)",
+    ...glass,
+    background:
+      "linear-gradient(135deg, rgba(247,170,180,0.5), rgba(255,255,255,0.4))",
     borderRadius: "34px",
-    padding: "30px",
-    boxShadow: "0 25px 60px rgba(230,57,70,0.18)",
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     gap: "20px",
     marginBottom: "25px",
   },
 
   alertTitle: {
-    color: "#7A1F2B",
-    fontSize: "30px",
-    fontWeight: "900",
+    color: "#6E2434",
+    fontWeight: "800",
     margin: "0 0 8px 0",
   },
 
   alertText: {
-    color: "#6D597A",
+    color: "#4A4468",
     lineHeight: "1.6",
     margin: 0,
     maxWidth: "760px",
   },
 
   sosButton: {
-    border: "none",
-    padding: "18px 28px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    border: "1px solid rgba(255,255,255,0.55)",
+    padding: "16px 28px",
     borderRadius: "26px",
-    background: "linear-gradient(135deg, #E63946, #FF758F)",
+    background: coral,
     color: "#FFFFFF",
     fontSize: "18px",
-    fontWeight: "900",
+    fontWeight: "800",
     cursor: "pointer",
-    boxShadow: "0 18px 35px rgba(230,57,70,0.35)",
+    boxShadow: coralShadow,
     whiteSpace: "nowrap",
   },
 
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "20px",
     marginBottom: "25px",
   },
 
   statCard: {
+    ...glass,
     display: "flex",
     alignItems: "center",
-    gap: "16px",
-    padding: "22px",
+    gap: "14px",
     borderRadius: "30px",
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
   },
 
   statIcon: {
-    width: "60px",
-    height: "60px",
-    borderRadius: "22px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
-    fontSize: "30px",
+    ...iconCircle,
+    width: "62px",
+    height: "62px",
   },
 
   statNumber: {
-    color: "#312244",
+    color: "#2F2A45",
     margin: "0 0 4px 0",
-    fontSize: "28px",
-    fontWeight: "900",
+    fontSize: "26px",
+    fontWeight: "800",
   },
 
   statText: {
-    color: "#6D597A",
+    color: "#5A5478",
     margin: 0,
-    fontSize: "14px",
-    fontWeight: "700",
+    fontSize: "13px",
+    fontWeight: "600",
   },
 
   mainGrid: {
     display: "grid",
-    gridTemplateColumns: "1.25fr 1fr",
-    gap: "25px",
-    marginBottom: "25px",
   },
 
   leftPanel: {
-    background: "rgba(255,255,255,0.54)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    borderRadius: "34px",
-    padding: "30px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
+    ...glass,
+    borderRadius: "36px",
+    minWidth: 0,
   },
 
   rightPanel: {
     display: "grid",
     gap: "25px",
+    alignContent: "start",
+    minWidth: 0,
   },
 
   panelHeader: {
@@ -643,30 +909,23 @@ const styles = {
   },
 
   sectionTitle: {
-    color: "#312244",
+    color: "#2F2A45",
     fontSize: "24px",
     margin: "0 0 7px 0",
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   sectionSubText: {
-    color: "#6D597A",
+    color: "#5A5478",
     margin: 0,
     lineHeight: "1.5",
     fontSize: "14px",
   },
 
   panelIcon: {
-    width: "62px",
-    height: "62px",
-    borderRadius: "22px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "32px",
-    background: "linear-gradient(135deg, #CDB4DB, #FFC8DD)",
-    boxShadow: "0 15px 30px rgba(49,34,68,0.15)",
-    flexShrink: 0,
+    ...iconCircle,
+    width: "64px",
+    height: "64px",
   },
 
   contactList: {
@@ -678,40 +937,40 @@ const styles = {
   contactCard: {
     display: "flex",
     alignItems: "center",
-    gap: "16px",
-    padding: "18px",
+    gap: "14px",
     borderRadius: "28px",
-    boxShadow: "0 16px 34px rgba(49,34,68,0.11)",
     cursor: "pointer",
-    transition: "0.3s ease",
+    transition: "0.25s ease",
+    boxSizing: "border-box",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
   },
 
   contactIcon: {
-    width: "78px",
-    height: "78px",
-    borderRadius: "27px",
+    borderRadius: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "40px",
+    boxShadow:
+      "0 14px 26px rgba(59,53,82,0.18), inset 0 3px 6px rgba(255,255,255,0.85)",
     flexShrink: 0,
   },
 
   contactInfo: {
-    flex: 1,
+    minWidth: 0,
   },
 
   contactName: {
-    color: "#312244",
-    fontSize: "19px",
+    color: "#2F2A45",
+    fontSize: "18px",
     margin: "0 0 5px 0",
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   contactType: {
-    color: "#9B5DE5",
+    color: "#7B64B8",
     margin: "0 0 10px 0",
-    fontWeight: "800",
+    fontWeight: "700",
     fontSize: "14px",
   },
 
@@ -722,112 +981,121 @@ const styles = {
   },
 
   metaBadge: {
-    background: "rgba(255,255,255,0.72)",
-    color: "#6D597A",
-    padding: "6px 10px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    background: "rgba(255,255,255,0.6)",
+    color: "#4A4468",
+    padding: "5px 10px",
     borderRadius: "14px",
     fontSize: "12px",
-    fontWeight: "800",
+    fontWeight: "700",
+    boxShadow: "inset 0 1px 2px rgba(255,255,255,0.8)",
+  },
+
+  metaEmoji: {
+    filter: "drop-shadow(0 2px 2px rgba(59,53,82,0.25))",
   },
 
   callButton: {
-    border: "none",
+    border: "1px solid rgba(255,255,255,0.55)",
     padding: "12px 18px",
     borderRadius: "18px",
-    background: "linear-gradient(135deg, #E63946, #FF758F)",
+    background: coral,
     color: "#FFFFFF",
-    fontWeight: "900",
+    fontWeight: "800",
     cursor: "pointer",
-    boxShadow: "0 12px 24px rgba(230,57,70,0.25)",
+    boxShadow: coralShadow,
   },
 
   deleteButton: {
-    border: "none",
-    padding: "8px 12px",
-    borderRadius: "14px",
-    background: "rgba(255,255,255,0.85)",
-    color: "#B83256",
-    fontWeight: "800",
+    border: "1px solid rgba(255,255,255,0.7)",
+    padding: "10px 12px",
+    borderRadius: "16px",
+    background: "rgba(255,255,255,0.65)",
+    color: "#B03A55",
+    fontWeight: "700",
     fontSize: "12px",
     cursor: "pointer",
+    boxShadow: "inset 0 1px 2px rgba(255,255,255,0.9)",
   },
 
   addContactBox: {
     padding: "20px",
     borderRadius: "26px",
-    background: "rgba(255,255,255,0.5)",
-    border: "1px dashed rgba(109,89,122,0.35)",
+    background: "rgba(255,255,255,0.35)",
+    border: "1px dashed rgba(90,84,120,0.4)",
   },
 
   addContactTitle: {
-    color: "#312244",
+    color: "#2F2A45",
     margin: "0 0 12px 0",
     fontSize: "16px",
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   input: {
     width: "100%",
-    padding: "13px",
+    padding: "13px 16px",
     border: "none",
     outline: "none",
     borderRadius: "18px",
-    background: "rgba(255,255,255,0.75)",
-    color: "#312244",
+    background: "rgba(255,255,255,0.55)",
+    color: "#2F2A45",
     fontSize: "14px",
-    boxShadow: "inset 0 0 14px rgba(49,34,68,0.06)",
+    boxShadow: "inset 0 2px 8px rgba(59,53,82,0.1), 0 1px 0 rgba(255,255,255,0.7)",
     boxSizing: "border-box",
     marginBottom: "10px",
   },
 
   sosCard: {
-    background: "rgba(255,255,255,0.54)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    borderRadius: "34px",
-    padding: "30px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
+    ...glass,
+    borderRadius: "36px",
     textAlign: "center",
   },
 
   selectedIconBox: {
-    width: "115px",
-    height: "115px",
-    borderRadius: "36px",
+    width: "120px",
+    height: "120px",
+    borderRadius: "50%",
     margin: "0 auto 18px auto",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "58px",
-    boxShadow: "0 18px 35px rgba(49,34,68,0.18)",
+    boxShadow:
+      "0 18px 36px rgba(59,53,82,0.2), inset 0 3px 6px rgba(255,255,255,0.9)",
   },
 
   selectedTitle: {
-    color: "#312244",
+    color: "#2F2A45",
     fontSize: "25px",
     margin: "0 0 6px 0",
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   selectedType: {
-    color: "#6D597A",
+    color: "#5A5478",
     margin: "0 0 14px 0",
-    fontWeight: "700",
+    fontWeight: "600",
   },
 
   phoneBadge: {
-    display: "inline-block",
-    padding: "9px 15px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "9px 16px",
     borderRadius: "18px",
-    background: "rgba(255,255,255,0.72)",
-    color: "#E63946",
-    fontWeight: "900",
+    background: "rgba(255,255,255,0.6)",
+    color: "#C94A5E",
+    fontWeight: "800",
     marginBottom: "18px",
+    boxShadow: "inset 0 1px 2px rgba(255,255,255,0.85)",
   },
 
   label: {
     display: "block",
-    color: "#312244",
-    fontWeight: "800",
+    color: "#2F2A45",
+    fontWeight: "700",
     margin: "14px 0 8px 0",
     textAlign: "left",
   },
@@ -840,59 +1108,74 @@ const styles = {
     border: "none",
     outline: "none",
     borderRadius: "22px",
-    background: "rgba(255,255,255,0.72)",
-    color: "#312244",
+    background: "rgba(255,255,255,0.55)",
+    color: "#2F2A45",
     fontSize: "15px",
-    boxShadow: "inset 0 0 16px rgba(49,34,68,0.07)",
+    fontFamily: "inherit",
+    boxShadow: "inset 0 2px 8px rgba(59,53,82,0.1), 0 1px 0 rgba(255,255,255,0.7)",
     boxSizing: "border-box",
     marginBottom: "15px",
   },
 
   actionGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
     gap: "12px",
     marginBottom: "12px",
   },
 
   primaryButton: {
-    padding: "15px",
-    border: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "14px",
+    border: "1px solid rgba(255,255,255,0.55)",
     borderRadius: "22px",
-    background: "linear-gradient(135deg, #E63946, #FF758F)",
+    background: coral,
     color: "white",
     fontSize: "15px",
-    fontWeight: "900",
+    fontWeight: "800",
     cursor: "pointer",
-    boxShadow: "0 16px 30px rgba(230,57,70,0.28)",
+    boxShadow: coralShadow,
   },
 
   locationButton: {
-    padding: "15px",
-    border: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "14px",
+    border: "1px solid rgba(255,255,255,0.7)",
     borderRadius: "22px",
-    background: "rgba(255,255,255,0.75)",
-    color: "#6D597A",
+    background: "linear-gradient(160deg, rgba(255,255,255,0.85), rgba(225,214,245,0.6))",
+    color: "#4A4468",
     fontSize: "15px",
-    fontWeight: "900",
+    fontWeight: "800",
     cursor: "pointer",
+    boxShadow:
+      "0 12px 24px rgba(59,53,82,0.12), inset 0 2px 4px rgba(255,255,255,0.9)",
   },
 
   fullSosButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
     width: "100%",
     padding: "16px",
-    border: "none",
+    border: "1px solid rgba(255,255,255,0.55)",
     borderRadius: "24px",
-    background: "linear-gradient(135deg, #9B5DE5, #F15BB5)",
+    background: "linear-gradient(135deg, #8FA8D8 0%, #B79BE0 50%, #F0A9A0 100%)",
     color: "white",
     fontSize: "16px",
-    fontWeight: "900",
+    fontWeight: "800",
     cursor: "pointer",
-    boxShadow: "0 18px 35px rgba(155,93,229,0.35)",
+    boxShadow:
+      "0 16px 32px rgba(142,120,190,0.4), inset 0 2px 4px rgba(255,255,255,0.5)",
   },
 
   safeNote: {
-    color: "#8D7D99",
+    color: "#5A5478",
     fontSize: "13px",
     textAlign: "center",
     margin: "16px 0 0 0",
@@ -900,102 +1183,47 @@ const styles = {
   },
 
   stepsCard: {
-    padding: "26px",
-    borderRadius: "32px",
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
+    ...glass,
+    borderRadius: "34px",
   },
 
   stepsTitle: {
-    color: "#312244",
+    color: "#2F2A45",
     margin: "0 0 18px 0",
     fontSize: "22px",
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   stepItem: {
     display: "flex",
     alignItems: "center",
     gap: "14px",
-    padding: "14px",
+    padding: "12px 14px",
     borderRadius: "22px",
-    background: "rgba(255,255,255,0.65)",
+    background: "rgba(255,255,255,0.5)",
     marginBottom: "12px",
+    boxShadow: "inset 0 1px 2px rgba(255,255,255,0.8)",
   },
 
   stepNumber: {
     width: "38px",
     height: "38px",
-    borderRadius: "14px",
-    background: "linear-gradient(135deg, #E63946, #FF758F)",
+    borderRadius: "50%",
+    background: coral,
     color: "#FFFFFF",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontWeight: "900",
+    fontWeight: "800",
     flexShrink: 0,
+    boxShadow: "0 8px 16px rgba(232,112,126,0.35), inset 0 2px 3px rgba(255,255,255,0.5)",
   },
 
   stepText: {
-    color: "#6D597A",
+    color: "#4A4468",
     margin: 0,
     lineHeight: "1.5",
     fontSize: "14px",
-  },
-
-  // Single full-width tab
-  bottomGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: "20px",
-  },
-
-  helpCard: {
-    padding: "30px 25px",
-    borderRadius: "30px",
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
-    textAlign: "center",
-    cursor: "pointer",
-  },
-
-  helpIcon: {
-    width: "120px",
-    height: "120px",
-    margin: "0 auto 16px auto",
-    borderRadius: "32px",
-    overflow: "hidden",
-    background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
-    boxShadow: "0 14px 28px rgba(49,34,68,0.15)",
-  },
-
-  helpImg: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  },
-
-  helpTitle: {
-    color: "#312244",
-    margin: "0 0 8px 0",
-    fontWeight: "900",
-  },
-
-  helpText: {
-    color: "#6D597A",
-    lineHeight: "1.6",
-    margin: 0,
-    fontSize: "14px",
-  },
-
-  helpLink: {
-    margin: "14px 0 0 0",
-    color: "#9B5DE5",
-    fontSize: "13px",
-    fontWeight: "900",
   },
 };
 

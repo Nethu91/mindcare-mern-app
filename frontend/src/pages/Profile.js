@@ -233,8 +233,6 @@ function Profile() {
     gender: "",
     city: "",
     role: "MindCare User",
-    emergencyName: "",
-    emergencyPhone: "",
     // customization (saved to the database)
     nickname: savedUser?.nickname || "",
     bio: "",
@@ -285,6 +283,24 @@ function Profile() {
     loadProfile();
   }, []);
 
+  // Turns a backend user object into profile state fields
+  const fromServer = (d) => ({
+    name: d.name || "",
+    email: d.email || "",
+    phone: d.phone || "",
+    age: d.age ?? "",
+    gender: d.gender || "",
+    city: d.city || "",
+    nickname: d.nickname || "",
+    bio: d.bio || "",
+    photo: d.photo || "",
+    avatarHair: d.avatarHair || DEFAULT_AVATAR.avatarHair,
+    avatarHairColor: d.avatarHairColor || DEFAULT_AVATAR.avatarHairColor,
+    avatarSkin: d.avatarSkin ?? DEFAULT_AVATAR.avatarSkin,
+    avatarGlasses: !!d.avatarGlasses,
+    avatarBg: d.avatarBg || DEFAULT_AVATAR.avatarBg,
+  });
+
   const loadProfile = async () => {
     try {
       setLoadingProfile(true);
@@ -292,26 +308,7 @@ function Profile() {
       const res = await API.get("/auth/profile"); // ⚠️ adjust path if your authRoutes are mounted elsewhere
 
       if (res?.data) {
-        const d = res.data;
-        setProfile((prev) => ({
-          ...prev,
-          name: d.name || "",
-          email: d.email || "",
-          phone: d.phone || "",
-          age: d.age ?? "",
-          gender: d.gender || "",
-          city: d.city || "",
-          emergencyName: d.emergencyName || "",
-          emergencyPhone: d.emergencyPhone || "",
-          nickname: d.nickname || "",
-          bio: d.bio || "",
-          photo: d.photo || "",
-          avatarHair: d.avatarHair || DEFAULT_AVATAR.avatarHair,
-          avatarHairColor: d.avatarHairColor || DEFAULT_AVATAR.avatarHairColor,
-          avatarSkin: d.avatarSkin ?? DEFAULT_AVATAR.avatarSkin,
-          avatarGlasses: !!d.avatarGlasses,
-          avatarBg: d.avatarBg || DEFAULT_AVATAR.avatarBg,
-        }));
+        setProfile((prev) => ({ ...prev, ...fromServer(res.data) }));
       }
     } catch (err) {
       console.log(err);
@@ -382,9 +379,15 @@ function Profile() {
         const min = Math.min(img.width, img.height);
         const sx = (img.width - min) / 2;
         const sy = (img.height - min) / 2;
+
+        // white background so transparent PNGs don't turn black as JPEG
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, SIZE, SIZE);
         ctx.drawImage(img, sx, sy, min, min, 0, 0, SIZE, SIZE);
+
         setField("photo", canvas.toDataURL("image/jpeg", 0.78));
       };
+      img.onerror = () => alert("Couldn't read that image. Please try another one.");
       img.src = reader.result;
     };
     reader.readAsDataURL(file);
@@ -403,13 +406,11 @@ function Profile() {
         name: profile.name,
         phone: profile.phone,
         city: profile.city,
-        age: profile.age,
+        age: profile.age === "" || profile.age === null ? null : Number(profile.age),
         gender: profile.gender,
-        emergencyName: profile.emergencyName,
-        emergencyPhone: profile.emergencyPhone,
         nickname: profile.nickname,
         bio: profile.bio,
-        photo: profile.photo,
+        photo: profile.photo, // "" when removed, so it clears in the DB too
         avatarHair: profile.avatarHair,
         avatarHairColor: profile.avatarHairColor,
         avatarSkin: profile.avatarSkin,
@@ -417,19 +418,44 @@ function Profile() {
         avatarBg: profile.avatarBg,
       });
 
+      // Use what the server actually saved, so the screen always
+      // matches the database. (Falls back to local values if the
+      // server doesn't send a field back.)
+      const d = res?.data?.user || res?.data || {};
+
+      const saved = {
+        name: d.name ?? profile.name,
+        email: d.email ?? profile.email,
+        phone: d.phone ?? profile.phone,
+        age: d.age ?? profile.age,
+        gender: d.gender ?? profile.gender,
+        city: d.city ?? profile.city,
+        nickname: d.nickname ?? profile.nickname,
+        bio: d.bio ?? profile.bio,
+        photo: d.photo ?? profile.photo,
+        avatarHair: d.avatarHair || profile.avatarHair,
+        avatarHairColor: d.avatarHairColor || profile.avatarHairColor,
+        avatarSkin: d.avatarSkin ?? profile.avatarSkin,
+        avatarGlasses:
+          d.avatarGlasses !== undefined ? !!d.avatarGlasses : profile.avatarGlasses,
+        avatarBg: d.avatarBg || profile.avatarBg,
+      };
+
+      setProfile((prev) => ({ ...prev, ...saved }));
+
       // Keep the locally-stored user (used for the dashboard greeting
       // etc.) in sync with what was just saved.
       const updatedUser = {
         ...savedUser,
-        name: res?.data?.name || profile.name,
-        email: res?.data?.email || profile.email,
-        nickname: profile.nickname,
-        photo: profile.photo,
-        avatarHair: profile.avatarHair,
-        avatarHairColor: profile.avatarHairColor,
-        avatarSkin: profile.avatarSkin,
-        avatarGlasses: profile.avatarGlasses,
-        avatarBg: profile.avatarBg,
+        name: saved.name,
+        email: saved.email,
+        nickname: saved.nickname,
+        photo: saved.photo,
+        avatarHair: saved.avatarHair,
+        avatarHairColor: saved.avatarHairColor,
+        avatarSkin: saved.avatarSkin,
+        avatarGlasses: saved.avatarGlasses,
+        avatarBg: saved.avatarBg,
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -437,8 +463,11 @@ function Profile() {
       setIsEditing(false);
       alert("Profile updated successfully 💜");
     } catch (err) {
-      console.log(err);
-      alert("Failed to save your profile. Please try again.");
+      console.log(err?.response?.data || err);
+      alert(
+        err?.response?.data?.message ||
+          "Failed to save your profile. Please try again."
+      );
     } finally {
       setSaving(false);
     }
@@ -448,22 +477,6 @@ function Profile() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
-  };
-
-  // Opens the phone dialer with the emergency contact's number
-  // (works on phones; on desktop it opens whichever calling app is set up)
-  const callEmergency = () => {
-    const number = (profile.emergencyPhone || "").replace(/[^\d+]/g, "");
-
-    if (number.length < 7) {
-      alert("Please add a valid emergency contact number first.");
-      return;
-    }
-
-    const who = profile.emergencyName || "your emergency contact";
-    if (window.confirm(`Call ${who} at ${profile.emergencyPhone}?`)) {
-      window.location.href = `tel:${number}`;
-    }
   };
 
   return (
@@ -493,8 +506,7 @@ function Profile() {
               My Profile
             </h1>
             <p style={styles.subtitle}>
-              Manage your personal details, emergency contact, and MindCare
-              journey.
+              Manage your personal details and your MindCare journey.
             </p>
           </div>
 
@@ -881,58 +893,6 @@ function Profile() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* ===================== EMERGENCY CONTACT ===================== */}
-            <div style={{ ...styles.supportCard, padding: isMobile ? "18px" : "30px" }}>
-              <div
-                style={{
-                  ...styles.cardHeader,
-                  flexDirection: isMobile ? "column" : "row",
-                  alignItems: isMobile ? "flex-start" : "center",
-                  gap: isMobile ? "12px" : "16px",
-                }}
-              >
-                <div>
-                  <h2 style={styles.sectionTitle}>Emergency Contact</h2>
-                  <p style={styles.sectionSubText}>
-                    Trusted person for urgent support.
-                  </p>
-                </div>
-                {!isMobile && <div style={styles.cardIcon}>🚨</div>}
-              </div>
-
-              <label style={styles.label}>Contact Name</label>
-              <input
-                style={styles.input}
-                name="emergencyName"
-                value={profile.emergencyName}
-                onChange={handleChange}
-                disabled={!isEditing}
-              />
-
-              <label style={{ ...styles.label, marginTop: "14px" }}>Contact Phone</label>
-              <input
-                style={styles.input}
-                name="emergencyPhone"
-                type="tel"
-                placeholder="+94 77 123 4567"
-                value={profile.emergencyPhone}
-                onChange={handleChange}
-                disabled={!isEditing}
-              />
-
-              <button
-                style={{
-                  ...styles.callButton,
-                  opacity: profile.emergencyPhone ? 1 : 0.5,
-                  cursor: profile.emergencyPhone ? "pointer" : "not-allowed",
-                }}
-                onClick={callEmergency}
-                disabled={!profile.emergencyPhone}
-              >
-                Call Emergency Contact
-              </button>
             </div>
           </div>
         </div>
@@ -1389,25 +1349,6 @@ const styles = {
     margin: 0,
     fontSize: "12px",
     fontWeight: "800",
-  },
-
-  supportCard: {
-    ...glass,
-    borderRadius: "34px",
-    boxShadow: "0 25px 60px rgba(38,48,90,0.16)",
-  },
-
-  callButton: {
-    width: "100%",
-    marginTop: "16px",
-    padding: "15px",
-    border: "none",
-    borderRadius: "23px",
-    background: "linear-gradient(135deg, #E63946, #FF758F)",
-    color: "#FFFFFF",
-    fontSize: "15px",
-    fontWeight: "900",
-    cursor: "pointer",
   },
 };
 
