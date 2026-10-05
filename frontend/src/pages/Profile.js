@@ -53,6 +53,172 @@ function Background() {
   );
 }
 
+/* ============================================================
+   AVATAR BUILDER (pure SVG 3D avatar, fully customizable)
+   ============================================================ */
+
+const SKINS = [
+  { light: "#FFE6D2", mid: "#F8C9A4", dark: "#D9976B" },
+  { light: "#FBD9B5", mid: "#EDB583", dark: "#C48556" },
+  { light: "#E8B98A", mid: "#C98E5D", dark: "#9A6137" },
+  { light: "#C98F63", mid: "#A5683F", dark: "#744322" },
+  { light: "#9A6A47", mid: "#74472A", dark: "#4E2C16" },
+];
+
+const HAIR_COLORS = ["#2b1608", "#5a3a1e", "#a8672e", "#e0b45a", "#8b8f9b", "#c8553d"];
+
+const HAIR_STYLES = [
+  { id: "long", label: "Long" },
+  { id: "short", label: "Short" },
+  { id: "bun", label: "Bun" },
+  { id: "curly", label: "Curly" },
+];
+
+const BG_COLORS = [
+  "#B7DED6",
+  "#A8DADC",
+  "#EAD7F0",
+  "#FFD6A5",
+  "#FFC8DD",
+  "#BDE0FE",
+  "#FDFFB6",
+  "#CAFFBF",
+];
+
+const DEFAULT_AVATAR = {
+  avatarHair: "long",
+  avatarHairColor: HAIR_COLORS[0],
+  avatarSkin: 1,
+  avatarGlasses: false,
+  avatarBg: BG_COLORS[0],
+};
+
+let avUid = 0;
+const useAvUid = () => {
+  const ref = useRef(null);
+  if (ref.current === null) ref.current = `av3d${++avUid}`;
+  return ref.current;
+};
+
+function Avatar3D({ hair = "long", hairColor = "#2b1608", skin = 1, glasses = false, size = 100 }) {
+  const u = useAvUid();
+  const sk = SKINS[skin] || SKINS[1];
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      style={{ display: "block", overflow: "visible" }}
+    >
+      <defs>
+        <radialGradient id={`${u}-skin`} cx="35%" cy="28%" r="85%">
+          <stop offset="0%" stopColor={sk.light} />
+          <stop offset="55%" stopColor={sk.mid} />
+          <stop offset="100%" stopColor={sk.dark} />
+        </radialGradient>
+        <radialGradient id={`${u}-shirt`} cx="35%" cy="28%" r="85%">
+          <stop offset="0%" stopColor="#9BE0D6" />
+          <stop offset="55%" stopColor="#4DB6AC" />
+          <stop offset="100%" stopColor="#2B7F77" />
+        </radialGradient>
+      </defs>
+
+      {/* hair behind the head */}
+      {hair === "long" && (
+        <path
+          d="M26 44 C22 8 78 8 74 44 C74 62 80 74 72 84 L28 84 C20 74 26 62 26 44 Z"
+          fill={hairColor}
+        />
+      )}
+      {hair === "curly" &&
+        [
+          [27, 40, 11],
+          [32, 26, 11],
+          [46, 17, 12],
+          [62, 19, 12],
+          [72, 30, 11],
+          [74, 44, 10],
+        ].map(([cx, cy, r], i) => <circle key={i} cx={cx} cy={cy} r={r} fill={hairColor} />)}
+      {hair === "bun" && <circle cx="50" cy="9" r="10" fill={hairColor} />}
+
+      {/* shoulders + neck */}
+      <path d="M8 102 C8 76 28 68 50 68 C72 68 92 76 92 102 Z" fill={`url(#${u}-shirt)`} />
+      <rect x="43" y="54" width="14" height="18" rx="6" fill={sk.mid} />
+      <path d="M41 68 L50 80 L59 68 Z" fill={sk.mid} />
+
+      {/* head */}
+      <circle cx="50" cy="42" r="22" fill={`url(#${u}-skin)`} />
+
+      {/* hair in front */}
+      {hair === "long" ? (
+        <path d="M27 40 C25 10 75 10 73 40 C65 28 35 28 27 40 Z" fill={hairColor} />
+      ) : (
+        <path
+          d="M27 38 C25 8 75 8 73 38 C71 27 60 21 50 21 C40 21 29 27 27 38 Z"
+          fill={hairColor}
+        />
+      )}
+
+      {/* face */}
+      <circle cx="42" cy="45" r="2.8" fill="#2b1608" />
+      <circle cx="58" cy="45" r="2.8" fill="#2b1608" />
+      <circle cx="41" cy="44" r="0.9" fill="#fff" />
+      <circle cx="57" cy="44" r="0.9" fill="#fff" />
+      <path d="M43 54 q7 6 14 0" fill="none" stroke="#B5523E" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="34" cy="51" r="4" fill="#FF8FA3" opacity="0.35" />
+      <circle cx="66" cy="51" r="4" fill="#FF8FA3" opacity="0.35" />
+
+      {glasses && (
+        <g fill="rgba(255,255,255,0.28)" stroke="#2b2b3a" strokeWidth="2.4" strokeLinecap="round">
+          <circle cx="42" cy="45" r="8.5" />
+          <circle cx="58" cy="45" r="8.5" />
+          <path d="M50.5 44 Q50 42.5 49.5 44" fill="none" />
+          <path d="M33.5 44 L28 42 M66.5 44 L72 42" fill="none" />
+        </g>
+      )}
+
+      <ellipse cx="40" cy="30" rx="6" ry="2.5" fill="#fff" opacity="0.4" transform="rotate(-25 40 30)" />
+    </svg>
+  );
+}
+
+// Shows the uploaded photo if there is one, otherwise the avatar
+function ProfilePic({ profile, size = 130 }) {
+  const radius = Math.round(size * 0.32);
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        backgroundColor: profile.avatarBg,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        overflow: "hidden",
+        boxShadow: "0 20px 40px rgba(38,48,90,0.18)",
+      }}
+    >
+      {profile.photo ? (
+        <img
+          src={profile.photo}
+          alt="Profile"
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : (
+        <Avatar3D
+          hair={profile.avatarHair}
+          hairColor={profile.avatarHairColor}
+          skin={profile.avatarSkin}
+          glasses={profile.avatarGlasses}
+          size={size * 0.92}
+        />
+      )}
+    </div>
+  );
+}
+
 function Profile() {
   const navigate = useNavigate();
   const containerRef = useRef(null);
@@ -69,9 +235,16 @@ function Profile() {
     role: "MindCare User",
     emergencyName: "",
     emergencyPhone: "",
-    goal: "",
-    reminderTime: "",
-    preferredSupport: "",
+    // customization (saved to the database)
+    nickname: savedUser?.nickname || "",
+    bio: "",
+    photo: savedUser?.photo || "",
+    ...DEFAULT_AVATAR,
+    avatarHair: savedUser?.avatarHair || DEFAULT_AVATAR.avatarHair,
+    avatarHairColor: savedUser?.avatarHairColor || DEFAULT_AVATAR.avatarHairColor,
+    avatarSkin: savedUser?.avatarSkin ?? DEFAULT_AVATAR.avatarSkin,
+    avatarGlasses: !!savedUser?.avatarGlasses,
+    avatarBg: savedUser?.avatarBg || DEFAULT_AVATAR.avatarBg,
   });
 
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -119,19 +292,25 @@ function Profile() {
       const res = await API.get("/auth/profile"); // ⚠️ adjust path if your authRoutes are mounted elsewhere
 
       if (res?.data) {
+        const d = res.data;
         setProfile((prev) => ({
           ...prev,
-          name: res.data.name || "",
-          email: res.data.email || "",
-          phone: res.data.phone || "",
-          age: res.data.age ?? "",
-          gender: res.data.gender || "",
-          city: res.data.city || "",
-          emergencyName: res.data.emergencyName || "",
-          emergencyPhone: res.data.emergencyPhone || "",
-          goal: res.data.goal || "",
-          reminderTime: res.data.reminderTime || "",
-          preferredSupport: res.data.preferredSupport || "",
+          name: d.name || "",
+          email: d.email || "",
+          phone: d.phone || "",
+          age: d.age ?? "",
+          gender: d.gender || "",
+          city: d.city || "",
+          emergencyName: d.emergencyName || "",
+          emergencyPhone: d.emergencyPhone || "",
+          nickname: d.nickname || "",
+          bio: d.bio || "",
+          photo: d.photo || "",
+          avatarHair: d.avatarHair || DEFAULT_AVATAR.avatarHair,
+          avatarHairColor: d.avatarHairColor || DEFAULT_AVATAR.avatarHairColor,
+          avatarSkin: d.avatarSkin ?? DEFAULT_AVATAR.avatarSkin,
+          avatarGlasses: !!d.avatarGlasses,
+          avatarBg: d.avatarBg || DEFAULT_AVATAR.avatarBg,
         }));
       }
     } catch (err) {
@@ -169,27 +348,6 @@ function Profile() {
     },
   ];
 
-  const achievements = [
-    {
-      id: 1,
-      title: "First Mood Check",
-      text: "You started tracking your emotions.",
-      icon: "🌱",
-    },
-    {
-      id: 2,
-      title: "Calm Listener",
-      text: "You explored calm music sessions.",
-      icon: "🎧",
-    },
-    {
-      id: 3,
-      title: "Mindful Moment",
-      text: "You completed meditation practice.",
-      icon: "🪷",
-    },
-  ];
-
   const moods = ["Happy", "Calm", "Tired", "Anxious", "Focused"];
 
   const handleChange = (e) => {
@@ -199,8 +357,42 @@ function Profile() {
     });
   };
 
+  const setField = (key, value) => setProfile((p) => ({ ...p, [key]: value }));
+
+  // Resize the chosen photo to a small square so it is light enough to store in the DB
+  const handlePhoto = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please choose an image file.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const SIZE = 200;
+        const canvas = document.createElement("canvas");
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        const ctx = canvas.getContext("2d");
+        const min = Math.min(img.width, img.height);
+        const sx = (img.width - min) / 2;
+        const sy = (img.height - min) / 2;
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, SIZE, SIZE);
+        setField("photo", canvas.toDataURL("image/jpeg", 0.78));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   // ===========================
   // Save profile to backend
+  // (personal info + customization together)
   // ===========================
 
   const handleSave = async () => {
@@ -215,17 +407,29 @@ function Profile() {
         gender: profile.gender,
         emergencyName: profile.emergencyName,
         emergencyPhone: profile.emergencyPhone,
-        goal: profile.goal,
-        reminderTime: profile.reminderTime,
-        preferredSupport: profile.preferredSupport,
+        nickname: profile.nickname,
+        bio: profile.bio,
+        photo: profile.photo,
+        avatarHair: profile.avatarHair,
+        avatarHairColor: profile.avatarHairColor,
+        avatarSkin: profile.avatarSkin,
+        avatarGlasses: profile.avatarGlasses,
+        avatarBg: profile.avatarBg,
       });
 
       // Keep the locally-stored user (used for the dashboard greeting
-      // etc.) in sync with the name that was just saved.
+      // etc.) in sync with what was just saved.
       const updatedUser = {
         ...savedUser,
         name: res?.data?.name || profile.name,
         email: res?.data?.email || profile.email,
+        nickname: profile.nickname,
+        photo: profile.photo,
+        avatarHair: profile.avatarHair,
+        avatarHairColor: profile.avatarHairColor,
+        avatarSkin: profile.avatarSkin,
+        avatarGlasses: profile.avatarGlasses,
+        avatarBg: profile.avatarBg,
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -244,6 +448,22 @@ function Profile() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
+  };
+
+  // Opens the phone dialer with the emergency contact's number
+  // (works on phones; on desktop it opens whichever calling app is set up)
+  const callEmergency = () => {
+    const number = (profile.emergencyPhone || "").replace(/[^\d+]/g, "");
+
+    if (number.length < 7) {
+      alert("Please add a valid emergency contact number first.");
+      return;
+    }
+
+    const who = profile.emergencyName || "your emergency contact";
+    if (window.confirm(`Call ${who} at ${profile.emergencyPhone}?`)) {
+      window.location.href = `tel:${number}`;
+    }
   };
 
   return (
@@ -273,8 +493,8 @@ function Profile() {
               My Profile
             </h1>
             <p style={styles.subtitle}>
-              Manage your personal details, wellness preferences, support plan,
-              and MindCare journey.
+              Manage your personal details, emergency contact, and MindCare
+              journey.
             </p>
           </div>
 
@@ -297,12 +517,16 @@ function Profile() {
           <div style={{ ...styles.leftPanel, gap: isMobile ? "18px" : "25px" }}>
             <div style={{ ...styles.profileCard, padding: isMobile ? "20px" : "30px" }}>
               <div style={styles.avatarWrapper}>
-                <div style={styles.avatar}>👩‍💻</div>
+                <ProfilePic profile={profile} size={130} />
                 <div style={styles.onlineDot}></div>
               </div>
 
               <h2 style={styles.profileName}>{profile.name || "User"}</h2>
+              {profile.nickname && (
+                <p style={styles.nickname}>@{profile.nickname}</p>
+              )}
               <p style={styles.profileRole}>{profile.role}</p>
+              {profile.bio && <p style={styles.bioText}>{profile.bio}</p>}
 
               <div style={styles.moodBadge}>Current Mood: {selectedMood}</div>
 
@@ -359,6 +583,173 @@ function Profile() {
           </div>
 
           <div style={{ ...styles.rightPanel, gap: isMobile ? "18px" : "25px" }}>
+            {/* ===================== CUSTOMIZE PROFILE ===================== */}
+            <div style={{ ...styles.formCard, padding: isMobile ? "18px" : "30px" }}>
+              <div style={{ ...styles.cardHeader, flexDirection: "column", gap: "6px" }}>
+                <h2 style={styles.sectionTitle}>Customize Your Profile</h2>
+                <p style={styles.sectionSubText}>
+                  Make it yours. Choose a photo or build your own avatar. Everything
+                  is saved to your account.
+                </p>
+              </div>
+
+              <div style={styles.previewRow}>
+                <ProfilePic profile={profile} size={110} />
+
+                <div style={styles.photoButtons}>
+                  <label style={styles.uploadButton}>
+                    Upload Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhoto}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+
+                  {profile.photo && (
+                    <button
+                      type="button"
+                      style={styles.ghostButton}
+                      onClick={() => setField("photo", "")}
+                    >
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <label style={styles.label}>Nickname</label>
+              <input
+                style={styles.input}
+                value={profile.nickname}
+                maxLength={30}
+                placeholder="What should we call you?"
+                onChange={(e) => setField("nickname", e.target.value)}
+              />
+
+              <label style={{ ...styles.label, marginTop: "14px" }}>About Me</label>
+              <textarea
+                style={{ ...styles.textArea, minHeight: "80px" }}
+                value={profile.bio}
+                maxLength={150}
+                placeholder="A short line about you or what keeps you calm..."
+                onChange={(e) => setField("bio", e.target.value)}
+              ></textarea>
+
+              <div style={{ opacity: profile.photo ? 0.45 : 1, transition: "0.3s" }}>
+                <div style={styles.optionTitle}>
+                  Avatar Builder
+                  {profile.photo && (
+                    <span style={styles.hint}> (remove your photo to use the avatar)</span>
+                  )}
+                </div>
+
+                <div style={styles.optionLabel}>Hair Style</div>
+                <div style={styles.chipRow}>
+                  {HAIR_STYLES.map((h) => (
+                    <button
+                      type="button"
+                      key={h.id}
+                      onClick={() => setField("avatarHair", h.id)}
+                      style={{
+                        ...styles.chip,
+                        background:
+                          profile.avatarHair === h.id
+                            ? "linear-gradient(135deg, #3B4A8C, #4DB6AC)"
+                            : "rgba(255,255,255,0.75)",
+                        color: profile.avatarHair === h.id ? "#fff" : "#26305A",
+                      }}
+                    >
+                      {h.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setField("avatarGlasses", !profile.avatarGlasses)}
+                    style={{
+                      ...styles.chip,
+                      background: profile.avatarGlasses
+                        ? "linear-gradient(135deg, #3B4A8C, #4DB6AC)"
+                        : "rgba(255,255,255,0.75)",
+                      color: profile.avatarGlasses ? "#fff" : "#26305A",
+                    }}
+                  >
+                    Glasses
+                  </button>
+                </div>
+
+                <div style={styles.optionLabel}>Hair Colour</div>
+                <div style={styles.chipRow}>
+                  {HAIR_COLORS.map((c) => (
+                    <button
+                      type="button"
+                      key={c}
+                      aria-label={`Hair colour ${c}`}
+                      onClick={() => setField("avatarHairColor", c)}
+                      style={{
+                        ...styles.swatch,
+                        background: c,
+                        border:
+                          profile.avatarHairColor === c
+                            ? "3px solid #3B4A8C"
+                            : "3px solid rgba(255,255,255,0.9)",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div style={styles.optionLabel}>Skin Tone</div>
+                <div style={styles.chipRow}>
+                  {SKINS.map((s, i) => (
+                    <button
+                      type="button"
+                      key={i}
+                      aria-label={`Skin tone ${i + 1}`}
+                      onClick={() => setField("avatarSkin", i)}
+                      style={{
+                        ...styles.swatch,
+                        background: `radial-gradient(circle at 35% 30%, ${s.light}, ${s.mid} 60%, ${s.dark})`,
+                        border:
+                          profile.avatarSkin === i
+                            ? "3px solid #3B4A8C"
+                            : "3px solid rgba(255,255,255,0.9)",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div style={styles.optionLabel}>Background</div>
+                <div style={styles.chipRow}>
+                  {BG_COLORS.map((c) => (
+                    <button
+                      type="button"
+                      key={c}
+                      aria-label={`Background ${c}`}
+                      onClick={() => setField("avatarBg", c)}
+                      style={{
+                        ...styles.swatch,
+                        background: c,
+                        border:
+                          profile.avatarBg === c
+                            ? "3px solid #3B4A8C"
+                            : "3px solid rgba(255,255,255,0.9)",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <button
+                style={{ ...styles.saveButton, opacity: saving ? 0.7 : 1 }}
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Customization"}
+              </button>
+            </div>
+
+            {/* ===================== PERSONAL INFORMATION ===================== */}
             <div style={{ ...styles.formCard, padding: isMobile ? "18px" : "30px" }}>
               <div
                 style={{
@@ -492,186 +883,57 @@ function Profile() {
               ))}
             </div>
 
-            <div
-              style={{
-                ...styles.supportGrid,
-                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                gap: isMobile ? "18px" : "25px",
-              }}
-            >
-              <div style={{ ...styles.supportCard, padding: isMobile ? "18px" : "30px" }}>
-                <div
-                  style={{
-                    ...styles.cardHeader,
-                    flexDirection: isMobile ? "column" : "row",
-                    alignItems: isMobile ? "flex-start" : "center",
-                    gap: isMobile ? "12px" : "16px",
-                  }}
-                >
-                  <div>
-                    <h2 style={styles.sectionTitle}>Emergency Contact</h2>
-                    <p style={styles.sectionSubText}>
-                      Trusted person for urgent support.
-                    </p>
-                  </div>
-                  {!isMobile && <div style={styles.cardIcon}>🚨</div>}
+            {/* ===================== EMERGENCY CONTACT ===================== */}
+            <div style={{ ...styles.supportCard, padding: isMobile ? "18px" : "30px" }}>
+              <div
+                style={{
+                  ...styles.cardHeader,
+                  flexDirection: isMobile ? "column" : "row",
+                  alignItems: isMobile ? "flex-start" : "center",
+                  gap: isMobile ? "12px" : "16px",
+                }}
+              >
+                <div>
+                  <h2 style={styles.sectionTitle}>Emergency Contact</h2>
+                  <p style={styles.sectionSubText}>
+                    Trusted person for urgent support.
+                  </p>
                 </div>
-
-                <label style={styles.label}>Contact Name</label>
-                <input
-                  style={styles.input}
-                  name="emergencyName"
-                  value={profile.emergencyName}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-
-                <label style={styles.label}>Contact Phone</label>
-                <input
-                  style={styles.input}
-                  name="emergencyPhone"
-                  value={profile.emergencyPhone}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-
-                <button
-                  style={styles.callButton}
-                  onClick={() =>
-                    (window.location.href = `tel:${profile.emergencyPhone}`)
-                  }
-                >
-                  Call Emergency Contact
-                </button>
+                {!isMobile && <div style={styles.cardIcon}>🚨</div>}
               </div>
 
-              <div style={{ ...styles.supportCard, padding: isMobile ? "18px" : "30px" }}>
-                <div
-                  style={{
-                    ...styles.cardHeader,
-                    flexDirection: isMobile ? "column" : "row",
-                    alignItems: isMobile ? "flex-start" : "center",
-                    gap: isMobile ? "12px" : "16px",
-                  }}
-                >
-                  <div>
-                    <h2 style={styles.sectionTitle}>Wellness Preferences</h2>
-                    <p style={styles.sectionSubText}>
-                      Personalize your MindCare support.
-                    </p>
-                  </div>
-                  {!isMobile && <div style={styles.cardIcon}>🌿</div>}
-                </div>
+              <label style={styles.label}>Contact Name</label>
+              <input
+                style={styles.input}
+                name="emergencyName"
+                value={profile.emergencyName}
+                onChange={handleChange}
+                disabled={!isEditing}
+              />
 
-                <label style={styles.label}>Wellness Goal</label>
-                <textarea
-                  style={styles.textArea}
-                  name="goal"
-                  value={profile.goal}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                ></textarea>
+              <label style={{ ...styles.label, marginTop: "14px" }}>Contact Phone</label>
+              <input
+                style={styles.input}
+                name="emergencyPhone"
+                type="tel"
+                placeholder="+94 77 123 4567"
+                value={profile.emergencyPhone}
+                onChange={handleChange}
+                disabled={!isEditing}
+              />
 
-                <label style={styles.label}>Daily Reminder Time</label>
-                <input
-                  style={styles.input}
-                  name="reminderTime"
-                  type="time"
-                  value={profile.reminderTime}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-
-                <label style={styles.label}>Preferred Support</label>
-                <input
-                  style={styles.input}
-                  name="preferredSupport"
-                  value={profile.preferredSupport}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </div>
+              <button
+                style={{
+                  ...styles.callButton,
+                  opacity: profile.emergencyPhone ? 1 : 0.5,
+                  cursor: profile.emergencyPhone ? "pointer" : "not-allowed",
+                }}
+                onClick={callEmergency}
+                disabled={!profile.emergencyPhone}
+              >
+                Call Emergency Contact
+              </button>
             </div>
-          </div>
-        </div>
-
-        <div style={{ ...styles.achievementCard, padding: isMobile ? "18px" : "30px" }}>
-          <div
-            style={{
-              ...styles.cardHeader,
-              flexDirection: isMobile ? "column" : "row",
-              alignItems: isMobile ? "flex-start" : "center",
-              gap: isMobile ? "12px" : "16px",
-            }}
-          >
-            <div>
-              <h2 style={styles.sectionTitle}>Wellness Achievements</h2>
-              <p style={styles.sectionSubText}>
-                Your progress and positive steps in MindCare.
-              </p>
-            </div>
-
-            {!isMobile && <div style={styles.cardIcon}>🏆</div>}
-          </div>
-
-          <div
-            style={{
-              ...styles.achievementGrid,
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-              gap: isMobile ? "14px" : "18px",
-            }}
-          >
-            {achievements.map((item) => (
-              <div key={item.id} style={styles.achievementItem}>
-                <div style={styles.achievementIcon}>{item.icon}</div>
-                <h3 style={styles.achievementTitle}>{item.title}</h3>
-                <p style={styles.achievementText}>{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div
-          style={{
-            ...styles.bottomGrid,
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-            gap: isMobile ? "14px" : "20px",
-          }}
-        >
-          <div
-            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
-            onClick={() => navigate("/mood")}
-          >
-            <div style={styles.helpIcon}>😊</div>
-            <h3 style={styles.helpTitle}>Mood Tracker</h3>
-            <p style={styles.helpText}>
-              Record how you feel and understand your emotional patterns.
-            </p>
-            <p style={styles.helpLink}>Go to Mood Tracker →</p>
-          </div>
-
-          <div
-            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
-            onClick={() => navigate("/assessment")}
-          >
-            <div style={styles.helpIcon}>📝</div>
-            <h3 style={styles.helpTitle}>Assessment</h3>
-            <p style={styles.helpText}>
-              Complete wellness checks and review your mental health state.
-            </p>
-            <p style={styles.helpLink}>Go to Assessment →</p>
-          </div>
-
-          <div
-            style={{ ...styles.helpCard, padding: isMobile ? "18px" : "25px" }}
-            onClick={() => navigate("/emergency")}
-          >
-            <div style={styles.helpIcon}>🚨</div>
-            <h3 style={styles.helpTitle}>Emergency Support</h3>
-            <p style={styles.helpText}>
-              Access urgent support contacts and safety actions quickly.
-            </p>
-            <p style={styles.helpLink}>Go to Emergency →</p>
           </div>
         </div>
       </div>
@@ -762,6 +1024,7 @@ const styles = {
 
   leftPanel: {
     display: "grid",
+    alignContent: "start",
   },
 
   rightPanel: {
@@ -782,18 +1045,6 @@ const styles = {
     position: "relative",
   },
 
-  avatar: {
-    width: "130px",
-    height: "130px",
-    borderRadius: "42px",
-    background: "linear-gradient(135deg, #B7DED6, #EAD7F0)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "62px",
-    boxShadow: "0 20px 40px rgba(38,48,90,0.18)",
-  },
-
   onlineDot: {
     position: "absolute",
     right: "7px",
@@ -812,10 +1063,26 @@ const styles = {
     fontWeight: "900",
   },
 
+  nickname: {
+    color: "#3B4A8C",
+    margin: "0 0 6px 0",
+    fontWeight: "800",
+    fontSize: "14px",
+  },
+
   profileRole: {
     color: "#4F6272",
     margin: "0 0 14px 0",
     fontWeight: "800",
+  },
+
+  bioText: {
+    color: "#4F6272",
+    margin: "0 0 14px 0",
+    fontSize: "14px",
+    lineHeight: "1.5",
+    fontStyle: "italic",
+    wordBreak: "break-word",
   },
 
   moodBadge: {
@@ -946,6 +1213,91 @@ const styles = {
     flexShrink: 0,
   },
 
+  previewRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "18px",
+    marginBottom: "20px",
+    flexWrap: "wrap",
+  },
+
+  photoButtons: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+
+  uploadButton: {
+    display: "inline-block",
+    textAlign: "center",
+    padding: "12px 18px",
+    borderRadius: "18px",
+    background: "linear-gradient(135deg, #3B4A8C, #4DB6AC)",
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: "14px",
+    cursor: "pointer",
+    boxShadow: "0 12px 24px rgba(59,74,140,0.25)",
+  },
+
+  ghostButton: {
+    border: "none",
+    padding: "11px 18px",
+    borderRadius: "18px",
+    background: "rgba(255,143,171,0.25)",
+    color: "#B83256",
+    fontWeight: "800",
+    fontSize: "14px",
+    cursor: "pointer",
+  },
+
+  optionTitle: {
+    color: "#26305A",
+    fontWeight: "900",
+    fontSize: "16px",
+    margin: "20px 0 4px",
+  },
+
+  hint: {
+    color: "#7A8794",
+    fontWeight: "600",
+    fontSize: "12px",
+  },
+
+  optionLabel: {
+    color: "#4F6272",
+    fontWeight: "800",
+    fontSize: "13px",
+    margin: "14px 0 8px",
+  },
+
+  chipRow: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px",
+    alignItems: "center",
+  },
+
+  chip: {
+    border: "none",
+    padding: "10px 16px",
+    borderRadius: "16px",
+    fontWeight: "800",
+    fontSize: "13px",
+    cursor: "pointer",
+    boxShadow: "0 8px 16px rgba(38,48,90,0.09)",
+  },
+
+  swatch: {
+    width: "36px",
+    height: "36px",
+    borderRadius: "50%",
+    cursor: "pointer",
+    padding: 0,
+    boxShadow: "0 6px 12px rgba(38,48,90,0.15)",
+    boxSizing: "border-box",
+  },
+
   formGrid: {
     display: "grid",
     gap: "16px",
@@ -985,6 +1337,7 @@ const styles = {
     boxShadow: "inset 0 0 16px rgba(38,48,90,0.07)",
     boxSizing: "border-box",
     marginBottom: "14px",
+    fontFamily: "inherit",
   },
 
   saveButton: {
@@ -1038,10 +1391,6 @@ const styles = {
     fontWeight: "800",
   },
 
-  supportGrid: {
-    display: "grid",
-  },
-
   supportCard: {
     ...glass,
     borderRadius: "34px",
@@ -1059,88 +1408,6 @@ const styles = {
     fontSize: "15px",
     fontWeight: "900",
     cursor: "pointer",
-  },
-
-  achievementCard: {
-    ...glass,
-    borderRadius: "34px",
-    marginBottom: "25px",
-    boxShadow: "0 25px 60px rgba(38,48,90,0.16)",
-  },
-
-  achievementGrid: {
-    display: "grid",
-  },
-
-  achievementItem: {
-    background: "rgba(255,255,255,0.68)",
-    borderRadius: "26px",
-    padding: "22px",
-    textAlign: "center",
-    boxShadow: "0 14px 28px rgba(38,48,90,0.09)",
-  },
-
-  achievementIcon: {
-    fontSize: "42px",
-    marginBottom: "12px",
-  },
-
-  achievementTitle: {
-    color: "#26305A",
-    margin: "0 0 8px 0",
-    fontWeight: "900",
-  },
-
-  achievementText: {
-    color: "#4F6272",
-    margin: 0,
-    lineHeight: "1.5",
-    fontSize: "14px",
-  },
-
-  bottomGrid: {
-    display: "grid",
-  },
-
-  helpCard: {
-    ...glass,
-    borderRadius: "30px",
-    boxShadow: "0 20px 45px rgba(38,48,90,0.13)",
-    textAlign: "center",
-    cursor: "pointer",
-    boxSizing: "border-box",
-  },
-
-  helpIcon: {
-    width: "58px",
-    height: "58px",
-    margin: "0 auto 14px auto",
-    borderRadius: "20px",
-    background: "linear-gradient(135deg, #E6F4F1, #FFFFFF)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "32px",
-  },
-
-  helpTitle: {
-    color: "#26305A",
-    margin: "0 0 8px 0",
-    fontWeight: "900",
-  },
-
-  helpText: {
-    color: "#4F6272",
-    lineHeight: "1.6",
-    margin: 0,
-    fontSize: "14px",
-  },
-
-  helpLink: {
-    margin: "14px 0 0 0",
-    color: "#3B4A8C",
-    fontSize: "13px",
-    fontWeight: "900",
   },
 };
 

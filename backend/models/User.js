@@ -73,19 +73,51 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    goal: {
+    // ===========================
+    // Profile customization
+    // ===========================
+
+    nickname: {
+      type: String,
+      default: "",
+      maxlength: 30,
+    },
+
+    bio: {
+      type: String,
+      default: "",
+      maxlength: 150,
+    },
+
+    // small resized image stored as a base64 data URL
+    photo: {
       type: String,
       default: "",
     },
 
-    reminderTime: {
+    avatarHair: {
       type: String,
-      default: "",
+      default: "long",
     },
 
-    preferredSupport: {
+    avatarHairColor: {
       type: String,
-      default: "",
+      default: "#2b1608",
+    },
+
+    avatarSkin: {
+      type: Number,
+      default: 1,
+    },
+
+    avatarGlasses: {
+      type: Boolean,
+      default: false,
+    },
+
+    avatarBg: {
+      type: String,
+      default: "#B7DED6",
     },
   },
   { timestamps: true }
