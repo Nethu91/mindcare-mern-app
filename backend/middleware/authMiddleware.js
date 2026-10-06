@@ -5,6 +5,10 @@ const protect = async (req, res, next) => {
   try {
     let token;
 
+    // ========================================================
+    // GET TOKEN FROM AUTHORIZATION HEADER
+    // ========================================================
+
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
@@ -12,15 +16,32 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
     }
 
+    // ========================================================
+    // CHECK TOKEN
+    // ========================================================
+
     if (!token) {
       return res.status(401).json({
         message: "Not authorized. No token provided.",
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // ========================================================
+    // VERIFY TOKEN
+    // ========================================================
 
-    req.user = await User.findById(decoded.id).select("-password");
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    // ========================================================
+    // GET LOGGED-IN USER
+    // ========================================================
+
+    req.user = await User.findById(decoded.id).select(
+      "-password"
+    );
 
     if (!req.user) {
       return res.status(401).json({
@@ -28,9 +49,15 @@ const protect = async (req, res, next) => {
       });
     }
 
+    // ========================================================
+    // CONTINUE TO PROTECTED ROUTE
+    // ========================================================
+
     next();
   } catch (error) {
-    res.status(401).json({
+    console.error("Authentication error:", error.message);
+
+    return res.status(401).json({
       message: "Not authorized. Token failed.",
       error: error.message,
     });

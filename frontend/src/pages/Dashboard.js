@@ -5,7 +5,10 @@ import BottomNav from "../components/BottomNav";
 import { ThemeContext } from "../context/ThemeContext";
 import "./Dashboard.css";
 
-// Asset imports match the exact file names and extensions in src/assets/
+// ============================================================
+// ASSETS
+// ============================================================
+
 import mindfulImg from "../assets/Mindful banner.jpeg";
 import moodImg from "../assets/Mood Tracker.jpeg";
 import assessmentImg from "../assets/Assessment.jpeg";
@@ -19,7 +22,13 @@ import meditationImg from "../assets/Meditation.jpeg";
 import bellImg from "../assets/bell.jpeg";
 import summaryImg from "../assets/summary.jpeg";
 
-// Safely read the logged-in user (avoids a crash if localStorage is empty/corrupt)
+// Medication image
+import medicationImg from "../assets/Medication.jpeg";
+
+// ============================================================
+// HELPERS
+// ============================================================
+
 const getStoredUser = () => {
   try {
     return JSON.parse(localStorage.getItem("user"));
@@ -30,7 +39,6 @@ const getStoredUser = () => {
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-// Emoji for each mood name saved by the Mood page (keys must match exactly)
 const MOOD_EMOJIS = {
   Happy: "😊",
   Calm: "😌",
@@ -41,8 +49,11 @@ const MOOD_EMOJIS = {
   Tired: "😴",
 };
 
-// Change to 10 if your Mood page saves ratings out of 10
 const MAX_RATING = 5;
+
+// ============================================================
+// DASHBOARD
+// ============================================================
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -50,22 +61,25 @@ function Dashboard() {
 
   const user = getStoredUser();
 
-  // ===========================
-  // Theme (light / dark)
-  // ===========================
+  // ==========================================================
+  // Theme
+  // ==========================================================
+
   const { theme, toggleTheme } = useContext(ThemeContext);
 
-  // ===========================
+  // ==========================================================
   // Reminder States
-  // ===========================
+  // ==========================================================
+
   const [showReminder, setShowReminder] = useState(false);
   const [appointment, setAppointment] = useState(null);
   const [loadingReminder, setLoadingReminder] = useState(true);
   const [daysUntil, setDaysUntil] = useState(null);
 
-  // ===========================
+  // ==========================================================
   // Live Clock
-  // ===========================
+  // ==========================================================
+
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -76,9 +90,10 @@ function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // ===========================
+  // ==========================================================
   // Booking Success Toast
-  // ===========================
+  // ==========================================================
+
   const [bookingToast, setBookingToast] = useState(null);
 
   useEffect(() => {
@@ -99,33 +114,40 @@ function Dashboard() {
     }
   }, [location.state]);
 
-  // ===========================
+  // ==========================================================
   // Mood Summary
-  // null = user has not logged a mood yet
-  // ===========================
+  // ==========================================================
+
   const [mood, setMood] = useState(null);
 
-  // ===========================
+  // ==========================================================
   // Logout
-  // ===========================
+  // ==========================================================
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     navigate("/login");
   };
 
-  // ===========================
+  // ==========================================================
   // Load Dashboard Data
-  // ===========================
+  // ==========================================================
+
   useEffect(() => {
     let ignore = false;
 
-    // ---------- Appointment Reminder ----------
+    // --------------------------------------------------------
+    // Appointment Reminder
+    // --------------------------------------------------------
+
     const loadAppointmentReminder = async () => {
       try {
         setLoadingReminder(true);
 
         const res = await API.get("/appointments/my");
+
         if (ignore) return;
 
         if (!Array.isArray(res.data) || res.data.length === 0) {
@@ -159,7 +181,6 @@ function Dashboard() {
         const appointmentDate = new Date(upcoming.date);
         appointmentDate.setHours(0, 0, 0, 0);
 
-        // Math.round handles daylight-saving shifts correctly
         const days = Math.round(
           (appointmentDate.getTime() - today.getTime()) / MS_PER_DAY
         );
@@ -171,17 +192,22 @@ function Dashboard() {
           console.error("Failed to load appointments", err);
         }
       } finally {
-        if (!ignore) setLoadingReminder(false);
+        if (!ignore) {
+          setLoadingReminder(false);
+        }
       }
     };
 
-    // ---------- Latest Mood ----------
+    // --------------------------------------------------------
+    // Latest Mood
+    // --------------------------------------------------------
+
     const loadLatestMood = async () => {
       try {
         const res = await API.get("/moods/latest");
+
         if (ignore) return;
 
-        // Backend may return 200 with null when there is no mood yet
         if (!res.data) {
           setMood(null);
           return;
@@ -197,7 +223,6 @@ function Dashboard() {
       } catch (err) {
         if (ignore) return;
 
-        // 404 just means "no mood logged yet" -> not a real error
         if (err.response?.status === 404) {
           setMood(null);
         } else {
@@ -209,15 +234,15 @@ function Dashboard() {
     loadAppointmentReminder();
     loadLatestMood();
 
-    // Cleanup: stops state updates after unmount / StrictMode re-run
     return () => {
       ignore = true;
     };
   }, []);
 
-  // ===========================
+  // ==========================================================
   // Format Date
-  // ===========================
+  // ==========================================================
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-GB", {
       weekday: "long",
@@ -227,9 +252,10 @@ function Dashboard() {
     });
   };
 
-  // ===========================
+  // ==========================================================
   // Greeting
-  // ===========================
+  // ==========================================================
+
   const getGreeting = () => {
     const hour = now.getHours();
 
@@ -239,9 +265,10 @@ function Dashboard() {
     return "🌙 Good Evening,";
   };
 
-  // ===========================
-  // Countdown Text
-  // ===========================
+  // ==========================================================
+  // Appointment Countdown
+  // ==========================================================
+
   const getCountdownText = () => {
     if (daysUntil === null) return "";
 
@@ -251,9 +278,10 @@ function Dashboard() {
     return `In ${daysUntil} days`;
   };
 
-  // ===========================
+  // ==========================================================
   // Reminder Color
-  // ===========================
+  // ==========================================================
+
   const getReminderColor = () => {
     if (daysUntil === 0) return "#DC2626";
     if (daysUntil === 1) return "#7C3AED";
@@ -261,21 +289,44 @@ function Dashboard() {
     return "#2563EB";
   };
 
-  // ===========================
-  // Mood progress (safe against divide by zero)
-  // ===========================
+  // ==========================================================
+  // Mood Progress
+  // ==========================================================
+
   const moodPercent =
     mood && mood.maxScore > 0
-      ? Math.min(100, Math.max(0, (mood.score / mood.maxScore) * 100))
+      ? Math.min(
+          100,
+          Math.max(0, (mood.score / mood.maxScore) * 100)
+        )
       : 0;
 
-  // ===========================
-  // Features
-  // ===========================
+  // ==========================================================
+  // FEATURES
+  // ==========================================================
+
   const features = [
-    {title:"Breathing Practice",subtitle:"Guided breathing & mindfulness",icon:meditationImg,path:"/breathing",bg:"#E3F5F2"},
-    {title:"Meditation Centers",subtitle:"Find peaceful spaces near you",icon:meditationImg,path:"/meditation-centers",bg:"#EFE3FF"},
-    {title:"My Journal",subtitle:"Write your thoughts & reflections",icon:summaryImg,path:"/journal",bg:"#FFE4EC"},
+    {
+      title: "Breathing Practice",
+      subtitle: "Guided breathing & mindfulness",
+      icon: meditationImg,
+      path: "/breathing",
+      bg: "#E3F5F2",
+    },
+    {
+      title: "Meditation Centers",
+      subtitle: "Find peaceful spaces near you",
+      icon: meditationImg,
+      path: "/meditation-centers",
+      bg: "#EFE3FF",
+    },
+    {
+      title: "My Journal",
+      subtitle: "Write your thoughts & reflections",
+      icon: summaryImg,
+      path: "/journal",
+      bg: "#FFE4EC",
+    },
     {
       title: "Mood Tracker",
       subtitle: "Track your daily mood",
@@ -325,6 +376,19 @@ function Dashboard() {
       path: "/mind-relax-games",
       bg: "#FFF0F5",
     },
+
+    // ========================================================
+    // MEDICATION CARD
+    // ========================================================
+
+    {
+      title: "Medication",
+      subtitle: "Track medicines & reminders",
+      icon: medicationImg,
+      path: "/medication",
+      bg: "#E8F5E9",
+    },
+
     {
       title: "Emergency",
       subtitle: "Helpline support",
@@ -334,21 +398,32 @@ function Dashboard() {
     },
   ];
 
+  // ==========================================================
+  // UI
+  // ==========================================================
+
   return (
     <div className="dashboard-container">
-      {/* Top Bar */}
+      {/* ======================================================
+          TOP BAR
+      ====================================================== */}
+
       <div className="dashboard-top">
         <div>
           <h1 className="dashboard-title">
             {getGreeting()} <br />
             {user?.name || "Friend"}
           </h1>
-          <p className="dashboard-subtitle">How are you feeling today?</p>
+
+          <p className="dashboard-subtitle">
+            How are you feeling today?
+          </p>
         </div>
 
         <div className="dashboard-actions">
           <div className="action-row">
-            {/* Dark / Light mode toggle */}
+            {/* Dark / Light Mode */}
+
             <button
               className="theme-toggle"
               onClick={toggleTheme}
@@ -362,49 +437,69 @@ function Dashboard() {
               {theme === "light" ? "🌙" : "☀️"}
             </button>
 
+            {/* Notifications */}
+
             <button
               className="notification-btn"
               onClick={() => navigate("/notifications")}
-              title="View Appointments"
+              title="View Notifications"
             >
               <img
                 src={bellImg}
                 alt="Notifications"
                 className="notification-img"
               />
-
             </button>
           </div>
 
-          <button className="logout-btn" onClick={handleLogout}>
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+          >
             Logout
           </button>
         </div>
       </div>
 
-      {/* Booking Success Notification */}
+      {/* ======================================================
+          BOOKING SUCCESS NOTIFICATION
+      ====================================================== */}
+
       {bookingToast && (
         <div className="success-toast">
           <span className="toast-icon">✅</span>
+
           <div>
             <h4>Appointment Confirmed!</h4>
+
             <p>
-              With {bookingToast.counselor} on {bookingToast.date} at{" "}
-              {bookingToast.time}
+              With {bookingToast.counselor} on{" "}
+              {bookingToast.date} at {bookingToast.time}
             </p>
           </div>
         </div>
       )}
 
-      {/* Upcoming Appointment Card */}
+      {/* ======================================================
+          UPCOMING APPOINTMENT
+      ====================================================== */}
+
       {!loadingReminder && showReminder && appointment && (
         <div className="appointment-card">
-          <button className="close-btn" onClick={() => setShowReminder(false)}>
+          <button
+            className="close-btn"
+            onClick={() => setShowReminder(false)}
+          >
             ✕
           </button>
 
           <div className="bell-circle">
-            <img src={bellImg} alt="Bell" className="bell-img" />
+            <img
+              src={bellImg}
+              alt="Bell"
+              className="bell-img"
+            />
+
             <span className="bell-count">1</span>
           </div>
 
@@ -424,13 +519,18 @@ function Dashboard() {
             <h2>Upcoming Session</h2>
 
             <p>
-              <strong>Counselor:</strong> {appointment.counselorName}
+              <strong>Counselor:</strong>{" "}
+              {appointment.counselorName}
             </p>
+
             <p>
-              <strong>Date:</strong> {formatDate(appointment.date)}
+              <strong>Date:</strong>{" "}
+              {formatDate(appointment.date)}
             </p>
+
             <p>
-              <strong>Time:</strong> {appointment.time}
+              <strong>Time:</strong>{" "}
+              {appointment.time}
             </p>
 
             <button
@@ -443,25 +543,41 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Mindful Banner */}
+      {/* ======================================================
+          MINDFULNESS BANNER
+      ====================================================== */}
+
       <div className="mindful-card">
         <div className="mindful-left">
           <h2>Daily Mindfulness</h2>
+
           <p>
-            Take a deep breath. Focus on the present moment and care for your
-            mind.
+            Take a deep breath. Focus on the present moment and
+            care for your mind.
           </p>
         </div>
+
         <div className="mindful-image">
-          <img src={mindfulImg} alt="Mindfulness" className="mindful-img" />
+          <img
+            src={mindfulImg}
+            alt="Mindfulness"
+            className="mindful-img"
+          />
         </div>
       </div>
 
-      {/* Latest Mood Summary */}
+      {/* ======================================================
+          LATEST MOOD
+      ====================================================== */}
+
       <div className="summary-section">
         <div className="summary-header">
           <h2>Latest Mood Log</h2>
-          <button className="history-btn" onClick={() => navigate("/mood")}>
+
+          <button
+            className="history-btn"
+            onClick={() => navigate("/mood")}
+          >
             History &gt;
           </button>
         </div>
@@ -469,25 +585,40 @@ function Dashboard() {
         {mood ? (
           <div className="summary-card">
             <div className="summary-left">
-              <div className="summary-emoji">{mood.emoji}</div>
+              <div className="summary-emoji">
+                {mood.emoji}
+              </div>
+
               <div>
-                <p className="summary-label">Status</p>
+                <p className="summary-label">
+                  Status
+                </p>
+
                 <h3>{mood.label}</h3>
-                <span>{mood.description}</span>
+
+                <span>
+                  {mood.description}
+                </span>
               </div>
             </div>
 
             <div className="summary-divider"></div>
 
             <div className="summary-right">
-              <p className="summary-label">Intensity</p>
+              <p className="summary-label">
+                Intensity
+              </p>
+
               <h2>
                 {mood.score} / {mood.maxScore}
               </h2>
+
               <div className="progress">
                 <div
                   className="progress-fill"
-                  style={{ width: `${moodPercent}%` }}
+                  style={{
+                    width: `${moodPercent}%`,
+                  }}
                 ></div>
               </div>
             </div>
@@ -495,23 +626,36 @@ function Dashboard() {
         ) : (
           <div
             className="summary-card"
-            style={{ cursor: "pointer" }}
+            style={{
+              cursor: "pointer",
+            }}
             onClick={() => navigate("/mood")}
           >
             <div className="summary-left">
               <div className="summary-emoji">
-                <img src={summaryImg} alt="Summary" className="summary-img" />
+                <img
+                  src={summaryImg}
+                  alt="Summary"
+                  className="summary-img"
+                />
               </div>
+
               <div>
                 <h3>No mood logged yet</h3>
-                <span>Click here to track your mood today!</span>
+
+                <span>
+                  Click here to track your mood today!
+                </span>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Feature Navigation Grid */}
+      {/* ======================================================
+          FEATURE NAVIGATION GRID
+      ====================================================== */}
+
       <div className="feature-grid">
         {features.map((item, index) => (
           <div
@@ -521,9 +665,15 @@ function Dashboard() {
           >
             <div
               className="feature-icon-new"
-              style={{ backgroundColor: item.bg }}
+              style={{
+                backgroundColor: item.bg,
+              }}
             >
-              <img src={item.icon} alt={item.title} className="feature-img" />
+              <img
+                src={item.icon}
+                alt={item.title}
+                className="feature-img"
+              />
             </div>
 
             <div className="feature-content">
@@ -531,21 +681,33 @@ function Dashboard() {
               <p>{item.subtitle}</p>
             </div>
 
-            <span className="feature-arrow">&rsaquo;</span>
+            <span className="feature-arrow">
+              &rsaquo;
+            </span>
           </div>
         ))}
       </div>
 
-      {/* Floating AI Chatbot Button */}
+      {/* ======================================================
+          FLOATING AI CHATBOT BUTTON
+      ====================================================== */}
+
       <button
         className="floating-ai"
         onClick={() => navigate("/chatbot")}
         title="AI Mental Health Companion"
       >
-        <img src={aiImg} alt="AI Assistant" className="floating-ai-img" />
+        <img
+          src={aiImg}
+          alt="AI Assistant"
+          className="floating-ai-img"
+        />
       </button>
 
-      {/* Bottom Navigation */}
+      {/* ======================================================
+          BOTTOM NAVIGATION
+      ====================================================== */}
+
       <BottomNav />
     </div>
   );

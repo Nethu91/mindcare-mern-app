@@ -3,13 +3,17 @@ import { useContext } from "react";
 import { ThemeContext } from "./context/ThemeContext";
 import "./styles/main.css";
 
-// Public Pages
+// ============================================================
+// PUBLIC PAGES
+// ============================================================
 import Splash from "./pages/Splash";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import VerifyOtp from "./pages/VerifyOtp";
 
-// Protected Pages
+// ============================================================
+// PROTECTED PAGES
+// ============================================================
 import Dashboard from "./pages/Dashboard";
 import MoodTracker from "./pages/MoodTracker";
 import Assessment from "./pages/Assessment";
@@ -22,12 +26,18 @@ import Chatbot from "./pages/Chatbot";
 import Emergency from "./pages/Emergency";
 import Profile from "./pages/Profile";
 
+// ============================================================
+// ADDITIONAL PAGES
+// ============================================================
 import Journal from "./pages/Journal";
 import Notifications from "./pages/Notifications";
 import MeditationCenters from "./pages/MeditationCenters";
 import MindRelaxGames from "./pages/MindRelaxGames";
+import Medication from "./pages/Medication";
 
-// Components
+// ============================================================
+// COMPONENTS
+// ============================================================
 import NotificationBell from "./components/NotificationBell";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -39,40 +49,26 @@ function App() {
       {/* Dynamic theme class for app shell */}
       <div className={`app-shell ${theme}`}>
         <div className="app-screen">
+          {/* Global Notification Bell */}
           <NotificationBell />
-          <Routes>
-            <Route
-              path="/breathing"
-              element={
-                <ProtectedRoute>
-                  <Meditation breathing />
-                </ProtectedRoute>
-              }
-            />
-            {[
-              ["/journal", Journal],
-              ["/notifications", Notifications],
-              ["/meditation-centers", MeditationCenters],
-              ["/mind-relax-games", MindRelaxGames],
-            ].map(([path, Page]) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute>
-                    <Page />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
 
-            {/* Public Routes */}
+          <Routes>
+            {/* ==================================================
+                PUBLIC ROUTES
+            ================================================== */}
+
             <Route path="/" element={<Splash />} />
+
             <Route path="/login" element={<Login />} />
+
             <Route path="/register" element={<Register />} />
+
             <Route path="/verify-otp" element={<VerifyOtp />} />
 
-            {/* Protected Routes */}
+            {/* ==================================================
+                DASHBOARD
+            ================================================== */}
+
             <Route
               path="/dashboard"
               element={
@@ -81,6 +77,23 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ==================================================
+                BREATHING
+            ================================================== */}
+
+            <Route
+              path="/breathing"
+              element={
+                <ProtectedRoute>
+                  <Meditation breathing />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ==================================================
+                MOOD TRACKER
+            ================================================== */}
 
             <Route
               path="/mood"
@@ -91,6 +104,10 @@ function App() {
               }
             />
 
+            {/* ==================================================
+                ASSESSMENT
+            ================================================== */}
+
             <Route
               path="/assessment"
               element={
@@ -99,6 +116,10 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ==================================================
+                COUNSELOR
+            ================================================== */}
 
             <Route
               path="/counselor"
@@ -109,6 +130,10 @@ function App() {
               }
             />
 
+            {/* ==================================================
+                APPOINTMENTS
+            ================================================== */}
+
             <Route
               path="/appointments"
               element={
@@ -117,6 +142,10 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ==================================================
+                CALM VIDEOS
+            ================================================== */}
 
             <Route
               path="/calm-videos"
@@ -127,6 +156,10 @@ function App() {
               }
             />
 
+            {/* ==================================================
+                MUSIC
+            ================================================== */}
+
             <Route
               path="/music"
               element={
@@ -135,6 +168,10 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ==================================================
+                MEDITATION
+            ================================================== */}
 
             <Route
               path="/meditation"
@@ -145,6 +182,75 @@ function App() {
               }
             />
 
+            {/* ==================================================
+                JOURNAL
+            ================================================== */}
+
+            <Route
+              path="/journal"
+              element={
+                <ProtectedRoute>
+                  <Journal />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ==================================================
+                NOTIFICATIONS
+            ================================================== */}
+
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ==================================================
+                MEDITATION CENTERS
+            ================================================== */}
+
+            <Route
+              path="/meditation-centers"
+              element={
+                <ProtectedRoute>
+                  <MeditationCenters />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ==================================================
+                MIND RELAX GAMES
+            ================================================== */}
+
+            <Route
+              path="/mind-relax-games"
+              element={
+                <ProtectedRoute>
+                  <MindRelaxGames />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ==================================================
+                MEDICATION
+            ================================================== */}
+
+            <Route
+              path="/medication"
+              element={
+                <ProtectedRoute>
+                  <Medication />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ==================================================
+                AI CHATBOT
+            ================================================== */}
+
             <Route
               path="/chatbot"
               element={
@@ -154,6 +260,10 @@ function App() {
               }
             />
 
+            {/* ==================================================
+                EMERGENCY
+            ================================================== */}
+
             <Route
               path="/emergency"
               element={
@@ -162,6 +272,10 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ==================================================
+                PROFILE
+            ================================================== */}
 
             <Route
               path="/profile"
