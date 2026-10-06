@@ -1,0 +1,272 @@
+[
+  {
+    "name": "International Vipassana Meditation Center",
+    "address": "Dhamma Lanka, Colombo 07, Sri Lanka",
+    "phone": "+94112694100",
+    "description": "Buddhist meditation programs offering residential Vipassana courses in a tranquil setting. Suitable for beginners and experienced meditators. Courses are offered free of charge.",
+    "classes": ["Vipassana", "Buddhist Meditation", "Dhamma Courses", "10-Day Retreat"],
+    "latitude": 6.9022,
+    "longitude": 79.8619,
+    "hours": [
+      {"day": 0, "start": "06:00", "end": "20:00"},
+      {"day": 1, "start": "06:00", "end": "20:00"},
+      {"day": 2, "start": "06:00", "end": "20:00"},
+      {"day": 3, "start": "06:00", "end": "20:00"},
+      {"day": 4, "start": "06:00", "end": "20:00"},
+      {"day": 5, "start": "06:00", "end": "20:00"},
+      {"day": 6, "start": "06:00", "end": "20:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.8,
+    "reviewCount": 231
+  },
+  {
+    "name": "Nilambe Buddhist Meditation Centre",
+    "address": "Nilambe, Galaha, Kandy, Sri Lanka",
+    "phone": "+94812476299",
+    "description": "A peaceful residential meditation centre set in the hills near Kandy. Offers an open, non-dogmatic approach to meditation practice. Forest walks and tea gardens surrounding.",
+    "classes": ["Mindfulness", "Silent Meditation", "Retreat", "Yoga"],
+    "latitude": 7.2906,
+    "longitude": 80.6337,
+    "hours": [
+      {"day": 0, "start": "05:00", "end": "21:00"},
+      {"day": 1, "start": "05:00", "end": "21:00"},
+      {"day": 2, "start": "05:00", "end": "21:00"},
+      {"day": 3, "start": "05:00", "end": "21:00"},
+      {"day": 4, "start": "05:00", "end": "21:00"},
+      {"day": 5, "start": "05:00", "end": "21:00"},
+      {"day": 6, "start": "05:00", "end": "21:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.9,
+    "reviewCount": 187
+  },
+  {
+    "name": "Heartfulness Meditation Centre Colombo",
+    "address": "No. 12A, Havelock Road, Colombo 05, Sri Lanka",
+    "phone": "+94777123542",
+    "description": "Free meditation sessions open to everyone. Heartfulness is a simple, practical approach to meditation. Walk-in sessions available daily. No prior experience needed.",
+    "classes": ["Heartfulness Meditation", "Relaxation", "Free Sessions", "Beginner Classes"],
+    "latitude": 6.8939,
+    "longitude": 79.8594,
+    "hours": [
+      {"day": 0, "start": "08:00", "end": "11:00"},
+      {"day": 1, "start": "07:00", "end": "10:00"},
+      {"day": 2, "start": "07:00", "end": "10:00"},
+      {"day": 3, "start": "07:00", "end": "10:00"},
+      {"day": 4, "start": "07:00", "end": "10:00"},
+      {"day": 5, "start": "07:00", "end": "10:00"},
+      {"day": 6, "start": "07:00", "end": "12:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 5.0,
+    "reviewCount": 25
+  },
+  {
+    "name": "Seema Malaka Temple Meditation",
+    "address": "Seema Malaka, Beira Lake, Colombo 02, Sri Lanka",
+    "phone": "+94112321988",
+    "description": "A serene Buddhist temple on Beira Lake offering guided meditation sessions and Dhamma talks. Open to the public and visitors are welcome to sit and meditate.",
+    "classes": ["Buddhist Meditation", "Dhamma Talks", "Chanting", "Mindfulness"],
+    "latitude": 6.9166,
+    "longitude": 79.8577,
+    "hours": [
+      {"day": 0, "start": "06:00", "end": "18:00"},
+      {"day": 1, "start": "06:00", "end": "18:00"},
+      {"day": 2, "start": "06:00", "end": "18:00"},
+      {"day": 3, "start": "06:00", "end": "18:00"},
+      {"day": 4, "start": "06:00", "end": "18:00"},
+      {"day": 5, "start": "06:00", "end": "18:00"},
+      {"day": 6, "start": "06:00", "end": "18:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.7,
+    "reviewCount": 312
+  },
+  {
+    "name": "Gangaramaya Temple Meditation Hall",
+    "address": "61 Sri Jinarathana Road, Colombo 02, Sri Lanka",
+    "phone": "+94112327084",
+    "description": "One of Colombo's most important Buddhist temples with a dedicated meditation hall. Regular meditation programs available for monks, devotees and visitors alike.",
+    "classes": ["Pansil", "Meditation", "Dhamma School", "Buddhist Studies"],
+    "latitude": 6.9135,
+    "longitude": 79.8573,
+    "hours": [
+      {"day": 0, "start": "06:00", "end": "22:00"},
+      {"day": 1, "start": "06:00", "end": "22:00"},
+      {"day": 2, "start": "06:00", "end": "22:00"},
+      {"day": 3, "start": "06:00", "end": "22:00"},
+      {"day": 4, "start": "06:00", "end": "22:00"},
+      {"day": 5, "start": "06:00", "end": "22:00"},
+      {"day": 6, "start": "06:00", "end": "22:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.6,
+    "reviewCount": 560
+  },
+  {
+    "name": "Samadhi Centre for Mindful Living",
+    "address": "45, Guildford Crescent, Colombo 07, Sri Lanka",
+    "phone": "+94112690124",
+    "description": "A modern wellness centre blending traditional meditation with contemporary mindfulness practices. Individual and group sessions available. Corporate mindfulness programs offered.",
+    "classes": ["Mindfulness-Based Stress Reduction", "MBSR", "Yoga Nidra", "Corporate Wellness"],
+    "latitude": 6.9050,
+    "longitude": 79.8631,
+    "hours": [
+      {"day": 1, "start": "08:00", "end": "20:00"},
+      {"day": 2, "start": "08:00", "end": "20:00"},
+      {"day": 3, "start": "08:00", "end": "20:00"},
+      {"day": 4, "start": "08:00", "end": "20:00"},
+      {"day": 5, "start": "08:00", "end": "20:00"},
+      {"day": 6, "start": "09:00", "end": "17:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.5,
+    "reviewCount": 89
+  },
+  {
+    "name": "Mindful Life Counseling Centre",
+    "address": "No. 30/1, Flower Road, Colombo 07, Sri Lanka",
+    "phone": "+94702259599",
+    "description": "Counseling for children and adults. Integrates mindfulness-based therapies with professional counseling support. Specialized programs for anxiety, depression and stress management.",
+    "classes": ["Counseling", "Mindfulness Therapy", "CBT", "Child Psychology"],
+    "latitude": 6.9025,
+    "longitude": 79.8640,
+    "hours": [
+      {"day": 1, "start": "09:00", "end": "18:00"},
+      {"day": 2, "start": "09:00", "end": "18:00"},
+      {"day": 3, "start": "09:00", "end": "18:00"},
+      {"day": 4, "start": "09:00", "end": "18:00"},
+      {"day": 5, "start": "09:00", "end": "18:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.7,
+    "reviewCount": 95,
+    "website": "www.mindfullife.lk"
+  },
+  {
+    "name": "Kanduboda Meditation Centre",
+    "address": "Kanduboda, Delgoda, Gampaha, Sri Lanka",
+    "phone": "+94112488189",
+    "description": "A prominent meditation centre offering Satipatthana Vipassana meditation training. Resident monks provide guidance. Accommodation available for retreat participants.",
+    "classes": ["Satipatthana", "Vipassana", "Meditation Retreat", "Dhamma Study"],
+    "latitude": 7.0412,
+    "longitude": 80.0185,
+    "hours": [
+      {"day": 0, "start": "04:30", "end": "21:00"},
+      {"day": 1, "start": "04:30", "end": "21:00"},
+      {"day": 2, "start": "04:30", "end": "21:00"},
+      {"day": 3, "start": "04:30", "end": "21:00"},
+      {"day": 4, "start": "04:30", "end": "21:00"},
+      {"day": 5, "start": "04:30", "end": "21:00"},
+      {"day": 6, "start": "04:30", "end": "21:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.8,
+    "reviewCount": 143
+  },
+  {
+    "name": "Sri Kalyani Yoga & Meditation Studio",
+    "address": "23, Barnes Place, Colombo 07, Sri Lanka",
+    "phone": "+94115577890",
+    "description": "A holistic wellness studio combining yoga, pranayama and guided meditation. Morning and evening batch classes. Beginner-friendly with certified instructors.",
+    "classes": ["Hatha Yoga", "Pranayama", "Guided Meditation", "Sound Healing"],
+    "latitude": 6.9055,
+    "longitude": 79.8592,
+    "hours": [
+      {"day": 1, "start": "06:00", "end": "09:00"},
+      {"day": 1, "start": "17:00", "end": "20:00"},
+      {"day": 2, "start": "06:00", "end": "09:00"},
+      {"day": 2, "start": "17:00", "end": "20:00"},
+      {"day": 3, "start": "06:00", "end": "09:00"},
+      {"day": 3, "start": "17:00", "end": "20:00"},
+      {"day": 4, "start": "06:00", "end": "09:00"},
+      {"day": 4, "start": "17:00", "end": "20:00"},
+      {"day": 5, "start": "06:00", "end": "09:00"},
+      {"day": 5, "start": "17:00", "end": "20:00"},
+      {"day": 6, "start": "07:00", "end": "11:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.6,
+    "reviewCount": 68
+  },
+  {
+    "name": "Bhavana Society Sri Lanka",
+    "address": "Mitirigala Nissarana Vanaya, Mitirigala, Sri Lanka",
+    "phone": "+94332275540",
+    "description": "A forest monastery and meditation centre offering intensive meditation practice in a natural environment. Silent retreat conditions maintained. Instruction in Theravada tradition.",
+    "classes": ["Silent Retreat", "Forest Meditation", "Theravada", "Walking Meditation"],
+    "latitude": 7.1150,
+    "longitude": 79.9752,
+    "hours": [
+      {"day": 0, "start": "05:00", "end": "21:00"},
+      {"day": 1, "start": "05:00", "end": "21:00"},
+      {"day": 2, "start": "05:00", "end": "21:00"},
+      {"day": 3, "start": "05:00", "end": "21:00"},
+      {"day": 4, "start": "05:00", "end": "21:00"},
+      {"day": 5, "start": "05:00", "end": "21:00"},
+      {"day": 6, "start": "05:00", "end": "21:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.9,
+    "reviewCount": 76
+  },
+  {
+    "name": "Awareness Institute of Sri Lanka",
+    "address": "189, High Level Road, Maharagama, Sri Lanka",
+    "phone": "+94114318989",
+    "description": "Professional mental wellness institute offering mindfulness-based cognitive therapy, stress reduction and meditation instruction. Weekend workshops and weekly group sessions.",
+    "classes": ["Mindfulness-Based Cognitive Therapy", "MBCT", "Stress Reduction", "Group Therapy"],
+    "latitude": 6.8480,
+    "longitude": 79.9263,
+    "hours": [
+      {"day": 1, "start": "09:00", "end": "19:00"},
+      {"day": 2, "start": "09:00", "end": "19:00"},
+      {"day": 3, "start": "09:00", "end": "19:00"},
+      {"day": 4, "start": "09:00", "end": "19:00"},
+      {"day": 5, "start": "09:00", "end": "19:00"},
+      {"day": 6, "start": "09:00", "end": "14:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.4,
+    "reviewCount": 52
+  },
+  {
+    "name": "Inner Peace Meditation Kandy",
+    "address": "100, Peradeniya Road, Kandy, Sri Lanka",
+    "phone": "+94812232460",
+    "description": "A welcoming meditation centre in the heart of Kandy offering daily guided meditation, breathing exercises and Dharma talks. Suitable for all faiths and backgrounds.",
+    "classes": ["Breathing Exercises", "Guided Meditation", "Dharma Talks", "Loving Kindness"],
+    "latitude": 7.2906,
+    "longitude": 80.6337,
+    "hours": [
+      {"day": 0, "start": "07:00", "end": "20:00"},
+      {"day": 1, "start": "07:00", "end": "20:00"},
+      {"day": 2, "start": "07:00", "end": "20:00"},
+      {"day": 3, "start": "07:00", "end": "20:00"},
+      {"day": 4, "start": "07:00", "end": "20:00"},
+      {"day": 5, "start": "07:00", "end": "20:00"},
+      {"day": 6, "start": "07:00", "end": "20:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.5,
+    "reviewCount": 41
+  },
+  {
+    "name": "Shambhala Meditation Centre Colombo",
+    "address": "36, Wijerama Road, Colombo 07, Sri Lanka",
+    "phone": "+94115588421",
+    "description": "Shambhala offers open-heart meditation rooted in the Tibetan Buddhist tradition. Weekly meditation sittings, study programs and community events. All are welcome.",
+    "classes": ["Tibetan Buddhism", "Open Heart Meditation", "Study Program", "Community Sitting"],
+    "latitude": 6.9031,
+    "longitude": 79.8648,
+    "hours": [
+      {"day": 0, "start": "09:00", "end": "13:00"},
+      {"day": 3, "start": "18:30", "end": "21:00"},
+      {"day": 6, "start": "09:00", "end": "12:00"}
+    ],
+    "timeZone": "Asia/Colombo",
+    "rating": 4.7,
+    "reviewCount": 38
+  }
+]

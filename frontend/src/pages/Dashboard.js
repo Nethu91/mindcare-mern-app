@@ -319,6 +319,13 @@ function Dashboard() {
       bg: "#E3F2FD",
     },
     {
+      title: "Mind Relax Games",
+      subtitle: "Anti-stress & fun games",
+      icon: calmImg,
+      path: "/mind-relax-games",
+      bg: "#FFF0F5",
+    },
+    {
       title: "Emergency",
       subtitle: "Helpline support",
       icon: emergencyImg,
