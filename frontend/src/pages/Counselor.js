@@ -548,163 +548,197 @@ function Counselor() {
               filteredCounselors.map((counselor) => {
                 const active = selectedCounselor?._id === counselor._id;
                 return (
-                  <button
+                  <div
                     key={counselor._id}
-                    onClick={() => setSelectedCounselor(counselor)}
+                    onClick={() => setSelectedCounselor(active ? null : counselor)}
                     style={{
                       ...S.counselorCard,
+                      flexDirection: "column",
+                      alignItems: "stretch",
                       border: active
                         ? `3px solid ${theme.accent}`
                         : "1px solid rgba(255,255,255,0.75)",
                       background: active
                         ? `linear-gradient(145deg, #FFFFFF, ${theme.soft})`
                         : "rgba(255,255,255,0.64)",
-                      transform: active ? "translateY(-4px)" : "translateY(0)",
+                      transform: active ? "translateY(-2px)" : "translateY(0)",
+                      boxShadow: active
+                        ? `0 14px 32px ${theme.line || "rgba(0,0,0,0.12)"}`
+                        : "0 6px 16px rgba(30,30,40,0.06)",
                     }}
                   >
-                    <div
-                      style={{
-                        ...S.avatarBox,
-                        backgroundColor: getAvatarColor(counselor._id),
-                      }}
-                    >
-                      <Icon3D
-                        name="counselor"
-                        size={52}
-                        hue={theme.hue}
-                        variant={getAvatarVariant(counselor._id)}
-                      />
-                    </div>
+                    {/* Top Row: Avatar + Info + Toggle Badge */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%" }}>
+                      <div
+                        style={{
+                          ...S.avatarBox,
+                          backgroundColor: getAvatarColor(counselor._id),
+                        }}
+                      >
+                        <Icon3D
+                          name="counselor"
+                          size={52}
+                          hue={theme.hue}
+                          variant={getAvatarVariant(counselor._id)}
+                        />
+                      </div>
 
-                    <div style={S.counselorInfo}>
-                      <h3 style={S.counselorName}>{counselor.name}</h3>
-                      <p style={S.counselorRole}>{counselor.role}</p>
-                      <p style={S.specialty}>{counselor.specialization}</p>
-
-                      <div style={S.miniInfoRow}>
-                        <span style={S.miniBadge}>
-                          <Icon3D name="pin" size={14} />
-                          {counselor.location}
-                        </span>
-                        {counselor.experience && (
-                          <span style={S.miniBadge}>
-                            <Icon3D name="hourglass" size={14} />
-                            {counselor.experience}
+                      <div style={S.counselorInfo}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <h3 style={S.counselorName}>{counselor.name}</h3>
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: active ? theme.accentDark : theme.text,
+                              background: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)",
+                              padding: "4px 10px",
+                              borderRadius: 12,
+                              border: `1px solid ${active ? theme.accent : "rgba(0,0,0,0.06)"}`,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {active ? "▲ Hide Details" : "▼ View Details"}
                           </span>
-                        )}
+                        </div>
+
+                        <p style={S.counselorRole}>{counselor.role}</p>
+                        <p style={S.specialty}>{counselor.specialization}</p>
+
+                        <div style={S.miniInfoRow}>
+                          <span style={S.miniBadge}>
+                            <Icon3D name="pin" size={14} />
+                            {counselor.location}
+                          </span>
+                          {counselor.experience && (
+                            <span style={S.miniBadge}>
+                              <Icon3D name="hourglass" size={14} />
+                              {counselor.experience}
+                            </span>
+                          )}
+                          <span style={{ ...S.miniBadge, color: "#10b981" }}>
+                            <Icon3D name="dot" size={12} />
+                            {counselor.availability || "Available"}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </button>
+
+                    {/* In-Place Details & Booking Section */}
+                    {active && (
+                      <div
+                        style={{
+                          marginTop: 16,
+                          paddingTop: 16,
+                          borderTop: `1.5px solid ${theme.line || "rgba(0,0,0,0.08)"}`,
+                          width: "100%",
+                          cursor: "default",
+                          textAlign: "left",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Details Grid */}
+                        <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+                          <div style={S.detailBox}>
+                            <h3 style={S.detailTitle}>Specialized In</h3>
+                            <p style={S.detailText}>{counselor.specialization}</p>
+                          </div>
+
+                          <div style={S.detailBox}>
+                            <h3 style={S.detailTitle}>About Counselor</h3>
+                            <p style={S.detailText}>
+                              {counselor.about || "No description provided."}
+                            </p>
+                          </div>
+
+                          <div style={S.detailBox}>
+                            <h3 style={S.detailTitle}>Session Location</h3>
+                            <p style={S.detailText}>{counselor.location}</p>
+                          </div>
+                        </div>
+
+                        {/* In-Place Booking Form */}
+                        <div
+                          style={{
+                            background: "rgba(255,255,255,0.78)",
+                            borderRadius: 20,
+                            padding: "18px 16px",
+                            border: "1px solid rgba(255,255,255,0.9)",
+                            boxShadow: "0 6px 18px rgba(0,0,0,0.04)",
+                          }}
+                        >
+                          <h3 style={{ ...S.sectionTitle, fontSize: 17, marginBottom: 12 }}>
+                            Book Session with {counselor.name}
+                          </h3>
+
+                          {bookingSuccess && <p style={S.success}>{bookingSuccess}</p>}
+
+                          <div style={S.modeGrid}>
+                            {MODES.map((mode) => {
+                              const activeMode = selectedMode === mode.value;
+                              return (
+                                <button
+                                  key={mode.value}
+                                  type="button"
+                                  onClick={() => setSelectedMode(mode.value)}
+                                  style={{
+                                    ...S.modeButton,
+                                    background: activeMode
+                                      ? `linear-gradient(135deg, ${theme.accent}, ${theme.accentDark})`
+                                      : "rgba(255,255,255,0.75)",
+                                    color: activeMode ? "#FFFFFF" : theme.ink,
+                                    transform: activeMode ? "translateY(-2px)" : "none",
+                                  }}
+                                >
+                                  <Icon3D name={mode.icon} size={28} hue={theme.hue} />
+                                  {mode.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <label style={S.label}>Appointment Date</label>
+                          <input
+                            style={S.input}
+                            type="date"
+                            value={appointmentDate}
+                            onChange={(e) => setAppointmentDate(e.target.value)}
+                          />
+
+                          <label style={S.label}>Appointment Time</label>
+                          <input
+                            style={S.input}
+                            type="time"
+                            value={appointmentTime}
+                            onChange={(e) => setAppointmentTime(e.target.value)}
+                          />
+
+                          <button
+                            style={{
+                              ...S.bookButton,
+                              opacity: bookingLoading ? 0.7 : 1,
+                              marginTop: 12,
+                            }}
+                            type="button"
+                            onClick={handleBooking}
+                            disabled={bookingLoading}
+                          >
+                            {bookingLoading ? "Booking..." : "Request Appointment"}
+                          </button>
+
+                          <p style={{ ...S.safeNote, marginTop: 10 }}>
+                            <Icon3D name="lock" size={16} />
+                            Your session details are private and confidential.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })
             )}
           </div>
         </div>
-
-        {/* Profile */}
-        {selectedCounselor && (
-          <div style={{ ...S.panel, textAlign: "center" }}>
-            <div
-              style={{
-                ...S.profileAvatar,
-                backgroundColor: getAvatarColor(selectedCounselor._id),
-              }}
-            >
-              <Icon3D
-                name="counselor"
-                size={84}
-                hue={theme.hue}
-                variant={getAvatarVariant(selectedCounselor._id)}
-              />
-            </div>
-
-            <h2 style={S.profileName}>{selectedCounselor.name}</h2>
-            <p style={S.profileRole}>{selectedCounselor.role}</p>
-
-            <div style={S.statusBadge}>
-              <Icon3D name="dot" size={16} />
-              {selectedCounselor.availability || "Available"}
-            </div>
-
-            <div style={S.detailBox}>
-              <h3 style={S.detailTitle}>Specialized In</h3>
-              <p style={S.detailText}>{selectedCounselor.specialization}</p>
-            </div>
-
-            <div style={S.detailBox}>
-              <h3 style={S.detailTitle}>About Counselor</h3>
-              <p style={S.detailText}>
-                {selectedCounselor.about || "No description provided."}
-              </p>
-            </div>
-
-            <div style={S.detailBox}>
-              <h3 style={S.detailTitle}>Session Location</h3>
-              <p style={S.detailText}>{selectedCounselor.location}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Booking */}
-        {selectedCounselor && (
-          <div style={S.panel}>
-            <h2 style={S.sectionTitle}>Book Session</h2>
-
-            {bookingSuccess && <p style={S.success}>{bookingSuccess}</p>}
-
-            <div style={S.modeGrid}>
-              {MODES.map((mode) => {
-                const active = selectedMode === mode.value;
-                return (
-                  <button
-                    key={mode.value}
-                    onClick={() => setSelectedMode(mode.value)}
-                    style={{
-                      ...S.modeButton,
-                      background: active
-                        ? `linear-gradient(135deg, ${theme.accent}, ${theme.accentDark})`
-                        : "rgba(255,255,255,0.7)",
-                      color: active ? "#FFFFFF" : theme.ink,
-                      transform: active ? "translateY(-3px)" : "none",
-                    }}
-                  >
-                    <Icon3D name={mode.icon} size={32} hue={theme.hue} />
-                    {mode.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <label style={S.label}>Appointment Date</label>
-            <input
-              style={S.input}
-              type="date"
-              value={appointmentDate}
-              onChange={(e) => setAppointmentDate(e.target.value)}
-            />
-
-            <label style={S.label}>Appointment Time</label>
-            <input
-              style={S.input}
-              type="time"
-              value={appointmentTime}
-              onChange={(e) => setAppointmentTime(e.target.value)}
-            />
-
-            <button
-              style={{ ...S.bookButton, opacity: bookingLoading ? 0.7 : 1 }}
-              onClick={handleBooking}
-              disabled={bookingLoading}
-            >
-              {bookingLoading ? "Booking..." : "Request Appointment"}
-            </button>
-
-            <p style={S.safeNote}>
-              <Icon3D name="lock" size={16} />
-              Your session details are private and confidential.
-            </p>
-          </div>
-        )}
 
         {/* Bottom cards */}
         <div style={S.bottomGrid}>

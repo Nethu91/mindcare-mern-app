@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+
 function Appointments() {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
+
   const [counselors, setCounselors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loadingCounselors, setLoadingCounselors] = useState(true);
@@ -16,6 +19,27 @@ function Appointments() {
     reason: "",
   });
   const [selectedFilter, setSelectedFilter] = useState("All");
+
+  // ===========================
+  // Responsive (container width) detection
+  // Uses ResizeObserver on the container so it adapts
+  // correctly inside the locked-width .app-screen frame too.
+  // ===========================
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+      setIsMobile(width <= 820);
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // -----------------------------
   // Load counselors + appointments from backend
   // -----------------------------
@@ -24,6 +48,7 @@ function Appointments() {
     loadAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const loadCounselors = async () => {
     try {
       setLoadingCounselors(true);
@@ -38,6 +63,7 @@ function Appointments() {
       setLoadingCounselors(false);
     }
   };
+
   const loadAppointments = async () => {
     try {
       setLoadingAppointments(true);
@@ -49,12 +75,14 @@ function Appointments() {
       setLoadingAppointments(false);
     }
   };
+
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
   };
+
   // -----------------------------
   // Create appointment -> saves to DB
   // -----------------------------
@@ -103,12 +131,13 @@ function Appointments() {
       console.error(err);
       alert(
         err.response?.data?.message ||
-          "Failed to book appointment. Please try again.",
+          "Failed to book appointment. Please try again."
       );
     } finally {
       setSubmitting(false);
     }
   };
+
   // -----------------------------
   // Cancel appointment -> updates DB
   // -----------------------------
@@ -117,814 +146,1113 @@ function Appointments() {
       await API.put(`/appointments/${id}/cancel`);
       setAppointments((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, status: "Cancelled" } : item,
-        ),
+          item._id === id ? { ...item, status: "Cancelled" } : item
+        )
       );
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || "Failed to cancel appointment.");
     }
   };
+
   const filteredAppointments =
     selectedFilter === "All"
       ? appointments
       : appointments.filter((item) => item.status === selectedFilter);
+
   const totalAppointments = appointments.length;
   const pendingCount = appointments.filter(
-    (a) => a.status === "Pending",
+    (a) => a.status === "Pending"
   ).length;
   const confirmedCount = appointments.filter(
-    (a) => a.status === "Accepted",
+    (a) => a.status === "Accepted"
   ).length;
-  const getStatusStyle = (status) => {
+
+  const getStatusBadge = (status) => {
     if (status === "Accepted" || status === "Confirmed") {
       return {
-        background: "rgba(112, 214, 164, 0.22)",
-        color: "#2F855A",
-        border: "1px solid rgba(47, 133, 90, 0.22)",
+        bg: "rgba(16, 185, 129, 0.14)",
+        color: "#065f46",
+        border: "1px solid rgba(16, 185, 129, 0.3)",
+        dot: "#10b981",
+        label: "Accepted",
       };
     }
     if (status === "Pending") {
       return {
-        background: "rgba(255, 209, 102, 0.28)",
-        color: "#9A6700",
-        border: "1px solid rgba(154, 103, 0, 0.22)",
+        bg: "rgba(245, 158, 11, 0.14)",
+        color: "#92400e",
+        border: "1px solid rgba(245, 158, 11, 0.3)",
+        dot: "#f59e0b",
+        label: "Pending Review",
       };
     }
     return {
-      background: "rgba(255, 143, 171, 0.22)",
-      color: "#B83256",
-      border: "1px solid rgba(184, 50, 86, 0.22)",
+      bg: "rgba(239, 68, 68, 0.14)",
+      color: "#991b1b",
+      border: "1px solid rgba(239, 68, 68, 0.3)",
+      dot: "#ef4444",
+      label: "Cancelled",
     };
   };
+
   return (
-    <div style={styles.page} className="appt-page">
-      {/* Responsive rules (inline styles can't use media queries) */}
+    <div
+      ref={containerRef}
+      className="appt2-page"
+      style={{
+        padding: isMobile ? "16px 12px 60px" : "32px 24px 60px",
+        overflowX: "auto",
+      }}
+    >
       <style>{`
-        .appt-stats-grid,
-        .appt-bottom-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        /* Global & Reset */
+        .appt2-page {
+          min-height: 100vh;
+          background: linear-gradient(160deg, #F5EEF8 0%, #EDE4F3 40%, #DFD7EC 100%);
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          position: relative;
+          overflow-x: auto;
+          box-sizing: border-box;
+          color: #2D1A47;
+          width: 100%;
         }
-        .appt-main-grid {
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) !important;
+
+        /* Ambient glow orbs */
+        .appt2-orb-1 {
+          position: absolute;
+          width: 380px; height: 380px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(236,72,153,0.24) 0%, rgba(236,72,153,0) 70%);
+          top: -40px; right: -60px;
+          pointer-events: none;
+          z-index: 1;
         }
-        .appt-info-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        .appt2-orb-2 {
+          position: absolute;
+          width: 440px; height: 440px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(168,85,247,0.22) 0%, rgba(168,85,247,0) 70%);
+          bottom: 120px; left: -100px;
+          pointer-events: none;
+          z-index: 1;
         }
-        /* Tablet: booking + timeline stack */
-        @media (max-width: 900px) {
-          .appt-main-grid {
-            grid-template-columns: minmax(0, 1fr) !important;
-          }
+        .appt2-orb-3 {
+          position: absolute;
+          width: 320px; height: 320px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0) 70%);
+          top: 380px; left: 45%;
+          pointer-events: none;
+          z-index: 1;
         }
-        /* Phone: 3 cards become square tiles that fit the screen */
-        @media (max-width: 600px) {
-          .appt-page { padding: 16px !important; }
-          .appt-stats-grid,
-          .appt-bottom-grid {
-            gap: 10px !important;
-          }
-          .appt-stats-grid > div,
-          .appt-bottom-grid > div {
-            aspect-ratio: 1 / 1;
-            padding: 10px !important;
-            border-radius: 20px !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            gap: 6px !important;
-            text-align: center;
-            min-width: 0;
-            overflow: hidden;
-            box-sizing: border-box;
-          }
-          /* stat cards */
-          .appt-stats-grid > div > div:first-child,
-          .appt-bottom-grid > div > div:first-child {
-            width: 38px !important;
-            height: 38px !important;
-            font-size: 20px !important;
-            border-radius: 14px !important;
-            margin: 0 auto !important;
-          }
-          .appt-stats-grid h3 { font-size: 20px !important; margin: 0 !important; }
-          .appt-stats-grid p { font-size: 10px !important; line-height: 1.2 !important; }
-          /* help cards: icon + title + link only */
-          .appt-bottom-grid h3 {
-            font-size: 12px !important;
-            margin: 0 0 2px 0 !important;
-            line-height: 1.2 !important;
-          }
-          .appt-bottom-grid p:not(:last-child) { display: none; }
-          .appt-bottom-grid p:last-child {
-            font-size: 10px !important;
-            margin: 2px 0 0 0 !important;
-            line-height: 1.2 !important;
-          }
-          /* forms + lists */
-          .appt-two-col,
-          .appt-mode-grid,
-          .appt-info-grid {
-            grid-template-columns: minmax(0, 1fr) !important;
-          }
-          .appt-title { font-size: 30px !important; }
+
+        .appt2-container {
+          max-width: 1220px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          overflow-x: auto;
+        }
+
+        /* ── Header ── */
+        .appt2-header {
+          background: linear-gradient(135deg, #4C1D95 0%, #6D28D9 45%, #9333EA 80%, #C026D3 100%);
+          border-radius: 28px;
+          padding: 30px 32px;
+          margin-bottom: 24px;
+          color: #ffffff;
+          box-shadow: 0 16px 40px rgba(93, 33, 171, 0.28), 0 2px 8px rgba(0,0,0,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 16px;
+          position: relative;
+          overflow: hidden;
+          box-sizing: border-box;
+        }
+        .appt2-header::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 60%);
+          pointer-events: none;
+        }
+        .appt2-header-left {
+          position: relative;
+          z-index: 2;
+          max-width: 650px;
+        }
+        .appt2-back-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.18);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: #ffffff;
+          padding: 8px 16px;
+          border-radius: 14px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          backdrop-filter: blur(10px);
+          margin-bottom: 14px;
+          transition: all 0.2s ease;
+        }
+        .appt2-back-btn:hover {
+          background: rgba(255, 255, 255, 0.28);
+          transform: translateX(-2px);
+        }
+        .appt2-title {
+          font-size: 34px;
+          font-weight: 900;
+          margin: 0 0 6px 0;
+          letter-spacing: -0.6px;
+          line-height: 1.15;
+          text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .appt2-subtitle {
+          font-size: 14px;
+          margin: 0;
+          color: rgba(255, 255, 255, 0.88);
+          line-height: 1.45;
+        }
+        .appt2-header-right {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .appt2-header-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          backdrop-filter: blur(12px);
+          padding: 7px 14px;
+          border-radius: 16px;
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #ffffff;
+        }
+        .appt2-header-dot {
+          width: 8px; height: 8px;
+          border-radius: 50%;
+          background: #34D399;
+          box-shadow: 0 0 10px #34D399;
+        }
+
+        /* ── Stats Bar ── */
+        .appt2-stats-grid {
+          display: grid;
+          gap: 14px;
+          margin-bottom: 24px;
+          width: 100%;
+        }
+        .appt2-stat-card {
+          background: rgba(255, 255, 255, 0.72);
+          backdrop-filter: blur(20px);
+          border: 1.5px solid rgba(255, 255, 255, 0.85);
+          border-radius: 20px;
+          padding: 16px 18px;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          box-shadow: 0 10px 26px rgba(76, 29, 149, 0.07);
+          box-sizing: border-box;
+          min-width: 0;
+        }
+        .appt2-stat-icon {
+          width: 48px; height: 48px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 22px;
+          flex-shrink: 0;
+          box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        }
+        .appt2-stat-info {
+          min-width: 0;
+        }
+        .appt2-stat-info h3 {
+          font-size: 24px;
+          font-weight: 900;
+          color: #1F1135;
+          margin: 0 0 2px 0;
+          line-height: 1.1;
+        }
+        .appt2-stat-info p {
+          font-size: 12px;
+          font-weight: 700;
+          color: #6B5B82;
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* ── Main Grid ── */
+        .appt2-main-grid {
+          display: grid;
+          gap: 22px;
+          margin-bottom: 28px;
+          width: 100%;
+          align-items: start;
+        }
+
+        /* ── Booking Form Card ── */
+        .appt2-booking-card {
+          background: rgba(255, 255, 255, 0.82);
+          backdrop-filter: blur(22px);
+          border: 1.5px solid rgba(255, 255, 255, 0.9);
+          border-radius: 24px;
+          padding: 24px 22px;
+          box-shadow: 0 16px 40px rgba(76, 29, 149, 0.09);
+          box-sizing: border-box;
+          width: 100%;
+        }
+        .appt2-card-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          padding-bottom: 14px;
+          border-bottom: 1.5px solid rgba(109, 40, 217, 0.1);
+          gap: 10px;
+        }
+        .appt2-card-title-group h2 {
+          font-size: 20px;
+          font-weight: 900;
+          color: #2D1A47;
+          margin: 0 0 4px 0;
+        }
+        .appt2-card-title-group p {
+          font-size: 12.5px;
+          color: #6D597A;
+          margin: 0;
+        }
+        .appt2-card-badge-icon {
+          width: 42px; height: 42px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #F3E8FF, #FFFFFF);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          box-shadow: 0 6px 14px rgba(109, 40, 217, 0.12);
+          flex-shrink: 0;
+        }
+
+        .appt2-form-group {
+          margin-bottom: 16px;
+        }
+        .appt2-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.6px;
+          color: #5B4770;
+          margin-bottom: 6px;
+        }
+        .appt2-select,
+        .appt2-input,
+        .appt2-textarea {
+          width: 100%;
+          box-sizing: border-box;
+          background: rgba(255, 255, 255, 0.95);
+          border: 1.5px solid #DDD6FE;
+          border-radius: 14px;
+          padding: 11px 13px;
+          font-size: 13.5px;
+          font-family: inherit;
+          color: #2D1A47;
+          outline: none;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(76, 29, 149, 0.04);
+        }
+        .appt2-select:focus,
+        .appt2-input:focus,
+        .appt2-textarea:focus {
+          border-color: #7C3AED;
+          background: #FFFFFF;
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+        }
+        .appt2-textarea {
+          resize: vertical;
+          min-height: 85px;
+          line-height: 1.45;
+        }
+
+        /* Session Type Pills */
+        .appt2-mode-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+        }
+        .appt2-mode-btn {
+          border: 1.5px solid #DDD6FE;
+          background: rgba(255, 255, 255, 0.75);
+          color: #4C1D95;
+          padding: 9px 4px;
+          border-radius: 13px;
+          font-size: 12px;
+          font-weight: 800;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          transition: all 0.2s ease;
+          box-sizing: border-box;
+        }
+        .appt2-mode-btn.active {
+          background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
+          border-color: transparent;
+          color: #FFFFFF;
+          box-shadow: 0 6px 14px rgba(124, 58, 237, 0.32);
+        }
+        .appt2-mode-btn:not(.active):hover {
+          background: #F3E8FF;
+          border-color: #C4B5FD;
+        }
+
+        /* Two columns Date & Time */
+        .appt2-two-col {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+
+        /* Submit Button */
+        .appt2-submit-btn {
+          width: 100%;
+          padding: 14px;
+          border: none;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #7C3AED 0%, #C026D3 100%);
+          color: #FFFFFF;
+          font-size: 15px;
+          font-weight: 800;
+          cursor: pointer;
+          box-shadow: 0 10px 24px rgba(124, 58, 237, 0.32);
+          transition: all 0.22s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 6px;
+        }
+        .appt2-submit-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 30px rgba(124, 58, 237, 0.4);
+        }
+        .appt2-submit-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .appt2-safe-banner {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(124, 58, 237, 0.08);
+          border-radius: 12px;
+          padding: 10px 12px;
+          margin-top: 14px;
+          color: #6D28D9;
+          font-size: 11.5px;
+          font-weight: 700;
+          line-height: 1.4;
+        }
+
+        /* ── Timeline Panel ── */
+        .appt2-timeline-card {
+          background: rgba(255, 255, 255, 0.82);
+          backdrop-filter: blur(22px);
+          border: 1.5px solid rgba(255, 255, 255, 0.9);
+          border-radius: 24px;
+          padding: 24px 22px;
+          box-shadow: 0 16px 40px rgba(76, 29, 149, 0.09);
+          box-sizing: border-box;
+          width: 100%;
+        }
+
+        /* Filter Pills */
+        .appt2-filter-row {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+          margin-bottom: 18px;
+          border-bottom: 1.5px solid rgba(109, 40, 217, 0.1);
+          padding-bottom: 14px;
+        }
+        .appt2-filter-btn {
+          border: 1.5px solid #DDD6FE;
+          border-radius: 13px;
+          padding: 6px 12px;
+          font-size: 12px;
+          font-weight: 800;
+          cursor: pointer;
+          background: rgba(255, 255, 255, 0.75);
+          color: #5B4770;
+          transition: all 0.18s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .appt2-filter-btn.active {
+          background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
+          color: #FFFFFF;
+          border-color: transparent;
+          box-shadow: 0 6px 14px rgba(124, 58, 237, 0.3);
+        }
+        .appt2-filter-btn:not(.active):hover {
+          background: #F3E8FF;
+          border-color: #C4B5FD;
+        }
+        .appt2-filter-count {
+          background: rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+          padding: 1px 6px;
+          font-size: 10.5px;
+        }
+        .appt2-filter-btn.active .appt2-filter-count {
+          background: rgba(255, 255, 255, 0.24);
+        }
+
+        /* Appointments List */
+        .appt2-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          max-height: 600px;
+          overflow-y: auto;
+          padding-right: 2px;
+          box-sizing: border-box;
+        }
+        .appt2-list::-webkit-scrollbar {
+          width: 5px;
+        }
+        .appt2-list::-webkit-scrollbar-thumb {
+          background: #DDD6FE;
+          border-radius: 10px;
+        }
+
+        .appt2-item-card {
+          background: rgba(255, 255, 255, 0.92);
+          border-radius: 18px;
+          border: 1.5px solid rgba(221, 214, 254, 0.7);
+          box-shadow: 0 6px 20px rgba(76, 29, 149, 0.05);
+          padding: 16px 18px;
+          transition: all 0.22s ease;
+          box-sizing: border-box;
+          width: 100%;
+        }
+        .appt2-item-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 26px rgba(124, 58, 237, 0.12);
+          border-color: #C4B5FD;
+        }
+
+        .appt2-item-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+        .appt2-counselor-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+        .appt2-avatar {
+          width: 40px; height: 40px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #E9D5FF 0%, #F5D0FE 100%);
+          color: #6D28D9;
+          font-weight: 900;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(109, 40, 217, 0.12);
+          flex-shrink: 0;
+        }
+        .appt2-item-title {
+          font-size: 15.5px;
+          font-weight: 800;
+          color: #2D1A47;
+          margin: 0 0 2px 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .appt2-item-reason {
+          font-size: 12px;
+          color: #6D597A;
+          margin: 0;
+          line-height: 1.35;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .appt2-status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 10px;
+          border-radius: 10px;
+          font-size: 11px;
+          font-weight: 800;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .appt2-status-dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+        }
+
+        /* Item Info Grid */
+        .appt2-item-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          margin-bottom: 12px;
+        }
+        .appt2-item-cell {
+          background: #F8F5FC;
+          border-radius: 10px;
+          padding: 6px 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .appt2-cell-label {
+          font-size: 10px;
+          font-weight: 800;
+          text-transform: uppercase;
+          color: #8C7A9F;
+        }
+        .appt2-cell-val {
+          font-size: 11.5px;
+          font-weight: 800;
+          color: #2D1A47;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* Action Buttons */
+        .appt2-item-actions {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+        }
+        .appt2-action-view {
+          border: 1.5px solid #C4B5FD;
+          background: #FAF5FF;
+          color: #6D28D9;
+          font-size: 11.5px;
+          font-weight: 800;
+          padding: 6px 12px;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .appt2-action-view:hover {
+          background: #F3E8FF;
+          border-color: #A855F7;
+        }
+        .appt2-action-cancel {
+          border: 1px solid rgba(239, 68, 68, 0.28);
+          background: rgba(239, 68, 68, 0.08);
+          color: #DC2626;
+          font-size: 11.5px;
+          font-weight: 800;
+          padding: 6px 12px;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .appt2-action-cancel:hover {
+          background: rgba(239, 68, 68, 0.16);
+          border-color: #EF4444;
+        }
+
+        .appt2-empty {
+          text-align: center;
+          padding: 40px 16px;
+          color: #7C6892;
+        }
+        .appt2-empty-icon {
+          font-size: 38px;
+          margin-bottom: 8px;
+        }
+        .appt2-empty p {
+          font-size: 14px;
+          font-weight: 700;
+          margin: 0;
+        }
+
+        /* ── Bottom Cards ── */
+        .appt2-bottom-grid {
+          display: grid;
+          gap: 14px;
+          width: 100%;
+        }
+        .appt2-help-card {
+          background: rgba(255, 255, 255, 0.72);
+          backdrop-filter: blur(20px);
+          border: 1.5px solid rgba(255, 255, 255, 0.85);
+          border-radius: 20px;
+          padding: 20px 18px;
+          text-align: center;
+          cursor: pointer;
+          box-shadow: 0 10px 26px rgba(76, 29, 149, 0.07);
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          box-sizing: border-box;
+        }
+        .appt2-help-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 16px 34px rgba(76, 29, 149, 0.14);
+        }
+        .appt2-help-icon {
+          width: 48px; height: 48px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #F3E8FF, #FFFFFF);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          margin: 0 auto 10px;
+          box-shadow: 0 6px 14px rgba(109, 40, 217, 0.12);
+        }
+        .appt2-help-card h3 {
+          font-size: 16px;
+          font-weight: 900;
+          color: #2D1A47;
+          margin: 0 0 4px 0;
+        }
+        .appt2-help-card p {
+          font-size: 12.5px;
+          color: #6D597A;
+          margin: 0 0 10px 0;
+          line-height: 1.45;
+        }
+        .appt2-help-link {
+          color: #7C3AED;
+          font-size: 12px;
+          font-weight: 800;
         }
       `}</style>
-      <div style={styles.circleOne}></div>
-      <div style={styles.circleTwo}></div>
-      <div style={styles.circleThree}></div>
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <div>
+
+      {/* Decorative ambient background orbs */}
+      <div className="appt2-orb-1"></div>
+      <div className="appt2-orb-2"></div>
+      <div className="appt2-orb-3"></div>
+
+      <div className="appt2-container">
+        {/* Hero Header */}
+        <div
+          className="appt2-header"
+          style={{
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "flex-start" : "center",
+            padding: isMobile ? "22px 18px" : "30px 32px",
+          }}
+        >
+          <div className="appt2-header-left">
             <button
-              style={styles.backButton}
+              className="appt2-back-btn"
               onClick={() => navigate("/counselor")}
             >
               ← Back to Counselors
             </button>
-            <h1 style={styles.title} className="appt-title">
-              Appointments
+            <h1
+              className="appt2-title"
+              style={{ fontSize: isMobile ? "26px" : "34px" }}
+            >
+              Counseling Sessions
             </h1>
-            <p style={styles.subtitle}>
-              Manage your counseling sessions, booking requests, and upcoming
-              appointments.
+            <p className="appt2-subtitle">
+              Manage your confidential mental wellness sessions, booking requests, and counselor appointments.
             </p>
           </div>
-          <div style={styles.headerBadge}>📅 Session Planner</div>
-        </div>
-        <div style={styles.statsGrid} className="appt-stats-grid">
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>📌</div>
-            <div>
-              <h3 style={styles.statNumber}>{totalAppointments}</h3>
-              <p style={styles.statText}>Total Appointments</p>
-            </div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>⏳</div>
-            <div>
-              <h3 style={styles.statNumber}>{pendingCount}</h3>
-              <p style={styles.statText}>Pending Requests</p>
-            </div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>✅</div>
-            <div>
-              <h3 style={styles.statNumber}>{confirmedCount}</h3>
-              <p style={styles.statText}>Confirmed Sessions</p>
+          <div className="appt2-header-right">
+            <div className="appt2-header-pill">
+              <span className="appt2-header-dot"></span>
+              <span>Direct Booking Active</span>
             </div>
           </div>
         </div>
-        <div style={styles.mainGrid} className="appt-main-grid">
-          <div style={styles.bookingPanel}>
-            <div style={styles.panelHeader}>
-              <div>
-                <h2 style={styles.sectionTitle}>Book New Appointment</h2>
-                <p style={styles.sectionSubText}>
-                  Select a counselor and request a comfortable session time.
-                </p>
-              </div>
-              <div style={styles.panelIcon}>🧠</div>
-            </div>
-            <label style={styles.label}>Select Counselor</label>
-            <select
-              name="counselorId"
-              value={form.counselorId}
-              onChange={handleChange}
-              style={styles.input}
-              disabled={loadingCounselors}
+
+        {/* Stats Row */}
+        <div
+          className="appt2-stats-grid"
+          style={{
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          }}
+        >
+          <div className="appt2-stat-card">
+            <div
+              className="appt2-stat-icon"
+              style={{ background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)" }}
             >
-              {loadingCounselors ? (
-                <option>Loading counselors...</option>
-              ) : counselors.length === 0 ? (
-                <option>No counselors available</option>
-              ) : (
-                counselors.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                  </option>
-                ))
-              )}
-            </select>
-            <label style={styles.label}>Session Type</label>
-            <div style={styles.modeGrid} className="appt-mode-grid">
-              {["Online", "Physical", "Phone Call"].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setForm({ ...form, type })}
-                  style={{
-                    ...styles.modeButton,
-                    background:
-                      form.type === type
-                        ? "linear-gradient(135deg, #9B5DE5, #F15BB5)"
-                        : "rgba(255,255,255,0.68)",
-                    color: form.type === type ? "#FFFFFF" : "#312244",
-                  }}
-                >
-                  {type === "Online"
-                    ? "💻 Online"
-                    : type === "Physical"
-                      ? "🏥 Physical"
-                      : "📞 Phone"}
-                </button>
-              ))}
+              📌
             </div>
-            <div style={styles.twoColumn} className="appt-two-col">
-              <div>
-                <label style={styles.label}>Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={form.date}
-                  onChange={handleChange}
-                  style={styles.input}
-                />
+            <div className="appt2-stat-info">
+              <h3>{totalAppointments}</h3>
+              <p>Total Appointments</p>
+            </div>
+          </div>
+
+          <div className="appt2-stat-card">
+            <div
+              className="appt2-stat-icon"
+              style={{ background: "linear-gradient(135deg, #FEF3C7, #FFFFFF)" }}
+            >
+              ⏳
+            </div>
+            <div className="appt2-stat-info">
+              <h3>{pendingCount}</h3>
+              <p>Pending Requests</p>
+            </div>
+          </div>
+
+          <div className="appt2-stat-card">
+            <div
+              className="appt2-stat-icon"
+              style={{ background: "linear-gradient(135deg, #D1FAE5, #FFFFFF)" }}
+            >
+              ✅
+            </div>
+            <div className="appt2-stat-info">
+              <h3>{confirmedCount}</h3>
+              <p>Confirmed Sessions</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid (Stacks cleanly in 1 column when on mobile/frame, or 2 cols on wide desktop) */}
+        <div
+          className="appt2-main-grid"
+          style={{
+            gridTemplateColumns: isMobile ? "1fr" : "1.05fr 1.35fr",
+          }}
+        >
+          {/* Booking Card */}
+          <div className="appt2-booking-card">
+            <div className="appt2-card-header">
+              <div className="appt2-card-title-group">
+                <h2>Book New Session</h2>
+                <p>Select your counselor and preferred session slot</p>
               </div>
-              <div>
-                <label style={styles.label}>Time</label>
-                <input
-                  type="time"
-                  name="time"
-                  value={form.time}
-                  onChange={handleChange}
-                  style={styles.input}
-                />
+              <div className="appt2-card-badge-icon">🧠</div>
+            </div>
+
+            <div className="appt2-form-group">
+              <label className="appt2-label">Select Counselor</label>
+              <select
+                name="counselorId"
+                value={form.counselorId}
+                onChange={handleChange}
+                className="appt2-select"
+                disabled={loadingCounselors}
+              >
+                {loadingCounselors ? (
+                  <option>Loading counselors...</option>
+                ) : counselors.length === 0 ? (
+                  <option>No counselors available</option>
+                ) : (
+                  counselors.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+
+            <div className="appt2-form-group">
+              <label className="appt2-label">Session Type</label>
+              <div className="appt2-mode-grid">
+                {[
+                  { key: "Online", label: "💻 Online" },
+                  { key: "Physical", label: "🏥 In-Person" },
+                  { key: "Phone Call", label: "📞 Phone" },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setForm({ ...form, type: item.key })}
+                    className={`appt2-mode-btn ${
+                      form.type === item.key ? "active" : ""
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
             </div>
-            <label style={styles.label}>Reason for Appointment</label>
-            <textarea
-              name="reason"
-              value={form.reason}
-              onChange={handleChange}
-              placeholder="Write a short reason for this session..."
-              style={styles.textArea}
-            ></textarea>
+
+            <div className="appt2-form-group">
+              <div className="appt2-two-col">
+                <div>
+                  <label className="appt2-label">Date</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={form.date}
+                    onChange={handleChange}
+                    className="appt2-input"
+                  />
+                </div>
+                <div>
+                  <label className="appt2-label">Time</label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={form.time}
+                    onChange={handleChange}
+                    className="appt2-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="appt2-form-group">
+              <label className="appt2-label">Reason for Appointment</label>
+              <textarea
+                name="reason"
+                value={form.reason}
+                onChange={handleChange}
+                placeholder="Briefly describe what you'd like to discuss or work on..."
+                className="appt2-textarea"
+              ></textarea>
+            </div>
+
             <button
-              style={{ ...styles.primaryButton, opacity: submitting ? 0.7 : 1 }}
+              className="appt2-submit-btn"
               onClick={createAppointment}
               disabled={
                 submitting || loadingCounselors || counselors.length === 0
               }
             >
-              {submitting ? "Booking..." : "Request Appointment"}
+              {submitting ? (
+                <>⏳ Booking Appointment...</>
+              ) : (
+                <>✨ Request Appointment</>
+              )}
             </button>
-            <p style={styles.safeNote}>
-              🔒 Your appointment information will be handled confidentially.
-            </p>
+
+            <div className="appt2-safe-banner">
+              <span>🔒</span>
+              <span>
+                100% Confidential & Private. Handled under clinical ethical standards.
+              </span>
+            </div>
           </div>
-          <div style={styles.timelinePanel}>
-            <div style={styles.panelHeader}>
-              <div>
-                <h2 style={styles.sectionTitle}>Appointment Timeline</h2>
-                <p style={styles.sectionSubText}>
-                  View upcoming, pending, and cancelled sessions.
-                </p>
+
+          {/* Timeline & History Card */}
+          <div className="appt2-timeline-card">
+            <div className="appt2-card-header">
+              <div className="appt2-card-title-group">
+                <h2>Session Timeline</h2>
+                <p>Track your pending requests and upcoming appointments</p>
               </div>
-              <div style={styles.panelIcon}>📋</div>
+              <div className="appt2-card-badge-icon">📋</div>
             </div>
-            <div style={styles.filterRow}>
-              {["All", "Accepted", "Pending", "Cancelled"].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setSelectedFilter(filter)}
-                  style={{
-                    ...styles.filterButton,
-                    background:
-                      selectedFilter === filter
-                        ? "linear-gradient(135deg, #9B5DE5, #F15BB5)"
-                        : "rgba(255,255,255,0.65)",
-                    color: selectedFilter === filter ? "#FFFFFF" : "#312244",
-                  }}
-                >
-                  {filter}
-                </button>
-              ))}
+
+            {/* Filter Pills */}
+            <div className="appt2-filter-row">
+              {["All", "Accepted", "Pending", "Cancelled"].map((filter) => {
+                const count =
+                  filter === "All"
+                    ? appointments.length
+                    : appointments.filter((a) => a.status === filter).length;
+
+                return (
+                  <button
+                    key={filter}
+                    onClick={() => setSelectedFilter(filter)}
+                    className={`appt2-filter-btn ${
+                      selectedFilter === filter ? "active" : ""
+                    }`}
+                  >
+                    <span>{filter}</span>
+                    <span className="appt2-filter-count">{count}</span>
+                  </button>
+                );
+              })}
             </div>
-            <div style={styles.appointmentList}>
+
+            {/* Appointments List */}
+            <div className="appt2-list">
               {loadingAppointments ? (
-                <div style={styles.emptyBox}>
-                  <p style={styles.emptyText}>Loading appointments...</p>
+                <div className="appt2-empty">
+                  <p>⏳ Loading your appointments...</p>
                 </div>
               ) : filteredAppointments.length === 0 ? (
-                <div style={styles.emptyBox}>
-                  <div style={styles.emptyIcon}>🗓️</div>
-                  <p style={styles.emptyText}>No appointments found</p>
+                <div className="appt2-empty">
+                  <div className="appt2-empty-icon">🗓️</div>
+                  <p>No {selectedFilter !== "All" ? selectedFilter.toLowerCase() : ""} appointments found.</p>
                 </div>
               ) : (
-                filteredAppointments.map((item) => (
-                  <div key={item._id} style={styles.appointmentCard}>
-                    <div style={styles.cardTop}>
-                      <div>
-                        <h3 style={styles.appointmentTitle}>
-                          {item.counselorId?.name || "Counselor"}
-                        </h3>
-                        <p style={styles.appointmentReason}>{item.reason}</p>
-                      </div>
-                      <span
-                        style={{
-                          ...styles.statusBadge,
-                          ...getStatusStyle(item.status),
-                        }}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
-                    <div
-                      style={styles.appointmentInfoGrid}
-                      className="appt-info-grid"
-                    >
-                      <div style={styles.infoBox}>
-                        <span style={styles.infoLabel}>Session Type</span>
-                        <strong style={styles.infoValue}>{item.type || "Not recorded"}</strong>
-                      </div>
-                      <div style={styles.infoBox}>
-                        <span style={styles.infoLabel}>Date</span>
-                        <strong style={styles.infoValue}>
-                          {new Date(item.date).toLocaleDateString()}
-                        </strong>
-                      </div>
-                      <div style={styles.infoBox}>
-                        <span style={styles.infoLabel}>Time</span>
-                        <strong style={styles.infoValue}>{item.time}</strong>
-                      </div>
-                    </div>
-                    <div style={styles.cardActions}>
-                      <button
-                        style={styles.secondaryButton}
-                        onClick={() =>
-                          alert(
-                            `Counselor: ${item.counselorId?.name || "-"}\nDate: ${new Date(
-                              item.date,
-                            ).toLocaleDateString()}\nTime: ${item.time}\nReason: ${
-                              item.reason
-                            }\nStatus: ${item.status}`,
-                          )
-                        }
-                      >
-                        View Details
-                      </button>
-                      {["Pending", "Accepted"].includes(item.status) && (
-                        <button
-                          style={styles.cancelButton}
-                          onClick={() => cancelAppointment(item._id)}
+                filteredAppointments.map((item) => {
+                  const badge = getStatusBadge(item.status);
+                  const counselorName = item.counselorId?.name || "Counselor";
+                  const initial = counselorName.charAt(0).toUpperCase();
+
+                  return (
+                    <div key={item._id} className="appt2-item-card">
+                      <div className="appt2-item-top">
+                        <div className="appt2-counselor-group">
+                          <div className="appt2-avatar">{initial}</div>
+                          <div>
+                            <h3 className="appt2-item-title">{counselorName}</h3>
+                            <p className="appt2-item-reason">{item.reason}</p>
+                          </div>
+                        </div>
+
+                        <span
+                          className="appt2-status-pill"
+                          style={{
+                            background: badge.bg,
+                            color: badge.color,
+                            border: badge.border,
+                          }}
                         >
-                          Cancel
+                          <span
+                            className="appt2-status-dot"
+                            style={{ background: badge.dot }}
+                          ></span>
+                          {badge.label}
+                        </span>
+                      </div>
+
+                      <div className="appt2-item-grid">
+                        <div className="appt2-item-cell">
+                          <span className="appt2-cell-label">Session Type</span>
+                          <span className="appt2-cell-val">
+                            {item.type === "Online"
+                              ? "💻 Online"
+                              : item.type === "Physical"
+                              ? "🏥 In-Person"
+                              : item.type === "Phone Call"
+                              ? "📞 Phone"
+                              : item.type || "Online"}
+                          </span>
+                        </div>
+
+                        <div className="appt2-item-cell">
+                          <span className="appt2-cell-label">Date</span>
+                          <span className="appt2-cell-val">
+                            📅 {new Date(item.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+
+                        <div className="appt2-item-cell">
+                          <span className="appt2-cell-label">Time</span>
+                          <span className="appt2-cell-val">⏰ {item.time}</span>
+                        </div>
+                      </div>
+
+                      <div className="appt2-item-actions">
+                        <button
+                          className="appt2-action-view"
+                          onClick={() =>
+                            alert(
+                              `Counselor: ${counselorName}\nDate: ${new Date(
+                                item.date
+                              ).toLocaleDateString()}\nTime: ${item.time}\nType: ${
+                                item.type || "Online"
+                              }\nReason: ${item.reason}\nStatus: ${item.status}`
+                            )
+                          }
+                        >
+                          View Details
                         </button>
-                      )}
+
+                        {["Pending", "Accepted"].includes(item.status) && (
+                          <button
+                            className="appt2-action-cancel"
+                            onClick={() => cancelAppointment(item._id)}
+                          >
+                            ✕ Cancel
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
         </div>
-        <div style={styles.bottomGrid} className="appt-bottom-grid">
+
+        {/* Bottom Support Cards */}
+        <div
+          className="appt2-bottom-grid"
+          style={{
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          }}
+        >
           <div
-            style={styles.helpCard}
+            className="appt2-help-card"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <div style={styles.helpIcon}>💬</div>
-            <h3 style={styles.helpTitle}>Session Reminder</h3>
-            <p style={styles.helpText}>
-              Keep track of your counseling appointments and attend on time.
+            <div className="appt2-help-icon">💬</div>
+            <h3>Session Reminder</h3>
+            <p>
+              Keep track of your counseling appointments and attend on time for best outcomes.
             </p>
-            <p style={styles.helpLink}>View appointments ↑</p>
+            <span className="appt2-help-link">View appointments ↑</span>
           </div>
-          <div style={styles.helpCard} onClick={() => navigate("/counselor")}>
-            <div style={styles.helpIcon}>🌿</div>
-            <h3 style={styles.helpTitle}>Before the Session</h3>
-            <p style={styles.helpText}>
-              Prepare your thoughts, feelings, and questions before meeting the
-              counselor.
+
+          <div
+            className="appt2-help-card"
+            onClick={() => navigate("/counselor")}
+          >
+            <div className="appt2-help-icon">🌿</div>
+            <h3>Before the Session</h3>
+            <p>
+              Prepare your thoughts, feelings, and questions before meeting the counselor.
             </p>
-            <p style={styles.helpLink}>Go to counselors →</p>
+            <span className="appt2-help-link">Go to counselors →</span>
           </div>
-          <div style={styles.helpCard} onClick={() => navigate("/emergency")}>
-            <div style={styles.helpIcon}>🔐</div>
-            <h3 style={styles.helpTitle}>Confidential Support</h3>
-            <p style={styles.helpText}>
-              Your mental wellness journey is private, safe, and respected.
+
+          <div
+            className="appt2-help-card"
+            onClick={() => navigate("/emergency")}
+          >
+            <div className="appt2-help-icon">🔐</div>
+            <h3>Confidential Support</h3>
+            <p>
+              Your mental wellness journey is private, safe, and respected at all times.
             </p>
-            <p style={styles.helpLink}>Get urgent support →</p>
+            <span className="appt2-help-link">Get urgent support →</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
-const styles = {
-  page: {
-    minHeight: "100vh",
-    padding: "35px",
-    background:
-      "linear-gradient(160deg, #F1E8E9 0%, #EFE6EE 45%, #D2CFE1 100%)",
-    fontFamily: "Arial, sans-serif",
-    position: "relative",
-    overflowX: "hidden",
-    boxSizing: "border-box",
-  },
-  circleOne: {
-    position: "absolute",
-    width: "270px",
-    height: "270px",
-    borderRadius: "50%",
-    background: "#FFAFCC",
-    top: "70px",
-    right: "80px",
-    opacity: "0.34",
-    filter: "blur(5px)",
-  },
-  circleTwo: {
-    position: "absolute",
-    width: "310px",
-    height: "310px",
-    borderRadius: "50%",
-    background: "#B8C0FF",
-    bottom: "90px",
-    left: "60px",
-    opacity: "0.33",
-    filter: "blur(5px)",
-  },
-  circleThree: {
-    position: "absolute",
-    width: "190px",
-    height: "190px",
-    borderRadius: "50%",
-    background: "#A8DADC",
-    top: "360px",
-    left: "45%",
-    opacity: "0.24",
-    filter: "blur(6px)",
-  },
-  container: {
-    maxWidth: "1240px",
-    margin: "0 auto",
-    position: "relative",
-    zIndex: 2,
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "26px",
-    flexWrap: "wrap",
-    gap: "16px",
-  },
-  backButton: {
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: "18px",
-    background: "rgba(255,255,255,0.65)",
-    color: "#6D597A",
-    fontWeight: "800",
-    cursor: "pointer",
-    marginBottom: "12px",
-    boxShadow: "0 10px 24px rgba(49,34,68,0.1)",
-  },
-  title: {
-    fontSize: "42px",
-    color: "#312244",
-    margin: "0 0 7px 0",
-    fontWeight: "900",
-  },
-  subtitle: {
-    color: "#6D597A",
-    fontSize: "16px",
-    margin: 0,
-    lineHeight: "1.5",
-  },
-  headerBadge: {
-    padding: "13px 22px",
-    borderRadius: "22px",
-    background: "rgba(255,255,255,0.55)",
-    boxShadow: "0 12px 25px rgba(49,34,68,0.12)",
-    color: "#4A4E69",
-    fontWeight: "800",
-    backdropFilter: "blur(14px)",
-  },
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: "20px",
-    marginBottom: "25px",
-  },
-  statCard: {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-    padding: "22px",
-    borderRadius: "30px",
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    backdropFilter: "blur(18px)",
-    boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
-  },
-  statIcon: {
-    width: "60px",
-    height: "60px",
-    borderRadius: "22px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
-    fontSize: "30px",
-    boxShadow: "0 12px 24px rgba(49,34,68,0.12)",
-    flexShrink: 0,
-  },
-  statNumber: {
-    color: "#312244",
-    margin: "0 0 4px 0",
-    fontSize: "28px",
-    fontWeight: "900",
-  },
-  statText: {
-    color: "#6D597A",
-    margin: 0,
-    fontSize: "14px",
-    fontWeight: "700",
-  },
-  mainGrid: {
-    display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.25fr)",
-    gap: "25px",
-    marginBottom: "25px",
-  },
-  bookingPanel: {
-    background: "rgba(255,255,255,0.54)",
-    backdropFilter: "blur(18px)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    borderRadius: "34px",
-    padding: "30px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
-    minWidth: 0,
-  },
-  timelinePanel: {
-    background: "rgba(255,255,255,0.54)",
-    backdropFilter: "blur(18px)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    borderRadius: "34px",
-    padding: "30px",
-    boxShadow: "0 25px 60px rgba(49,34,68,0.16)",
-    minWidth: 0,
-  },
-  panelHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "16px",
-    alignItems: "center",
-    marginBottom: "22px",
-  },
-  sectionTitle: {
-    color: "#312244",
-    fontSize: "24px",
-    margin: "0 0 7px 0",
-    fontWeight: "900",
-  },
-  sectionSubText: {
-    color: "#6D597A",
-    margin: 0,
-    lineHeight: "1.5",
-    fontSize: "14px",
-  },
-  panelIcon: {
-    width: "62px",
-    height: "62px",
-    borderRadius: "22px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "32px",
-    background: "linear-gradient(135deg, #CDB4DB, #FFC8DD)",
-    boxShadow: "0 15px 30px rgba(49,34,68,0.15)",
-    flexShrink: 0,
-  },
-  label: {
-    display: "block",
-    color: "#312244",
-    fontWeight: "800",
-    margin: "15px 0 8px 0",
-  },
-  input: {
-    width: "100%",
-    padding: "15px",
-    border: "none",
-    outline: "none",
-    borderRadius: "20px",
-    background: "rgba(255,255,255,0.72)",
-    color: "#312244",
-    fontSize: "15px",
-    boxShadow: "inset 0 0 16px rgba(49,34,68,0.07)",
-    boxSizing: "border-box",
-  },
-  modeGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: "10px",
-  },
-  modeButton: {
-    border: "none",
-    padding: "13px 10px",
-    borderRadius: "18px",
-    fontWeight: "800",
-    cursor: "pointer",
-    boxShadow: "0 12px 24px rgba(49,34,68,0.1)",
-  },
-  twoColumn: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "14px",
-  },
-  textArea: {
-    width: "100%",
-    minHeight: "115px",
-    resize: "none",
-    padding: "16px",
-    border: "none",
-    outline: "none",
-    borderRadius: "22px",
-    background: "rgba(255,255,255,0.72)",
-    color: "#312244",
-    fontSize: "15px",
-    boxShadow: "inset 0 0 16px rgba(49,34,68,0.07)",
-    boxSizing: "border-box",
-  },
-  primaryButton: {
-    width: "100%",
-    marginTop: "20px",
-    padding: "16px",
-    border: "none",
-    borderRadius: "24px",
-    background: "linear-gradient(135deg, #9B5DE5, #F15BB5)",
-    color: "white",
-    fontSize: "16px",
-    fontWeight: "900",
-    cursor: "pointer",
-    boxShadow: "0 18px 35px rgba(155,93,229,0.35)",
-  },
-  safeNote: {
-    color: "#8D7D99",
-    fontSize: "13px",
-    textAlign: "center",
-    margin: "16px 0 0 0",
-    lineHeight: "1.5",
-  },
-  filterRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap",
-    marginBottom: "20px",
-  },
-  filterButton: {
-    border: "none",
-    padding: "10px 15px",
-    borderRadius: "18px",
-    fontWeight: "800",
-    cursor: "pointer",
-    boxShadow: "0 10px 20px rgba(49,34,68,0.09)",
-  },
-  appointmentList: {
-    display: "grid",
-    gap: "16px",
-  },
-  appointmentCard: {
-    padding: "20px",
-    borderRadius: "28px",
-    background: "rgba(255,255,255,0.66)",
-    boxShadow: "0 16px 34px rgba(49,34,68,0.11)",
-    border: "1px solid rgba(255,255,255,0.75)",
-  },
-  cardTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "12px",
-    alignItems: "flex-start",
-    marginBottom: "16px",
-  },
-  appointmentTitle: {
-    color: "#312244",
-    margin: "0 0 6px 0",
-    fontSize: "19px",
-    fontWeight: "900",
-  },
-  appointmentReason: {
-    color: "#6D597A",
-    margin: 0,
-    lineHeight: "1.5",
-    fontSize: "14px",
-  },
-  statusBadge: {
-    padding: "8px 13px",
-    borderRadius: "16px",
-    fontSize: "12px",
-    fontWeight: "900",
-    whiteSpace: "nowrap",
-  },
-  appointmentInfoGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: "10px",
-    marginBottom: "16px",
-  },
-  infoBox: {
-    background: "rgba(255,255,255,0.7)",
-    borderRadius: "18px",
-    padding: "13px",
-  },
-  infoLabel: {
-    display: "block",
-    color: "#8D7D99",
-    fontSize: "12px",
-    marginBottom: "5px",
-    fontWeight: "800",
-  },
-  infoValue: {
-    color: "#312244",
-    fontSize: "14px",
-  },
-  cardActions: {
-    display: "flex",
-    gap: "10px",
-  },
-  secondaryButton: {
-    flex: 1,
-    border: "none",
-    padding: "12px",
-    borderRadius: "18px",
-    background: "rgba(255,255,255,0.75)",
-    color: "#6D597A",
-    fontWeight: "900",
-    cursor: "pointer",
-  },
-  cancelButton: {
-    flex: 1,
-    border: "none",
-    padding: "12px",
-    borderRadius: "18px",
-    background: "rgba(255,143,171,0.28)",
-    color: "#B83256",
-    fontWeight: "900",
-    cursor: "pointer",
-  },
-  emptyBox: {
-    textAlign: "center",
-    padding: "40px",
-    borderRadius: "26px",
-    background: "rgba(255,255,255,0.5)",
-  },
-  emptyIcon: {
-    fontSize: "42px",
-    marginBottom: "10px",
-  },
-  emptyText: {
-    color: "#6D597A",
-    margin: 0,
-    fontWeight: "700",
-  },
-  bottomGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: "20px",
-  },
-  helpCard: {
-    padding: "25px",
-    borderRadius: "30px",
-    background: "rgba(255,255,255,0.56)",
-    border: "1px solid rgba(255,255,255,0.78)",
-    backdropFilter: "blur(18px)",
-    boxShadow: "0 20px 45px rgba(49,34,68,0.13)",
-    textAlign: "center",
-    cursor: "pointer",
-    transition: "0.3s ease",
-    minWidth: 0,
-  },
-  helpIcon: {
-    width: "58px",
-    height: "58px",
-    margin: "0 auto 14px auto",
-    borderRadius: "20px",
-    background: "linear-gradient(135deg, #F3E8FF, #FFFFFF)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "32px",
-    boxShadow: "0 12px 24px rgba(49,34,68,0.12)",
-  },
-  helpTitle: {
-    color: "#312244",
-    margin: "0 0 8px 0",
-    fontWeight: "900",
-  },
-  helpText: {
-    color: "#6D597A",
-    lineHeight: "1.6",
-    margin: 0,
-    fontSize: "14px",
-  },
-  helpLink: {
-    margin: "14px 0 0 0",
-    color: "#9B5DE5",
-    fontSize: "13px",
-    fontWeight: "900",
-  },
-};
+
 export default Appointments;

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
-import meditationImg from "../assets/Meditation.jpeg";
 
 function Emergency() {
   const navigate = useNavigate();
@@ -411,23 +410,6 @@ function Emergency() {
           </div>
         </div>
 
-        {/* Only the Breathing Practice tab, full width like the cards above */}
-        <div style={styles.bottomGrid}>
-          <div style={styles.helpCard} onClick={() => navigate("/breathing")}>
-            <div style={styles.helpIcon}>
-              <img
-                src={meditationImg}
-                alt="Breathing practice"
-                style={styles.helpImg}
-              />
-            </div>
-            <h3 style={styles.helpTitle}>Breathing Practice</h3>
-            <p style={styles.helpText}>
-              Use guided breathing to calm your body and mind.
-            </p>
-            <p style={styles.helpLink}>Go to Breathing Practice →</p>
-          </div>
-        </div>
       </div>
     </div>
   );

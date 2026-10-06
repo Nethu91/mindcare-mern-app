@@ -25,6 +25,7 @@ import Profile from "./pages/Profile";
 import Journal from "./pages/Journal";
 import Notifications from "./pages/Notifications";
 import MeditationCenters from "./pages/MeditationCenters";
+import MindRelaxGames from "./pages/MindRelaxGames";
 
 // Components
 import NotificationBell from "./components/NotificationBell";
@@ -52,6 +53,7 @@ function App() {
               ["/journal", Journal],
               ["/notifications", Notifications],
               ["/meditation-centers", MeditationCenters],
+              ["/mind-relax-games", MindRelaxGames],
             ].map(([path, Page]) => (
               <Route
                 key={path}
