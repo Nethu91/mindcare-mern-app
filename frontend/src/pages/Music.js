@@ -128,8 +128,21 @@ function Music() {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTrack, setSelectedTrack] = useState(tracks[0]);
+  const [playingTrackId, setPlayingTrackId] = useState(null);
+  const [playKey, setPlayKey] = useState(0);
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const handlePlayTrack = (track) => {
+    setSelectedTrack(track);
+    setPlayingTrackId(track.id);
+    setPlayKey((k) => k + 1);
+  };
+
+  const handleStopTrack = (e) => {
+    e.stopPropagation();
+    setPlayingTrackId(null);
+  };
 
   // Responsive detection based on the real container width
   const [isMobile, setIsMobile] = useState(false);
@@ -357,82 +370,140 @@ function Music() {
               }}
             >
               {filteredTracks.map((track) => {
+                const isPlaying = playingTrackId === track.id;
                 const active = selectedTrack.id === track.id;
                 return (
                   <div
                     key={track.id}
                     style={{
                       ...styles.trackCard,
-                      flexDirection: isMobile ? "column" : "row",
-                      alignItems: isMobile ? "flex-start" : "center",
-                      padding: isMobile ? "16px" : "18px",
-                      border: active
+                      border: isPlaying
+                        ? "2px solid #9B5DE5"
+                        : active
                         ? "2px solid rgba(255,255,255,0.95)"
                         : "1px solid rgba(255,255,255,0.55)",
-                      background: active
+                      background: isPlaying
+                        ? "linear-gradient(145deg, rgba(255,255,255,0.9), rgba(243,232,255,0.75))"
+                        : active
                         ? "linear-gradient(145deg, rgba(255,255,255,0.78), rgba(233,222,250,0.6))"
                         : "rgba(255,255,255,0.36)",
-                      boxShadow: active
+                      boxShadow: isPlaying
+                        ? "0 20px 45px rgba(155,93,229,0.3), inset 0 2px 4px rgba(255,255,255,0.9)"
+                        : active
                         ? "0 18px 38px rgba(142,120,190,0.3), inset 0 2px 4px rgba(255,255,255,0.8)"
                         : "0 12px 28px rgba(59,53,82,0.1), inset 0 1px 2px rgba(255,255,255,0.6)",
+                      padding: isMobile ? "14px" : "18px",
                     }}
-                    onClick={() => setSelectedTrack(track)}
+                    onClick={() => {
+                      if (!isPlaying) {
+                        handlePlayTrack(track);
+                      }
+                    }}
                   >
+                    {/* IN-PLACE INLINE PLAYER */}
+                    {isPlaying && (
+                      <div style={styles.inlinePlayerBox}>
+                        <div style={styles.inlinePlayerHeader}>
+                          <div style={styles.nowPlayingIndicator}>
+                            <span style={styles.pulseDot}></span>
+                            <span style={styles.nowPlayingText}>Playing In-Place</span>
+                          </div>
+                          <button
+                            style={styles.closePlayerBtn}
+                            onClick={handleStopTrack}
+                            title="Close music"
+                          >
+                            ✕ Stop & Close
+                          </button>
+                        </div>
+
+                        <div
+                          style={{
+                            ...styles.videoPlayerContainer,
+                            height: isMobile ? "210px" : "270px",
+                          }}
+                        >
+                          <iframe
+                            key={`inline-music-${track.id}-${playKey}`}
+                            style={styles.iframe}
+                            src={`${track.videoUrl}?autoplay=1&rel=0&modestbranding=1`}
+                            title={track.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                          ></iframe>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Track Content Row */}
                     <div
                       style={{
-                        ...styles.trackIcon,
-                        width: isMobile ? "64px" : "78px",
-                        height: isMobile ? "64px" : "78px",
-                        background: `radial-gradient(circle at 30% 25%, #FFFFFF 0%, ${track.color} 75%)`,
+                        ...styles.trackCardContent,
+                        flexDirection: isMobile ? "column" : "row",
+                        alignItems: isMobile ? "flex-start" : "center",
                       }}
                     >
-                      <Emoji3D e={track.icon} size={isMobile ? 44 : 54} />
-                    </div>
-
-                    <div style={styles.trackInfo}>
-                      <h3
+                      <div
                         style={{
-                          ...styles.trackTitle,
-                          paddingRight: isMobile ? "36px" : 0,
+                          ...styles.trackIcon,
+                          width: isMobile ? "58px" : "74px",
+                          height: isMobile ? "58px" : "74px",
+                          background: `radial-gradient(circle at 30% 25%, #FFFFFF 0%, ${track.color} 75%)`,
                         }}
                       >
-                        {track.title}
-                      </h3>
-                      <p style={styles.trackArtist}>{track.artist}</p>
-                      <div style={styles.trackMetaRow}>
-                        <span style={styles.metaBadge}>
-                          <Emoji3D e="⏱️" size={16} style={styles.metaEmoji} />
-                          {track.duration}
-                        </span>
-                        <span style={styles.metaBadge}>
-                          <Emoji3D e="🎧" size={16} style={styles.metaEmoji} />
-                          {track.category}
-                        </span>
-                        <span style={styles.metaBadge}>
-                          <Emoji3D e="🌈" size={16} style={styles.metaEmoji} />
-                          {track.mood}
-                        </span>
+                        <Emoji3D e={track.icon} size={isMobile ? 38 : 48} />
                       </div>
-                    </div>
 
-                    <button
-                      style={{
-                        ...styles.favoriteButton,
-                        position: isMobile ? "absolute" : "static",
-                        top: isMobile ? "16px" : "auto",
-                        right: isMobile ? "16px" : "auto",
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(track.id);
-                      }}
-                    >
-                      <Emoji3D
-                        e={favorites.includes(track.id) ? "💜" : "🤍"}
-                        size={26}
-                        style={{ filter: "drop-shadow(0 4px 5px rgba(59,53,82,0.25))" }}
-                      />
-                    </button>
+                      <div style={styles.trackInfo}>
+                        <h3
+                          style={{
+                            ...styles.trackTitle,
+                            paddingRight: isMobile ? "36px" : 0,
+                          }}
+                        >
+                          {track.title}
+                        </h3>
+                        <p style={styles.trackArtist}>{track.artist}</p>
+                        <div style={styles.trackMetaRow}>
+                          <span style={styles.metaBadge}>
+                            <Emoji3D e="⏱️" size={16} style={styles.metaEmoji} />
+                            {track.duration}
+                          </span>
+                          <span style={styles.metaBadge}>
+                            <Emoji3D e="🎧" size={16} style={styles.metaEmoji} />
+                            {track.category}
+                          </span>
+                          <span style={styles.metaBadge}>
+                            <Emoji3D e="🌈" size={16} style={styles.metaEmoji} />
+                            {track.mood}
+                          </span>
+                          {!isPlaying && (
+                            <span style={styles.clickToPlayBadge}>
+                              ▶ Click to play here
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        style={{
+                          ...styles.favoriteButton,
+                          position: isMobile ? "absolute" : "static",
+                          top: isMobile ? "16px" : "auto",
+                          right: isMobile ? "16px" : "auto",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(track.id);
+                        }}
+                      >
+                        <Emoji3D
+                          e={favorites.includes(track.id) ? "💜" : "🤍"}
+                          size={26}
+                          style={{ filter: "drop-shadow(0 4px 5px rgba(59,53,82,0.25))" }}
+                        />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -758,7 +829,8 @@ const styles = {
   },
   trackCard: {
     display: "flex",
-    gap: "16px",
+    flexDirection: "column",
+    gap: "12px",
     borderRadius: "28px",
     cursor: "pointer",
     transition: "0.25s ease",
@@ -766,6 +838,67 @@ const styles = {
     boxSizing: "border-box",
     backdropFilter: "blur(10px)",
     WebkitBackdropFilter: "blur(10px)",
+  },
+  trackCardContent: {
+    display: "flex",
+    gap: "16px",
+    width: "100%",
+  },
+  inlinePlayerBox: {
+    width: "100%",
+    marginBottom: "8px",
+  },
+  inlinePlayerHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "8px",
+    padding: "0 2px",
+  },
+  nowPlayingIndicator: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    background: "rgba(142,120,190,0.18)",
+    padding: "5px 12px",
+    borderRadius: "12px",
+  },
+  pulseDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    backgroundColor: "#9B5DE5",
+    boxShadow: "0 0 8px #9B5DE5",
+  },
+  nowPlayingText: {
+    color: "#6B46C1",
+    fontWeight: "800",
+    fontSize: "12px",
+  },
+  closePlayerBtn: {
+    border: "none",
+    background: "rgba(47,42,69,0.08)",
+    color: "#2F2A45",
+    padding: "5px 12px",
+    borderRadius: "12px",
+    fontWeight: "800",
+    fontSize: "12px",
+    cursor: "pointer",
+  },
+  videoPlayerContainer: {
+    width: "100%",
+    borderRadius: "20px",
+    overflow: "hidden",
+    background: "#000",
+    boxShadow: "0 14px 28px rgba(47,42,69,0.2)",
+  },
+  clickToPlayBadge: {
+    background: "rgba(142,120,190,0.18)",
+    color: "#6B46C1",
+    padding: "4px 8px",
+    borderRadius: "10px",
+    fontSize: "11px",
+    fontWeight: "800",
   },
   trackIcon: {
     borderRadius: "50%",

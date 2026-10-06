@@ -342,6 +342,7 @@ function Meditation({ breathing = false }) {
       mood: "Calm",
       icon: "wind",
       color: "#A8DADC",
+      videoUrl: "https://www.youtube.com/embed/inpok4MKVLM",
       description:
         "A simple breathing meditation to calm your body and reduce emotional pressure.",
       steps: [
@@ -360,6 +361,7 @@ function Meditation({ breathing = false }) {
       mood: "Present",
       icon: "meditate",
       color: "#CDB4DB",
+      videoUrl: "https://www.youtube.com/embed/ZToicYcHIOU",
       description:
         "Focus on the present moment and gently observe your thoughts without judgment.",
       steps: [
@@ -378,6 +380,7 @@ function Meditation({ breathing = false }) {
       mood: "Rest",
       icon: "moon",
       color: "#B8C0FF",
+      videoUrl: "https://www.youtube.com/embed/aEqlQvczMJQ",
       description:
         "A soft meditation session to relax your mind and prepare your body for sleep.",
       steps: [
@@ -396,6 +399,7 @@ function Meditation({ breathing = false }) {
       mood: "Relief",
       icon: "heartBlue",
       color: "#FFAFCC",
+      videoUrl: "https://www.youtube.com/embed/O-6f5wQXSu8",
       description:
         "A guided meditation to reduce anxious feelings and create a sense of safety.",
       steps: [
@@ -414,6 +418,7 @@ function Meditation({ breathing = false }) {
       mood: "Clear",
       icon: "book",
       color: "#A8DADC",
+      videoUrl: "https://www.youtube.com/embed/WPni755-Krg",
       description:
         "Clear mental distractions and gently bring your attention back to your task.",
       steps: [
@@ -432,6 +437,7 @@ function Meditation({ breathing = false }) {
       mood: "Positive",
       icon: "flower",
       color: "#FFD166",
+      videoUrl: "https://www.youtube.com/embed/ssss7V1_eyA",
       description:
         "A gentle reflection session to build positive thoughts and emotional balance.",
       steps: [
@@ -450,6 +456,7 @@ function Meditation({ breathing = false }) {
       mood: "Relaxed",
       icon: "lotus",
       color: "#FFC8DD",
+      videoUrl: "https://www.youtube.com/embed/syx3a1CYY00",
       description:
         "Slowly scan your body from head to toe and release physical tension.",
       steps: [
@@ -468,6 +475,7 @@ function Meditation({ breathing = false }) {
       mood: "Fresh",
       icon: "sun",
       color: "#FFD6A5",
+      videoUrl: "https://www.youtube.com/embed/bF_1ZiFta-E",
       description:
         "Start your morning with calm breathing and positive intention.",
       steps: [
@@ -477,10 +485,88 @@ function Meditation({ breathing = false }) {
         "Begin your day with kindness.",
       ],
     },
+    {
+      id: 9,
+      title: "Box Breathing (4-4-4-4)",
+      category: "Breathing",
+      duration: "5 min",
+      level: "Beginner",
+      mood: "Steady",
+      icon: "wind",
+      color: "#A8DADC",
+      videoUrl: "https://www.youtube.com/embed/bF_1ZiFta-E",
+      description:
+        "Regulate nervous system through equal 4-count inhale, hold, exhale, and pause cycles.",
+      steps: [
+        "Inhale slowly for 4 seconds.",
+        "Hold breath gently for 4 seconds.",
+        "Exhale steadily for 4 seconds.",
+        "Pause and rest for 4 seconds.",
+      ],
+    },
+    {
+      id: 10,
+      title: "4-7-8 Deep Sleep Breathing",
+      category: "Breathing",
+      duration: "8 min",
+      level: "Calm",
+      mood: "Rest",
+      icon: "moon",
+      color: "#B8C0FF",
+      videoUrl: "https://www.youtube.com/embed/odADwWzHR24",
+      description:
+        "Natural tranquilizer technique to calm heart rate and enter deep peaceful rest.",
+      steps: [
+        "Exhale completely through mouth.",
+        "Inhale quietly through nose for 4 seconds.",
+        "Hold breath comfortably for 7 seconds.",
+        "Exhale completely through mouth for 8 seconds.",
+      ],
+    },
+    {
+      id: 11,
+      title: "Diaphragmatic Belly Breathing",
+      category: "Breathing",
+      duration: "6 min",
+      level: "Easy",
+      mood: "Relaxed",
+      icon: "lotus",
+      color: "#CDB4DB",
+      videoUrl: "https://www.youtube.com/embed/g2Wo6bupnEQ",
+      description:
+        "Deep abdominal expansion to lower cortisol, activate vagus nerve, and dissolve tension.",
+      steps: [
+        "Place one hand on chest and one on belly.",
+        "Breathe deeply so your belly rises.",
+        "Keep chest relatively still.",
+        "Slowly exhale through pursed lips.",
+      ],
+    },
+    {
+      id: 12,
+      title: "Alternate Nostril (Nadi Shodhana)",
+      category: "Breathing",
+      duration: "7 min",
+      level: "Intermediate",
+      mood: "Balanced",
+      icon: "meditate",
+      color: "#FFAFCC",
+      videoUrl: "https://www.youtube.com/embed/8VwufJrUhic",
+      description:
+        "Traditional yogic pranayama to balance brain hemispheres and soothe anxiety.",
+      steps: [
+        "Close right nostril with thumb, inhale left.",
+        "Close left with ring finger, release right, exhale right.",
+        "Inhale through right nostril.",
+        "Close right, release left, exhale left.",
+      ],
+    },
   ];
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSession, setSelectedSession] = useState(sessions[0]);
+  const [playingSessionId, setPlayingSessionId] = useState(null);
+  const [playKey, setPlayKey] = useState(0);
   const [favorites, setFavorites] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -501,6 +587,17 @@ function Meditation({ breathing = false }) {
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
+  };
+
+  const handlePlaySession = (session) => {
+    setSelectedSession(session);
+    setPlayingSessionId(session.id);
+    setPlayKey((k) => k + 1);
+  };
+
+  const handleStopSession = (e) => {
+    e.stopPropagation();
+    setPlayingSessionId(null);
   };
 
   useEffect(() => {
@@ -743,68 +840,116 @@ function Meditation({ breathing = false }) {
             </div>
 
             <div style={styles.sessionList}>
-              {filteredSessions.map((session) => (
-                <div
-                  key={session.id}
-                  style={{
-                    ...styles.sessionCard,
-                    border:
-                      selectedSession.id === session.id
+              {filteredSessions.map((session) => {
+                const isPlaying = playingSessionId === session.id;
+                const isSelected = selectedSession.id === session.id;
+
+                return (
+                  <div
+                    key={session.id}
+                    style={{
+                      ...styles.sessionCard,
+                      border: isPlaying
                         ? "3px solid #9B5DE5"
+                        : isSelected
+                        ? "2px solid #9B5DE5"
                         : "1px solid rgba(255,255,255,0.75)",
-                    background:
-                      selectedSession.id === session.id
+                      background: isPlaying
+                        ? "linear-gradient(145deg, #FFFFFF, #FAF5FF)"
+                        : isSelected
                         ? "linear-gradient(145deg, #FFFFFF, #F3E8FF)"
                         : "rgba(255,255,255,0.64)",
-                  }}
-                  onClick={() => {
-                    setSelectedSession(session);
-                    setTimerRunning(false);
-                    setElapsed(0);
-                    clearGoal();
-                    setBreathPhase("Breathe In");
-                  }}
-                >
-                  <div
-                    style={{
-                      ...styles.sessionIcon,
-                      backgroundColor: session.color,
+                      boxShadow: isPlaying
+                        ? "0 20px 48px rgba(155,93,229,0.22)"
+                        : "0 16px 34px rgba(49,34,68,0.11)",
+                    }}
+                    onClick={() => {
+                      if (!isPlaying) {
+                        handlePlaySession(session);
+                      }
                     }}
                   >
-                    <Icon3D name={session.icon} size={38} />
-                  </div>
+                    {/* INLINE VIDEO PLAYER: Plays right here inside this card! */}
+                    {isPlaying && session.videoUrl && (
+                      <div style={styles.inlinePlayerBox}>
+                        <div style={styles.inlinePlayerHeader}>
+                          <div style={styles.nowPlayingIndicator}>
+                            <span style={styles.pulseDot}></span>
+                            <span style={styles.nowPlayingText}>
+                              Playing In-Place
+                            </span>
+                          </div>
+                          <button
+                            style={styles.closePlayerBtn}
+                            onClick={handleStopSession}
+                            title="Close video"
+                          >
+                            ✕ Stop & Close
+                          </button>
+                        </div>
 
-                  <div style={styles.sessionInfo}>
-                    <h3 style={styles.sessionTitle}>{session.title}</h3>
-                    <p style={styles.sessionDesc}>{session.description}</p>
+                        <div style={styles.videoPlayerContainer}>
+                          <iframe
+                            key={`inline-med-${session.id}-${playKey}`}
+                            style={styles.iframe}
+                            src={`${session.videoUrl}?autoplay=1&rel=0&modestbranding=1`}
+                            title={session.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                          ></iframe>
+                        </div>
+                      </div>
+                    )}
 
-                    <div style={styles.metaRow}>
-                      <span style={styles.metaBadge}>
-                        <Icon3D name="clock" size={14} /> {session.duration}
-                      </span>
-                      <span style={styles.metaBadge}>
-                        <Icon3D name="sparkle" size={14} /> {session.level}
-                      </span>
-                      <span style={styles.metaBadge}>
-                        <Icon3D name="rainbow" size={16} /> {session.mood}
-                      </span>
+                    {/* Card Content Row */}
+                    <div style={styles.sessionCardContent}>
+                      <div
+                        style={{
+                          ...styles.sessionIcon,
+                          backgroundColor: session.color,
+                        }}
+                      >
+                        <Icon3D name={session.icon} size={38} />
+                      </div>
+
+                      <div style={styles.sessionInfo}>
+                        <h3 style={styles.sessionTitle}>{session.title}</h3>
+                        <p style={styles.sessionDesc}>{session.description}</p>
+
+                        <div style={styles.metaRow}>
+                          <span style={styles.metaBadge}>
+                            <Icon3D name="clock" size={14} /> {session.duration}
+                          </span>
+                          <span style={styles.metaBadge}>
+                            <Icon3D name="sparkle" size={14} /> {session.level}
+                          </span>
+                          <span style={styles.metaBadge}>
+                            <Icon3D name="rainbow" size={16} /> {session.mood}
+                          </span>
+                          {!isPlaying && (
+                            <span style={styles.clickToPlayBadge}>
+                              ▶ Click to play here
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        style={styles.favoriteButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(session.id);
+                        }}
+                      >
+                        <Icon3D
+                          name={favorites.includes(session.id) ? "heartPurple" : "heartEmpty"}
+                          size={22}
+                        />
+                      </button>
                     </div>
                   </div>
-
-                  <button
-                    style={styles.favoriteButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(session.id);
-                    }}
-                  >
-                    <Icon3D
-                      name={favorites.includes(session.id) ? "heartPurple" : "heartEmpty"}
-                      size={22}
-                    />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -1202,14 +1347,93 @@ const styles = {
 
   sessionCard: {
     display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    padding: "14px",
+    flexDirection: "column",
+    gap: "10px",
+    padding: "16px",
     borderRadius: "24px",
     boxShadow: "0 16px 34px rgba(49,34,68,0.11)",
     cursor: "pointer",
     transition: "0.3s ease",
     position: "relative",
+  },
+
+  sessionCardContent: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    width: "100%",
+  },
+
+  inlinePlayerBox: {
+    width: "100%",
+    marginBottom: "12px",
+  },
+
+  inlinePlayerHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "8px",
+    padding: "0 2px",
+  },
+
+  nowPlayingIndicator: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    background: "rgba(155,93,229,0.12)",
+    padding: "5px 12px",
+    borderRadius: "12px",
+  },
+
+  pulseDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    backgroundColor: "#9B5DE5",
+    boxShadow: "0 0 8px #9B5DE5",
+  },
+
+  nowPlayingText: {
+    color: "#9B5DE5",
+    fontWeight: "800",
+    fontSize: "12px",
+  },
+
+  closePlayerBtn: {
+    border: "none",
+    background: "rgba(49,34,68,0.08)",
+    color: "#312244",
+    padding: "5px 12px",
+    borderRadius: "12px",
+    fontWeight: "800",
+    fontSize: "12px",
+    cursor: "pointer",
+  },
+
+  videoPlayerContainer: {
+    width: "100%",
+    height: "240px",
+    borderRadius: "20px",
+    overflow: "hidden",
+    background: "#000",
+    boxShadow: "0 14px 28px rgba(49,34,68,0.18)",
+  },
+
+  iframe: {
+    width: "100%",
+    height: "100%",
+    border: "none",
+    display: "block",
+  },
+
+  clickToPlayBadge: {
+    background: "rgba(155,93,229,0.12)",
+    color: "#9B5DE5",
+    padding: "4px 8px",
+    borderRadius: "10px",
+    fontSize: "11px",
+    fontWeight: "800",
   },
 
   sessionIcon: {
