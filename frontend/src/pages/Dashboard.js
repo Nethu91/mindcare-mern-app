@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+
 import API from "../api/axios";
 import BottomNav from "../components/BottomNav";
 import { ThemeContext } from "../context/ThemeContext";
+
 import "./Dashboard.css";
 
 // ============================================================
@@ -21,9 +23,11 @@ import aiImg from "../assets/AI Chatbot.jpeg";
 import meditationImg from "../assets/Meditation.jpeg";
 import bellImg from "../assets/bell.jpeg";
 import summaryImg from "../assets/summary.jpeg";
-
-// Medication image
 import medicationImg from "../assets/Medication.jpeg";
+
+// NEW IMAGES
+import mindRelaxGamesImg from "../assets/MindRelaxGames.jpeg";
+import meditationCentersImg from "../assets/MeditationCenters.jpeg";
 
 // ============================================================
 // HELPERS
@@ -306,27 +310,7 @@ function Dashboard() {
   // ==========================================================
 
   const features = [
-    {
-      title: "Breathing Practice",
-      subtitle: "Guided breathing & mindfulness",
-      icon: meditationImg,
-      path: "/breathing",
-      bg: "#E3F5F2",
-    },
-    {
-      title: "Meditation Centers",
-      subtitle: "Find peaceful spaces near you",
-      icon: meditationImg,
-      path: "/meditation-centers",
-      bg: "#EFE3FF",
-    },
-    {
-      title: "My Journal",
-      subtitle: "Write your thoughts & reflections",
-      icon: summaryImg,
-      path: "/journal",
-      bg: "#FFE4EC",
-    },
+    // 1. Mood Tracker
     {
       title: "Mood Tracker",
       subtitle: "Track your daily mood",
@@ -334,34 +318,44 @@ function Dashboard() {
       path: "/mood",
       bg: "#FFF3D6",
     },
+
+    // 2. Breathing Practice
     {
-      title: "Assessment",
-      subtitle: "Mental health test",
+      title: "Breathing Practice",
+      subtitle: "Guided breathing & mindfulness",
+      icon: meditationImg,
+      path: "/breathing",
+      bg: "#E3F5F2",
+    },
+
+    // 3. Assessments
+    {
+      title: "Assessments",
+      subtitle: "Mental health tests",
       icon: assessmentImg,
       path: "/assessment",
       bg: "#EFE3FF",
     },
+
+    // 4. Mind Relax Games - NEW IMAGE
     {
-      title: "Counselor",
-      subtitle: "Book a counselor",
-      icon: counselorImg,
-      path: "/counselor",
-      bg: "#DFF8EA",
+      title: "Mind Relax Games",
+      subtitle: "Anti-stress & fun games",
+      icon: mindRelaxGamesImg,
+      path: "/mind-relax-games",
+      bg: "#FFF8D9",
     },
+
+    // 5. Journal
     {
-      title: "Appointments",
-      subtitle: "Manage sessions",
-      icon: appointmentsImg,
-      path: "/appointments",
+      title: "Journal",
+      subtitle: "Write your thoughts & reflections",
+      icon: summaryImg,
+      path: "/journal",
       bg: "#FFE4EC",
     },
-    {
-      title: "Calm Videos",
-      subtitle: "Relax your mind",
-      icon: calmImg,
-      path: "/calm-videos",
-      bg: "#ECE6FF",
-    },
+
+    // 6. Music
     {
       title: "Music",
       subtitle: "Peaceful music",
@@ -369,18 +363,44 @@ function Dashboard() {
       path: "/music",
       bg: "#E3F2FD",
     },
+
+    // 7. Videos
     {
-      title: "Mind Relax Games",
-      subtitle: "Anti-stress & fun games",
+      title: "Videos",
+      subtitle: "Relax your mind",
       icon: calmImg,
-      path: "/mind-relax-games",
-      bg: "#FFF0F5",
+      path: "/calm-videos",
+      bg: "#ECE6FF",
     },
 
-    // ========================================================
-    // MEDICATION CARD
-    // ========================================================
+    // 8. Meditation Centers - NEW IMAGE
+    {
+      title: "Meditation Centers",
+      subtitle: "Find peaceful spaces near you",
+      icon: meditationCentersImg,
+      path: "/meditation-centers",
+      bg: "#E4F5FF",
+    },
 
+    // 9. Counselors
+    {
+      title: "Counselors",
+      subtitle: "Book a counselor",
+      icon: counselorImg,
+      path: "/counselor",
+      bg: "#DFF8EA",
+    },
+
+    // 10. Appointments
+    {
+      title: "Appointments",
+      subtitle: "Manage sessions",
+      icon: appointmentsImg,
+      path: "/appointments",
+      bg: "#FFE4EC",
+    },
+
+    // 11. Medication
     {
       title: "Medication",
       subtitle: "Track medicines & reminders",
@@ -389,6 +409,7 @@ function Dashboard() {
       bg: "#E8F5E9",
     },
 
+    // 12. Emergency
     {
       title: "Emergency",
       subtitle: "Helpline support",
@@ -404,6 +425,7 @@ function Dashboard() {
 
   return (
     <div className="dashboard-container">
+
       {/* ======================================================
           TOP BAR
       ====================================================== */}
@@ -422,6 +444,7 @@ function Dashboard() {
 
         <div className="dashboard-actions">
           <div className="action-row">
+
             {/* Dark / Light Mode */}
 
             <button
@@ -654,6 +677,19 @@ function Dashboard() {
 
       {/* ======================================================
           FEATURE NAVIGATION GRID
+
+          1. Mood Tracker
+          2. Breathing Practice
+          3. Assessments
+          4. Mind Relax Games
+          5. Journal
+          6. Music
+          7. Videos
+          8. Meditation Centers
+          9. Counselors
+          10. Appointments
+          11. Medication
+          12. Emergency
       ====================================================== */}
 
       <div className="feature-grid">

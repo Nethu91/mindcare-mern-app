@@ -8,84 +8,26 @@ import guidanceImg from "../assets/rusted guidance.jpeg";
 import { Emoji3D } from "./MoodTracker";
 
 /* ============================================================
-   THEME – colours are picked automatically from the background
-   photo so everything matches it (calm, no random purple)
+   THEME – fixed palette sampled from mood-bg.jpeg
+   (dusty teal → slate blue → soft purple → rose / peach)
    ============================================================ */
 
-const buildTheme = (h = 168, s = 40) => ({
-  hue: h,
-  accent: `hsl(${h} ${s}% 52%)`,
-  accentDark: `hsl(${h} ${s}% 36%)`,
-  ink: `hsl(${h} 30% 15%)`,
-  text: `hsl(${h} 15% 32%)`,
-  soft: `hsl(${h} 45% 94%)`,
-  line: `hsl(${h} 30% 82%)`,
-});
-
-const DEFAULT_THEME = buildTheme();
-
-const rgbToHsl = (r, g, b) => {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  const d = max - min;
-  let h = 0;
-  let s = 0;
-  if (d) {
-    s = d / (1 - Math.abs(2 * l - 1));
-    if (max === r) h = ((g - b) / d) % 6;
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h *= 60;
-    if (h < 0) h += 360;
-  }
-  return [h, s * 100, l * 100];
+const THEME = {
+  hue: 240, // used by the 3D icons (periwinkle / slate-blue)
+  accent: "#7F93C4", // periwinkle
+  accentDark: "#5F6DA6", // slate purple
+  accent2: "#E3A4B4", // rose (bottom of the photo)
+  teal: "#8FB8BE", // teal (top of the photo)
+  ink: "#2E3452",
+  text: "#5A6283",
+  soft: "#F3F0F9",
+  line: "#D9D6EC",
+  gradient: "linear-gradient(135deg, #8FB8BE 0%, #7F93C4 50%, #A28BC0 100%)",
+  gradientWarm: "linear-gradient(135deg, #E3A4B4 0%, #B793C4 100%)",
 };
 
-function useImageTheme(src) {
-  const [theme, setTheme] = useState(DEFAULT_THEME);
-
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const N = 24;
-        const canvas = document.createElement("canvas");
-        canvas.width = N;
-        canvas.height = N;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, N, N);
-        const data = ctx.getImageData(0, 0, N, N).data;
-
-        let r = 0;
-        let g = 0;
-        let b = 0;
-        let wSum = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          const [, s, l] = rgbToHsl(data[i], data[i + 1], data[i + 2]);
-          const w = (s / 100) * (1 - Math.abs(l - 50) / 50) + 0.01;
-          r += data[i] * w;
-          g += data[i + 1] * w;
-          b += data[i + 2] * w;
-          wSum += w;
-        }
-        const [h, s] = rgbToHsl(r / wSum, g / wSum, b / wSum);
-        setTheme(buildTheme(Math.round(h), Math.min(55, Math.max(28, Math.round(s)))));
-      } catch (e) {
-        // keep the default theme
-      }
-    };
-    img.src = src;
-  }, [src]);
-
-  return theme;
-}
-
 /* ============================================================
-   3D ICONS (pure SVG – no image files needed)
+   CUTE 3D ICONS (pure SVG – glossy, soft, with tiny faces)
    ============================================================ */
 
 let cUid = 0;
@@ -95,32 +37,47 @@ const useCUid = () => {
   return ref.current;
 };
 
-function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
+function Icon3D({ name, size = 32, hue = 240, variant = 0 }) {
   const u = useCUid();
   const id = (k) => `${u}-${k}`;
   const f = (k) => `url(#${id(k)})`;
+
+  // soft 3D ball-style gradient
   const R = (k, a, b, c) => (
-    <radialGradient id={id(k)} cx="35%" cy="28%" r="85%">
+    <radialGradient id={id(k)} cx="32%" cy="25%" r="90%">
       <stop offset="0%" stopColor={a} />
-      <stop offset="55%" stopColor={b} />
+      <stop offset="50%" stopColor={b} />
       <stop offset="100%" stopColor={c} />
     </radialGradient>
   );
-  const gloss = (cx, cy, rx, ry, rot = -25, o = 0.7) => (
-    <ellipse
-      cx={cx}
-      cy={cy}
-      rx={rx}
-      ry={ry}
-      fill="#fff"
-      opacity={o}
-      transform={`rotate(${rot} ${cx} ${cy})`}
-    />
+
+  const gloss = (cx, cy, rx, ry, rot = -25, o = 0.75) => (
+    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#fff" opacity={o} transform={`rotate(${rot} ${cx} ${cy})`} />
   );
+
+  // tiny cute face: eyes + smile + blush
+  const face = (cx, cy, s = 1, color = "#3b2a3f") => (
+    <g>
+      <ellipse cx={cx - 9 * s} cy={cy} rx={2.8 * s} ry={3.4 * s} fill={color} />
+      <ellipse cx={cx + 9 * s} cy={cy} rx={2.8 * s} ry={3.4 * s} fill={color} />
+      <circle cx={cx - 8.2 * s} cy={cy - 1.2 * s} r={1 * s} fill="#fff" />
+      <circle cx={cx + 9.8 * s} cy={cy - 1.2 * s} r={1 * s} fill="#fff" />
+      <path
+        d={`M${cx - 4 * s} ${cy + 5 * s} q${4 * s} ${4.5 * s} ${8 * s} 0`}
+        fill="none"
+        stroke={color}
+        strokeWidth={2 * s}
+        strokeLinecap="round"
+      />
+      <ellipse cx={cx - 15 * s} cy={cy + 5 * s} rx={4 * s} ry={2.6 * s} fill="#FF8FA3" opacity="0.55" />
+      <ellipse cx={cx + 15 * s} cy={cy + 5 * s} rx={4 * s} ry={2.6 * s} fill="#FF8FA3" opacity="0.55" />
+    </g>
+  );
+
   const H = {
-    l: `hsl(${hue} 65% 86%)`,
-    m: `hsl(${hue} 50% 55%)`,
-    d: `hsl(${hue} 55% 30%)`,
+    l: `hsl(${hue} 70% 90%)`,
+    m: `hsl(${hue} 50% 66%)`,
+    d: `hsl(${hue} 45% 42%)`,
   };
 
   let content = null;
@@ -131,13 +88,11 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
         <g>
           <defs>{R("b", H.l, H.m, H.d)}</defs>
           <path
-            d="M20 14 H80 a12 12 0 0 1 12 12 V58 a12 12 0 0 1 -12 12 H54 L34 90 V70 H20 a12 12 0 0 1 -12 -12 V26 a12 12 0 0 1 12 -12 Z"
+            d="M22 12 H78 a14 14 0 0 1 14 14 V58 a14 14 0 0 1 -14 14 H56 L34 92 V72 H22 a14 14 0 0 1 -14 -14 V26 a14 14 0 0 1 14 -14 Z"
             fill={f("b")}
           />
-          <circle cx="30" cy="42" r="6" fill="#fff" />
-          <circle cx="50" cy="42" r="6" fill="#fff" />
-          <circle cx="70" cy="42" r="6" fill="#fff" />
-          {gloss(30, 24, 14, 4.5, -8, 0.5)}
+          {face(50, 40, 1)}
+          {gloss(30, 22, 15, 4.5, -8, 0.6)}
         </g>
       );
       break;
@@ -145,16 +100,16 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
     case "brain":
       content = (
         <g>
-          <defs>{R("br", "#FFE1EA", "#FF93B0", "#D9456F")}</defs>
-          <circle cx="34" cy="46" r="22" fill={f("br")} />
-          <circle cx="66" cy="46" r="22" fill={f("br")} />
-          <circle cx="42" cy="30" r="18" fill={f("br")} />
-          <circle cx="58" cy="30" r="18" fill={f("br")} />
-          <circle cx="40" cy="64" r="18" fill={f("br")} />
-          <circle cx="60" cy="64" r="18" fill={f("br")} />
-          <path d="M50 14 V82" stroke="#C93A63" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-          <path d="M24 40 C32 36 36 44 44 40 M56 52 C64 48 70 56 78 50 M28 62 C36 58 40 66 46 62 M54 30 C62 26 66 34 74 30" stroke="#C93A63" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.8" />
-          {gloss(32, 28, 9, 4, -35, 0.7)}
+          <defs>{R("br", "#FFE9F0", "#FFA9C2", "#E2628A")}</defs>
+          <circle cx="32" cy="48" r="22" fill={f("br")} />
+          <circle cx="68" cy="48" r="22" fill={f("br")} />
+          <circle cx="42" cy="30" r="19" fill={f("br")} />
+          <circle cx="58" cy="30" r="19" fill={f("br")} />
+          <circle cx="40" cy="66" r="18" fill={f("br")} />
+          <circle cx="60" cy="66" r="18" fill={f("br")} />
+          <path d="M50 14 V84" stroke="#D3507B" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.55" />
+          {face(50, 50, 1, "#7a2a47")}
+          {gloss(30, 28, 10, 4.5, -35, 0.8)}
         </g>
       );
       break;
@@ -163,12 +118,12 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
       content = (
         <g>
           <defs>
-            {R("g", "#FFFFFF", "#DDF1FB", "#8CC9E6")}
+            {R("g", "#FFFFFF", "#E6EFFB", "#A9BFE6")}
             {R("r", H.l, H.m, H.d)}
           </defs>
-          <line x1="64" y1="64" x2="88" y2="88" stroke={H.d} strokeWidth="13" strokeLinecap="round" />
-          <circle cx="42" cy="42" r="30" fill={f("g")} stroke={f("r")} strokeWidth="9" />
-          {gloss(32, 30, 10, 4.5, -35, 0.9)}
+          <line x1="66" y1="66" x2="90" y2="90" stroke={H.d} strokeWidth="14" strokeLinecap="round" />
+          <circle cx="42" cy="42" r="30" fill={f("g")} stroke={f("r")} strokeWidth="10" />
+          {gloss(31, 30, 10, 4.5, -35, 0.95)}
         </g>
       );
       break;
@@ -178,30 +133,32 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
       content = (
         <g>
           <defs>
-            {R("skin", "#FFE3CC", "#F2B58C", "#CF8559")}
+            {R("skin", "#FFE8D6", "#F6BE98", "#D88F63")}
             {R("coat", H.l, H.m, H.d)}
           </defs>
-          {longHair && <ellipse cx="50" cy="44" rx="25" ry="28" fill="#3b2314" />}
-          <path d="M12 96 C12 72 28 64 50 64 C72 64 88 72 88 96 Z" fill={f("coat")} />
-          <rect x="43" y="52" width="14" height="16" rx="6" fill="#E5A57C" />
+          {longHair && <ellipse cx="50" cy="46" rx="27" ry="30" fill="#4a2e22" />}
+          <path d="M10 98 C10 72 28 64 50 64 C72 64 90 72 90 98 Z" fill={f("coat")} />
+          <rect x="43" y="52" width="14" height="16" rx="6" fill="#EDB087" />
           <path d="M40 64 L50 80 L60 64 Z" fill="#fff" />
-          <circle cx="50" cy="38" r="21" fill={f("skin")} />
+          <circle cx="50" cy="38" r="23" fill={f("skin")} />
           <path
             d={
               longHair
-                ? "M28 38 C26 10 74 10 72 38 C64 26 36 26 28 38 Z"
-                : "M28 36 C26 8 74 8 72 36 C70 26 58 20 50 20 C42 20 30 26 28 36 Z"
+                ? "M26 40 C23 8 77 8 74 40 C66 26 34 26 26 40 Z"
+                : "M27 38 C24 6 76 6 73 38 C71 26 59 19 50 19 C41 19 29 26 27 38 Z"
             }
-            fill="#3b2314"
+            fill="#4a2e22"
           />
-          <circle cx="42" cy="40" r="2.6" fill="#2b1608" />
-          <circle cx="58" cy="40" r="2.6" fill="#2b1608" />
+          <ellipse cx="41" cy="40" rx="2.8" ry="3.4" fill="#2b1608" />
+          <ellipse cx="59" cy="40" rx="2.8" ry="3.4" fill="#2b1608" />
+          <circle cx="41.9" cy="38.8" r="1" fill="#fff" />
+          <circle cx="59.9" cy="38.8" r="1" fill="#fff" />
           <path d="M44 49 q6 5 12 0" fill="none" stroke="#B5523E" strokeWidth="2.4" strokeLinecap="round" />
-          <circle cx="35" cy="46" r="4" fill="#FF8FA3" opacity="0.4" />
-          <circle cx="65" cy="46" r="4" fill="#FF8FA3" opacity="0.4" />
+          <ellipse cx="34" cy="47" rx="4.5" ry="3" fill="#FF8FA3" opacity="0.5" />
+          <ellipse cx="66" cy="47" rx="4.5" ry="3" fill="#FF8FA3" opacity="0.5" />
           <path d="M36 68 C30 84 46 90 52 80" fill="none" stroke="#4a4a5a" strokeWidth="3" strokeLinecap="round" />
           <circle cx="52" cy="80" r="4.5" fill="#D9DEE6" stroke="#4a4a5a" strokeWidth="1.5" />
-          {gloss(42, 26, 6, 2.5, -25, 0.5)}
+          {gloss(40, 24, 7, 2.8, -25, 0.55)}
         </g>
       );
       break;
@@ -210,10 +167,11 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
     case "pin":
       content = (
         <g>
-          <defs>{R("p", "#FFC9C9", "#F2646A", "#B8232F")}</defs>
-          <path d="M50 94 C26 68 20 56 20 40 A30 30 0 0 1 80 40 C80 56 74 68 50 94 Z" fill={f("p")} />
-          <circle cx="50" cy="40" r="12" fill="#fff" />
-          {gloss(38, 22, 9, 4, -35, 0.6)}
+          <defs>{R("p", "#FFD3D8", "#F77A86", "#C2303F")}</defs>
+          <path d="M50 96 C24 68 18 56 18 40 A32 32 0 0 1 82 40 C82 56 76 68 50 96 Z" fill={f("p")} />
+          <circle cx="50" cy="40" r="15" fill="#fff" />
+          <circle cx="50" cy="40" r="7" fill="#F77A86" opacity="0.6" />
+          {gloss(36, 22, 10, 4.5, -35, 0.7)}
         </g>
       );
       break;
@@ -222,15 +180,15 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
       content = (
         <g>
           <defs>
-            {R("w", "#F4D9A8", "#C9893F", "#8A5420")}
-            {R("s", "#FFF1B0", "#FFC93C", "#E08A00")}
+            {R("w", "#F7E2BE", "#D29A52", "#94602A")}
+            {R("s", "#FFF4C2", "#FFD056", "#E8951A")}
           </defs>
-          <path d="M30 18 H70 C70 40 56 46 50 50 C56 54 70 60 70 82 H30 C30 60 44 54 50 50 C44 46 30 40 30 18 Z" fill="#E6F4FB" stroke="#9CC9DE" strokeWidth="2.5" />
+          <path d="M30 18 H70 C70 40 56 46 50 50 C56 54 70 60 70 82 H30 C30 60 44 54 50 50 C44 46 30 40 30 18 Z" fill="#EEF6FC" stroke="#A9CCE0" strokeWidth="2.5" />
           <path d="M37 80 H63 C61 70 55 62 50 58 C45 62 39 70 37 80 Z" fill={f("s")} />
           <path d="M38 22 H62 C60 31 55 37 50 41 C45 37 40 31 38 22 Z" fill={f("s")} />
-          <rect x="22" y="8" width="56" height="11" rx="5" fill={f("w")} />
-          <rect x="22" y="81" width="56" height="11" rx="5" fill={f("w")} />
-          {gloss(38, 30, 3, 9, 8, 0.7)}
+          <rect x="22" y="8" width="56" height="11" rx="5.5" fill={f("w")} />
+          <rect x="22" y="81" width="56" height="11" rx="5.5" fill={f("w")} />
+          {gloss(38, 30, 3, 9, 8, 0.8)}
         </g>
       );
       break;
@@ -238,9 +196,9 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
     case "dot":
       content = (
         <g>
-          <defs>{R("g", "#C8F8D4", "#3FCB6E", "#17913F")}</defs>
+          <defs>{R("g", "#D3FADE", "#4FD27C", "#1E9A47")}</defs>
           <circle cx="50" cy="50" r="38" fill={f("g")} />
-          {gloss(38, 34, 13, 7, -30, 0.8)}
+          {gloss(38, 34, 14, 7.5, -30, 0.85)}
         </g>
       );
       break;
@@ -250,13 +208,14 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
         <g>
           <defs>
             {R("sc", H.l, H.m, H.d)}
-            {R("bs", "#FFFFFF", "#DCE1E8", "#A5ACB8")}
+            {R("bs", "#FFFFFF", "#E1E5EC", "#AEB5C2")}
           </defs>
-          <rect x="16" y="18" width="68" height="48" rx="8" fill="#3a3f4b" />
-          <rect x="21" y="23" width="58" height="38" rx="4" fill={f("sc")} />
-          <path d="M6 70 H94 L88 82 H12 Z" fill={f("bs")} />
-          <rect x="40" y="73" width="20" height="4" rx="2" fill="#A5ACB8" />
-          {gloss(36, 32, 12, 4, -20, 0.55)}
+          <rect x="16" y="14" width="68" height="52" rx="9" fill="#3e4452" />
+          <rect x="21" y="19" width="58" height="42" rx="5" fill={f("sc")} />
+          {face(50, 38, 0.8)}
+          <path d="M6 70 H94 L88 84 H12 Z" fill={f("bs")} />
+          <rect x="40" y="74" width="20" height="4" rx="2" fill="#AEB5C2" />
+          {gloss(34, 26, 12, 3.5, -20, 0.6)}
         </g>
       );
       break;
@@ -264,28 +223,10 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
     case "hospital":
       content = (
         <g>
-          <defs>{R("h", "#FFFFFF", "#EEF4F9", "#BCCCDA")}</defs>
-          <rect x="12" y="12" width="76" height="76" rx="18" fill={f("h")} />
-          <path d="M42 26 H58 V42 H74 V58 H58 V74 H42 V58 H26 V42 H42 Z" fill="#E5484D" />
-          {gloss(30, 24, 12, 4, -20, 0.8)}
-        </g>
-      );
-      break;
-
-    case "phone":
-      content = (
-        <g>
-          <defs>
-            {R("b", "#5b6270", "#3a3f4b", "#20242c")}
-            {R("sc", H.l, H.m, H.d)}
-            {R("g", "#C8F8D4", "#3FCB6E", "#17913F")}
-          </defs>
-          <rect x="26" y="8" width="48" height="84" rx="12" fill={f("b")} />
-          <rect x="31" y="18" width="38" height="62" rx="5" fill={f("sc")} />
-          <circle cx="50" cy="52" r="12" fill={f("g")} />
-          <path d="M45 56 C45 48 52 46 54 48 L55 51 L52 53 C53 55 54 56 56 57 L58 54 L61 55 C62 58 56 62 45 56 Z" fill="#fff" transform="translate(-1 -1)" />
-          <circle cx="50" cy="86" r="2.5" fill="#8b93a3" />
-          {gloss(38, 28, 6, 3, -25, 0.5)}
+          <defs>{R("h", "#FFFFFF", "#F1F6FB", "#C3D2E0")}</defs>
+          <rect x="10" y="10" width="80" height="80" rx="22" fill={f("h")} />
+          <path d="M42 26 H58 V42 H74 V58 H58 V74 H42 V58 H26 V42 H42 Z" fill="#EF5B63" />
+          {gloss(30, 24, 13, 4.5, -20, 0.9)}
         </g>
       );
       break;
@@ -293,12 +234,12 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
     case "lock":
       content = (
         <g>
-          <defs>{R("g", "#FFF3B0", "#FFC93C", "#E08A00")}</defs>
-          <path d="M33 44 V32 A17 17 0 0 1 67 32 V44" fill="none" stroke="#B9C0CC" strokeWidth="9" strokeLinecap="round" />
-          <rect x="20" y="42" width="60" height="48" rx="12" fill={f("g")} />
-          <circle cx="50" cy="63" r="7" fill="#7a4a10" />
-          <rect x="47" y="66" width="6" height="12" rx="3" fill="#7a4a10" />
-          {gloss(34, 50, 10, 4, -20, 0.7)}
+          <defs>{R("g", "#FFF6C4", "#FFD056", "#E8951A")}</defs>
+          <path d="M33 44 V32 A17 17 0 0 1 67 32 V44" fill="none" stroke="#BFC6D2" strokeWidth="9" strokeLinecap="round" />
+          <rect x="18" y="42" width="64" height="50" rx="14" fill={f("g")} />
+          <circle cx="50" cy="64" r="7" fill="#7a4a10" />
+          <rect x="47" y="67" width="6" height="12" rx="3" fill="#7a4a10" />
+          {gloss(34, 50, 11, 4.5, -20, 0.75)}
         </g>
       );
       break;
@@ -316,7 +257,7 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
         display: "block",
         overflow: "visible",
         flexShrink: 0,
-        filter: "drop-shadow(0 4px 4px rgba(49,34,68,0.25))",
+        filter: "drop-shadow(0 4px 5px rgba(60,60,110,0.28))",
       }}
     >
       {content}
@@ -328,15 +269,16 @@ function Icon3D({ name, size = 32, hue = 168, variant = 0 }) {
    COUNSELOR PAGE
    ============================================================ */
 
+// Only Online & Offline.  "Physical" is kept as the stored value so the
+// backend / existing appointments keep working – the label shows "Offline".
 const MODES = [
   { value: "Online", label: "Online", icon: "laptop" },
-  { value: "Physical", label: "Physical", icon: "hospital" },
-  { value: "Phone Call", label: "Phone", icon: "phone" },
+  { value: "Physical", label: "Offline", icon: "hospital" },
 ];
 
 function Counselor() {
   const navigate = useNavigate();
-  const theme = useImageTheme(bgImage);
+  const theme = THEME;
   const S = useMemo(() => makeStyles(theme), [theme]);
 
   const [counselors, setCounselors] = useState([]);
@@ -354,8 +296,8 @@ function Counselor() {
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
 
-  // Soft fallback colours for counselors that don't carry a colour in the DB
-  const avatarPalette = ["#FFC8DD", "#A8DADC", "#CDB4DB", "#FFD166", "#B8C0FF", "#FFAFCC"];
+  // soft pastel avatar colours that match the background photo
+  const avatarPalette = ["#F6D3DC", "#CFE3E6", "#DAD0EE", "#F7E3CF", "#CDD6F2", "#F0CFE6"];
   const hashOf = (id) => {
     const str = String(id);
     let sum = 0;
@@ -373,15 +315,11 @@ function Counselor() {
   const loadCounselors = async () => {
     try {
       setLoading(true);
-
       const response = await API.get("/counselors");
-
       setCounselors(response.data);
-
       if (response.data.length > 0) {
         setSelectedCounselor(response.data[0]);
       }
-
       setError("");
     } catch (err) {
       console.error(err);
@@ -393,7 +331,6 @@ function Counselor() {
 
   const filteredCounselors = counselors.filter((counselor) => {
     const search = searchTerm.toLowerCase();
-
     return (
       counselor.name?.toLowerCase().includes(search) ||
       counselor.role?.toLowerCase().includes(search) ||
@@ -407,7 +344,6 @@ function Counselor() {
       alert("Please select a counselor.");
       return;
     }
-
     if (!appointmentDate || !appointmentTime) {
       alert("Please select appointment date and time");
       return;
@@ -424,18 +360,12 @@ function Counselor() {
         reason: selectedMode,
       });
 
-      setBookingSuccess(
-        response.data.message || "Appointment booked successfully!"
-      );
-
+      setBookingSuccess(response.data.message || "Appointment booked successfully!");
       setAppointmentDate("");
       setAppointmentTime("");
     } catch (err) {
       console.error(err);
-      alert(
-        err.response?.data?.message ||
-          "Failed to book appointment. Please try again."
-      );
+      alert(err.response?.data?.message || "Failed to book appointment. Please try again.");
     } finally {
       setBookingLoading(false);
     }
@@ -456,7 +386,7 @@ function Counselor() {
       alt: "Easy booking",
       badge: "Booking",
       title: "Easy Booking",
-      text: "Select online, physical, or phone counseling and choose a date and time that is comfortable for you.",
+      text: "Select online or offline counseling and choose a date and time that is comfortable for you.",
       link: "Go to Appointments →",
       to: "/appointments",
     },
@@ -473,13 +403,15 @@ function Counselor() {
 
   return (
     <div style={S.page}>
+      {/* full-screen blurred copy of the photo (fills desktop sides) */}
       <div style={{ ...S.bgBlur, backgroundImage: `url(${bgImage})` }}></div>
 
+      {/* sharp phone-width copy of the photo */}
       <div style={S.bgPhone}>
         <div
           style={{
             ...S.bgPhoneImage,
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.12), rgba(255,255,255,0.22)), url(${bgImage})`,
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.06), rgba(255,255,255,0.16)), url(${bgImage})`,
           }}
         ></div>
       </div>
@@ -487,15 +419,13 @@ function Counselor() {
       <div style={S.container}>
         {/* Header */}
         <div style={S.header}>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h1 style={S.title}>Counselor Support</h1>
-            <p style={S.subtitle}>
-              Connect with Sri Lankan counselors and get emotional support.
-            </p>
+            <p style={S.subtitle}>Connect with Sri Lankan counselors and get emotional support.</p>
           </div>
 
           <div style={S.headerBadge}>
-            <Icon3D name="chat" size={24} hue={theme.hue} />
+            <Icon3D name="chat" size={26} hue={theme.hue} />
             Private &amp; Safe
           </div>
         </div>
@@ -505,13 +435,12 @@ function Counselor() {
           <div style={{ minWidth: 0 }}>
             <h2 style={S.heroTitle}>Need someone to talk to?</h2>
             <p style={S.heroText}>
-              Choose a counselor, select your session type, and request an
-              appointment at a comfortable time.
+              Choose a counselor, select your session type, and request an appointment at a comfortable time.
             </p>
           </div>
 
           <div style={S.heroIcon}>
-            <Icon3D name="brain" size={50} />
+            <Icon3D name="brain" size={52} />
           </div>
         </div>
 
@@ -553,126 +482,91 @@ function Counselor() {
                     onClick={() => setSelectedCounselor(active ? null : counselor)}
                     style={{
                       ...S.counselorCard,
-                      flexDirection: "column",
-                      alignItems: "stretch",
-                      border: active
-                        ? `3px solid ${theme.accent}`
-                        : "1px solid rgba(255,255,255,0.75)",
+                      border: active ? `2.5px solid ${theme.accent}` : "1px solid rgba(255,255,255,0.8)",
                       background: active
                         ? `linear-gradient(145deg, #FFFFFF, ${theme.soft})`
-                        : "rgba(255,255,255,0.64)",
-                      transform: active ? "translateY(-2px)" : "translateY(0)",
+                        : "rgba(255,255,255,0.66)",
                       boxShadow: active
-                        ? `0 14px 32px ${theme.line || "rgba(0,0,0,0.12)"}`
-                        : "0 6px 16px rgba(30,30,40,0.06)",
+                        ? `0 14px 30px ${theme.line}`
+                        : "0 6px 16px rgba(46,52,82,0.08)",
                     }}
                   >
-                    {/* Top Row: Avatar + Info + Toggle Badge */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%" }}>
-                      <div
-                        style={{
-                          ...S.avatarBox,
-                          backgroundColor: getAvatarColor(counselor._id),
-                        }}
-                      >
-                        <Icon3D
-                          name="counselor"
-                          size={52}
-                          hue={theme.hue}
-                          variant={getAvatarVariant(counselor._id)}
-                        />
+                    {/* Top row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%" }}>
+                      <div style={{ ...S.avatarBox, backgroundColor: getAvatarColor(counselor._id) }}>
+                        <Icon3D name="counselor" size={50} hue={theme.hue} variant={getAvatarVariant(counselor._id)} />
                       </div>
 
                       <div style={S.counselorInfo}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                          <h3 style={S.counselorName}>{counselor.name}</h3>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: active ? theme.accentDark : theme.text,
-                              background: active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)",
-                              padding: "4px 10px",
-                              borderRadius: 12,
-                              border: `1px solid ${active ? theme.accent : "rgba(0,0,0,0.06)"}`,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {active ? "▲ Hide Details" : "▼ View Details"}
-                          </span>
-                        </div>
-
+                        <h3 style={S.counselorName}>{counselor.name}</h3>
                         <p style={S.counselorRole}>{counselor.role}</p>
                         <p style={S.specialty}>{counselor.specialization}</p>
-
-                        <div style={S.miniInfoRow}>
-                          <span style={S.miniBadge}>
-                            <Icon3D name="pin" size={14} />
-                            {counselor.location}
-                          </span>
-                          {counselor.experience && (
-                            <span style={S.miniBadge}>
-                              <Icon3D name="hourglass" size={14} />
-                              {counselor.experience}
-                            </span>
-                          )}
-                          <span style={{ ...S.miniBadge, color: "#10b981" }}>
-                            <Icon3D name="dot" size={12} />
-                            {counselor.availability || "Available"}
-                          </span>
-                        </div>
                       </div>
+
+                      <span
+                        style={{
+                          ...S.toggleBadge,
+                          color: active ? theme.accentDark : theme.text,
+                          border: `1px solid ${active ? theme.accent : "rgba(0,0,0,0.06)"}`,
+                        }}
+                      >
+                        {active ? "▲" : "▼"}
+                      </span>
                     </div>
 
-                    {/* In-Place Details & Booking Section */}
+                    <div style={S.miniInfoRow}>
+                      <span style={S.miniBadge}>
+                        <Icon3D name="pin" size={15} />
+                        {counselor.location}
+                      </span>
+                      {counselor.experience && (
+                        <span style={S.miniBadge}>
+                          <Icon3D name="hourglass" size={15} />
+                          {counselor.experience}
+                        </span>
+                      )}
+                      <span style={{ ...S.miniBadge, color: "#168a55" }}>
+                        <Icon3D name="dot" size={12} />
+                        {counselor.availability || "Available"}
+                      </span>
+                    </div>
+
+                    {/* Details + booking */}
                     {active && (
                       <div
                         style={{
-                          marginTop: 16,
-                          paddingTop: 16,
-                          borderTop: `1.5px solid ${theme.line || "rgba(0,0,0,0.08)"}`,
+                          marginTop: 14,
+                          paddingTop: 14,
+                          borderTop: `1.5px solid ${theme.line}`,
                           width: "100%",
                           cursor: "default",
                           textAlign: "left",
                         }}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {/* Details Grid */}
-                        <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+                        <div style={{ display: "grid", gap: 10, marginBottom: 14 }}>
                           <div style={S.detailBox}>
                             <h3 style={S.detailTitle}>Specialized In</h3>
                             <p style={S.detailText}>{counselor.specialization}</p>
                           </div>
-
                           <div style={S.detailBox}>
                             <h3 style={S.detailTitle}>About Counselor</h3>
-                            <p style={S.detailText}>
-                              {counselor.about || "No description provided."}
-                            </p>
+                            <p style={S.detailText}>{counselor.about || "No description provided."}</p>
                           </div>
-
                           <div style={S.detailBox}>
                             <h3 style={S.detailTitle}>Session Location</h3>
                             <p style={S.detailText}>{counselor.location}</p>
                           </div>
                         </div>
 
-                        {/* In-Place Booking Form */}
-                        <div
-                          style={{
-                            background: "rgba(255,255,255,0.78)",
-                            borderRadius: 20,
-                            padding: "18px 16px",
-                            border: "1px solid rgba(255,255,255,0.9)",
-                            boxShadow: "0 6px 18px rgba(0,0,0,0.04)",
-                          }}
-                        >
+                        <div style={S.bookingBox}>
                           <h3 style={{ ...S.sectionTitle, fontSize: 17, marginBottom: 12 }}>
                             Book Session with {counselor.name}
                           </h3>
 
                           {bookingSuccess && <p style={S.success}>{bookingSuccess}</p>}
 
+                          <label style={{ ...S.label, marginTop: 0 }}>Session Type</label>
                           <div style={S.modeGrid}>
                             {MODES.map((mode) => {
                               const activeMode = selectedMode === mode.value;
@@ -683,42 +577,41 @@ function Counselor() {
                                   onClick={() => setSelectedMode(mode.value)}
                                   style={{
                                     ...S.modeButton,
-                                    background: activeMode
-                                      ? `linear-gradient(135deg, ${theme.accent}, ${theme.accentDark})`
-                                      : "rgba(255,255,255,0.75)",
+                                    background: activeMode ? theme.gradient : "rgba(255,255,255,0.8)",
                                     color: activeMode ? "#FFFFFF" : theme.ink,
                                     transform: activeMode ? "translateY(-2px)" : "none",
                                   }}
                                 >
-                                  <Icon3D name={mode.icon} size={28} hue={theme.hue} />
+                                  <Icon3D name={mode.icon} size={32} hue={theme.hue} />
                                   {mode.label}
                                 </button>
                               );
                             })}
                           </div>
 
-                          <label style={S.label}>Appointment Date</label>
-                          <input
-                            style={S.input}
-                            type="date"
-                            value={appointmentDate}
-                            onChange={(e) => setAppointmentDate(e.target.value)}
-                          />
-
-                          <label style={S.label}>Appointment Time</label>
-                          <input
-                            style={S.input}
-                            type="time"
-                            value={appointmentTime}
-                            onChange={(e) => setAppointmentTime(e.target.value)}
-                          />
+                          <div style={S.dateTimeRow}>
+                            <div style={{ minWidth: 0 }}>
+                              <label style={S.label}>Date</label>
+                              <input
+                                style={S.input}
+                                type="date"
+                                value={appointmentDate}
+                                onChange={(e) => setAppointmentDate(e.target.value)}
+                              />
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <label style={S.label}>Time</label>
+                              <input
+                                style={S.input}
+                                type="time"
+                                value={appointmentTime}
+                                onChange={(e) => setAppointmentTime(e.target.value)}
+                              />
+                            </div>
+                          </div>
 
                           <button
-                            style={{
-                              ...S.bookButton,
-                              opacity: bookingLoading ? 0.7 : 1,
-                              marginTop: 12,
-                            }}
+                            style={{ ...S.bookButton, opacity: bookingLoading ? 0.7 : 1 }}
                             type="button"
                             onClick={handleBooking}
                             disabled={bookingLoading}
@@ -726,8 +619,8 @@ function Counselor() {
                             {bookingLoading ? "Booking..." : "Request Appointment"}
                           </button>
 
-                          <p style={{ ...S.safeNote, marginTop: 10 }}>
-                            <Icon3D name="lock" size={16} />
+                          <p style={S.safeNote}>
+                            <Icon3D name="lock" size={18} />
                             Your session details are private and confidential.
                           </p>
                         </div>
@@ -764,26 +657,27 @@ function Counselor() {
 }
 
 /* ============================================================
-   STYLES
+   STYLES  (mobile-first, max width 480px)
    ============================================================ */
 
 const glass = {
-  background: "rgba(255,255,255,0.58)",
+  background: "rgba(255,255,255,0.6)",
   backdropFilter: "blur(16px)",
   WebkitBackdropFilter: "blur(16px)",
-  border: "1px solid rgba(255,255,255,0.75)",
-  boxShadow: "0 18px 40px rgba(30,30,40,0.14)",
+  border: "1px solid rgba(255,255,255,0.8)",
+  boxShadow: "0 16px 36px rgba(46,52,82,0.14)",
 };
 
 const makeStyles = (t) => ({
   page: {
     position: "relative",
-    minHeight: "100vh",
-    padding: "20px 14px 60px",
+    minHeight: "100dvh",
+    padding: "max(16px, env(safe-area-inset-top)) 12px max(48px, env(safe-area-inset-bottom))",
     fontFamily: "'Poppins', Arial, sans-serif",
     boxSizing: "border-box",
     overflowX: "hidden",
     background: t.soft,
+    WebkitTextSizeAdjust: "100%",
   },
 
   bgBlur: {
@@ -802,7 +696,7 @@ const makeStyles = (t) => ({
     top: 0,
     left: 0,
     right: 0,
-    height: "100vh",
+    height: "100dvh",
     zIndex: 1,
     display: "flex",
     justifyContent: "center",
@@ -820,12 +714,14 @@ const makeStyles = (t) => ({
   },
 
   container: {
+    width: "100%",
     maxWidth: "480px",
     margin: "0 auto",
     position: "relative",
     zIndex: 2,
     display: "grid",
-    gap: "18px",
+    gap: "16px",
+    boxSizing: "border-box",
   },
 
   header: {
@@ -836,10 +732,11 @@ const makeStyles = (t) => ({
   },
 
   title: {
-    fontSize: "30px",
+    fontSize: "28px",
     color: t.ink,
     margin: "0 0 6px 0",
     fontWeight: "800",
+    lineHeight: 1.15,
   },
 
   subtitle: {
@@ -854,7 +751,7 @@ const makeStyles = (t) => ({
     display: "inline-flex",
     alignItems: "center",
     gap: "8px",
-    padding: "10px 16px",
+    padding: "8px 16px 8px 10px",
     borderRadius: "20px",
     color: t.ink,
     fontWeight: "800",
@@ -863,55 +760,55 @@ const makeStyles = (t) => ({
 
   heroCard: {
     ...glass,
-    borderRadius: "28px",
-    padding: "20px",
+    borderRadius: "26px",
+    padding: "18px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: "14px",
+    gap: "12px",
   },
 
   heroTitle: {
     color: t.ink,
-    fontSize: "21px",
-    margin: "0 0 8px 0",
+    fontSize: "20px",
+    margin: "0 0 6px 0",
     fontWeight: "800",
   },
 
   heroText: {
     color: t.text,
-    lineHeight: "1.6",
+    lineHeight: "1.55",
     margin: 0,
     fontSize: "13.5px",
   },
 
   heroIcon: {
-    width: "72px",
-    height: "72px",
-    borderRadius: "24px",
+    width: "68px",
+    height: "68px",
+    borderRadius: "22px",
     background: `linear-gradient(135deg, ${t.soft}, #FFFFFF)`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    boxShadow: "0 14px 28px rgba(30,30,40,0.14)",
+    boxShadow: "0 12px 24px rgba(46,52,82,0.14)",
     flexShrink: 0,
   },
 
   panel: {
     ...glass,
-    borderRadius: "28px",
-    padding: "20px",
+    borderRadius: "26px",
+    padding: "16px",
   },
 
   searchBox: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    background: "rgba(255,255,255,0.8)",
-    padding: "13px 16px",
-    borderRadius: "22px",
-    boxShadow: "inset 0 0 16px rgba(30,30,40,0.07)",
-    marginBottom: "20px",
+    background: "rgba(255,255,255,0.85)",
+    padding: "12px 14px",
+    borderRadius: "20px",
+    boxShadow: "inset 0 0 14px rgba(46,52,82,0.07)",
+    marginBottom: "18px",
   },
 
   searchInput: {
@@ -921,44 +818,45 @@ const makeStyles = (t) => ({
     outline: "none",
     background: "transparent",
     color: t.ink,
-    fontSize: "14px",
+    fontSize: "16px", // 16px stops iOS zoom-on-focus
     fontFamily: "inherit",
   },
 
   sectionTitle: {
     color: t.ink,
-    fontSize: "21px",
-    margin: "0 0 16px 0",
+    fontSize: "20px",
+    margin: "0 0 14px 0",
     fontWeight: "800",
   },
 
   counselorList: {
     display: "grid",
-    gap: "14px",
+    gap: "12px",
   },
 
   counselorCard: {
     width: "100%",
-    borderRadius: "24px",
-    padding: "14px",
+    boxSizing: "border-box",
+    borderRadius: "22px",
+    padding: "12px",
     display: "flex",
-    gap: "12px",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: "10px",
     textAlign: "left",
     cursor: "pointer",
-    boxShadow: "0 12px 24px rgba(30,30,40,0.11)",
-    transition: "0.3s ease",
+    transition: "0.25s ease",
     fontFamily: "inherit",
   },
 
   avatarBox: {
-    width: "66px",
-    height: "66px",
-    borderRadius: "22px",
+    width: "62px",
+    height: "62px",
+    borderRadius: "20px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    boxShadow: "0 12px 22px rgba(30,30,40,0.14)",
+    boxShadow: "0 10px 20px rgba(46,52,82,0.14)",
     flexShrink: 0,
     overflow: "hidden",
   },
@@ -968,24 +866,38 @@ const makeStyles = (t) => ({
     minWidth: 0,
   },
 
+  toggleBadge: {
+    width: "30px",
+    height: "30px",
+    borderRadius: "50%",
+    background: "rgba(255,255,255,0.85)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "11px",
+    fontWeight: "800",
+    flexShrink: 0,
+  },
+
   counselorName: {
     color: t.ink,
-    fontSize: "16px",
-    margin: "0 0 3px 0",
+    fontSize: "15.5px",
+    margin: "0 0 2px 0",
     fontWeight: "800",
+    lineHeight: 1.25,
   },
 
   counselorRole: {
     color: t.accentDark,
-    margin: "0 0 4px 0",
+    margin: "0 0 2px 0",
     fontWeight: "700",
-    fontSize: "13px",
+    fontSize: "12.5px",
   },
 
   specialty: {
     color: t.text,
-    margin: "0 0 8px 0",
-    fontSize: "13px",
+    margin: 0,
+    fontSize: "12.5px",
     lineHeight: "1.4",
   },
 
@@ -999,7 +911,7 @@ const makeStyles = (t) => ({
     display: "inline-flex",
     alignItems: "center",
     gap: "5px",
-    background: "rgba(255,255,255,0.8)",
+    background: "rgba(255,255,255,0.85)",
     color: t.text,
     padding: "5px 9px",
     borderRadius: "12px",
@@ -1008,10 +920,10 @@ const makeStyles = (t) => ({
   },
 
   emptyBox: {
-    padding: "28px",
+    padding: "26px",
     textAlign: "center",
-    background: "rgba(255,255,255,0.5)",
-    borderRadius: "22px",
+    background: "rgba(255,255,255,0.55)",
+    borderRadius: "20px",
   },
 
   emptyText: {
@@ -1028,56 +940,16 @@ const makeStyles = (t) => ({
     fontSize: "14px",
   },
 
-  profileAvatar: {
-    width: "104px",
-    height: "104px",
-    borderRadius: "34px",
-    margin: "0 auto 16px auto",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 16px 30px rgba(30,30,40,0.18)",
-    overflow: "hidden",
-  },
-
-  profileName: {
-    color: t.ink,
-    fontSize: "23px",
-    margin: "0 0 6px 0",
-    fontWeight: "800",
-  },
-
-  profileRole: {
-    color: t.text,
-    margin: "0 0 14px 0",
-    fontWeight: "700",
-    fontSize: "14px",
-  },
-
-  statusBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "8px 14px",
-    borderRadius: "18px",
-    background: "rgba(255,255,255,0.8)",
-    color: t.ink,
-    fontWeight: "800",
-    fontSize: "13px",
-    marginBottom: "16px",
-  },
-
   detailBox: {
-    background: "rgba(255,255,255,0.68)",
-    borderRadius: "20px",
-    padding: "14px",
+    background: "rgba(255,255,255,0.72)",
+    borderRadius: "18px",
+    padding: "12px 14px",
     textAlign: "left",
-    marginBottom: "10px",
   },
 
   detailTitle: {
     color: t.ink,
-    margin: "0 0 6px 0",
+    margin: "0 0 4px 0",
     fontSize: "14px",
     fontWeight: "800",
   },
@@ -1086,7 +958,15 @@ const makeStyles = (t) => ({
     color: t.text,
     margin: 0,
     lineHeight: "1.5",
-    fontSize: "14px",
+    fontSize: "13.5px",
+  },
+
+  bookingBox: {
+    background: "rgba(255,255,255,0.8)",
+    borderRadius: "20px",
+    padding: "16px 14px",
+    border: "1px solid rgba(255,255,255,0.9)",
+    boxShadow: "0 6px 18px rgba(46,52,82,0.06)",
   },
 
   success: {
@@ -1102,62 +982,73 @@ const makeStyles = (t) => ({
 
   modeGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
+    gridTemplateColumns: "repeat(2, 1fr)",
     gap: "10px",
-    marginBottom: "16px",
+    marginBottom: "6px",
   },
 
   modeButton: {
     border: "none",
     padding: "12px 6px",
+    minHeight: "76px",
     borderRadius: "20px",
     fontWeight: "800",
-    fontSize: "12.5px",
+    fontSize: "13.5px",
     fontFamily: "inherit",
     cursor: "pointer",
-    boxShadow: "0 10px 20px rgba(30,30,40,0.11)",
+    boxShadow: "0 8px 18px rgba(46,52,82,0.12)",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+    justifyContent: "center",
     gap: "6px",
-    transition: "0.3s ease",
+    transition: "0.25s ease",
+    WebkitTapHighlightColor: "transparent",
+  },
+
+  dateTimeRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "10px",
   },
 
   label: {
     display: "block",
     color: t.ink,
     fontWeight: "800",
-    fontSize: "14px",
-    margin: "14px 0 8px 0",
+    fontSize: "13.5px",
+    margin: "14px 0 6px 0",
   },
 
   input: {
     width: "100%",
-    padding: "14px",
+    minWidth: 0,
+    padding: "12px",
     border: "none",
     outline: "none",
-    borderRadius: "18px",
-    background: "rgba(255,255,255,0.85)",
+    borderRadius: "16px",
+    background: "rgba(255,255,255,0.92)",
     color: t.ink,
-    fontSize: "15px",
+    fontSize: "16px", // 16px stops iOS zoom-on-focus
     fontFamily: "inherit",
-    boxShadow: "inset 0 0 14px rgba(30,30,40,0.07)",
+    boxShadow: "inset 0 0 12px rgba(46,52,82,0.08)",
     boxSizing: "border-box",
   },
 
   bookButton: {
     width: "100%",
-    marginTop: "20px",
+    marginTop: "18px",
     padding: "15px",
     border: "none",
-    borderRadius: "22px",
-    background: `linear-gradient(135deg, ${t.accent}, ${t.accentDark})`,
+    borderRadius: "20px",
+    background: t.gradient,
     color: "white",
     fontSize: "16px",
     fontWeight: "800",
     fontFamily: "inherit",
     cursor: "pointer",
-    boxShadow: "0 14px 28px rgba(30,30,40,0.22)",
+    boxShadow: "0 12px 24px rgba(95,109,166,0.35)",
+    WebkitTapHighlightColor: "transparent",
   },
 
   safeNote: {
@@ -1168,7 +1059,7 @@ const makeStyles = (t) => ({
     color: t.text,
     fontSize: "12.5px",
     textAlign: "center",
-    margin: "16px 0 0 0",
+    margin: "14px 0 0 0",
     lineHeight: "1.5",
   },
 
@@ -1180,8 +1071,8 @@ const makeStyles = (t) => ({
 
   supportCard: {
     ...glass,
-    borderRadius: "26px",
-    padding: "20px",
+    borderRadius: "24px",
+    padding: "18px",
     textAlign: "left",
     cursor: "pointer",
     overflow: "hidden",
@@ -1191,12 +1082,12 @@ const makeStyles = (t) => ({
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "14px",
+    marginBottom: "12px",
   },
 
   supportIcon: {
-    width: "64px",
-    height: "64px",
+    width: "62px",
+    height: "62px",
     borderRadius: "20px",
     background: `linear-gradient(135deg, ${t.soft}, #FFFFFF)`,
     display: "flex",
@@ -1205,7 +1096,7 @@ const makeStyles = (t) => ({
     overflow: "hidden",
     padding: "6px",
     boxSizing: "border-box",
-    boxShadow: "0 12px 22px rgba(30,30,40,0.12)",
+    boxShadow: "0 10px 20px rgba(46,52,82,0.12)",
   },
 
   supportImg: {
@@ -1218,7 +1109,7 @@ const makeStyles = (t) => ({
   supportBadge: {
     padding: "6px 12px",
     borderRadius: "16px",
-    background: `linear-gradient(135deg, ${t.accent}, ${t.accentDark})`,
+    background: t.gradient,
     color: "white",
     fontSize: "12px",
     fontWeight: "800",
@@ -1226,7 +1117,7 @@ const makeStyles = (t) => ({
 
   supportTitle: {
     color: t.ink,
-    fontSize: "19px",
+    fontSize: "18px",
     margin: "0 0 8px 0",
     fontWeight: "800",
   },
@@ -1242,7 +1133,7 @@ const makeStyles = (t) => ({
     width: "100%",
     height: "1px",
     background: t.line,
-    margin: "16px 0 12px 0",
+    margin: "14px 0 12px 0",
   },
 
   supportMiniText: {

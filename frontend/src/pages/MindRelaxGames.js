@@ -1,5 +1,27 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import bgImage from "../assets/mood-bg.jpeg";
+import { Icon3D, THEME, glass } from "../components/GameIcons";
+
+// Check if puzzle is solved: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+const checkSolved = (currentTiles) => {
+  for (let i = 0; i < 9; i++) {
+    if (currentTiles[i] !== i + 1) return false;
+  }
+  return true;
+};
+
+// Random shuffled (never already solved) tile order
+const makeShuffledTiles = () => {
+  let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  do {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  } while (checkSolved(arr));
+  return arr;
+};
 
 function MindRelaxGames() {
   const navigate = useNavigate();
@@ -26,62 +48,65 @@ function MindRelaxGames() {
     }
   }, []);
 
-  const playSound = useCallback((type = "click") => {
-    try {
-      const ctx = getAudioCtx();
-      if (!ctx) return;
+  const playSound = useCallback(
+    (type = "click") => {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
 
-      if (type === "click") {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(480, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(240, ctx.currentTime + 0.06);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.06);
-      } else if (type === "win") {
-        // Rich celebration fanfare: ascending chord + sparkle
-        const fanfare = [
-          { freq: 523.25, start: 0,   dur: 0.5,  vol: 0.22, type: "sine" },
-          { freq: 659.25, start: 0.1, dur: 0.5,  vol: 0.20, type: "sine" },
-          { freq: 783.99, start: 0.2, dur: 0.5,  vol: 0.18, type: "sine" },
-          { freq: 1046.5, start: 0.3, dur: 0.7,  vol: 0.20, type: "sine" },
-          { freq: 1318.5, start: 0.5, dur: 0.7,  vol: 0.18, type: "triangle" },
-          { freq: 1567.98,start: 0.7, dur: 0.8,  vol: 0.14, type: "triangle" },
-        ];
-        fanfare.forEach(({ freq, start, dur, vol, type: waveType }) => {
+        if (type === "click") {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.type = waveType;
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-          gain.gain.setValueAtTime(vol, ctx.currentTime + start);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(480, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(240, ctx.currentTime + 0.06);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
           osc.connect(gain);
           gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + start);
-          osc.stop(ctx.currentTime + start + dur + 0.05);
-        });
-      } else if (type === "color") {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(360 + Math.random() * 200, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.12);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.06);
+        } else if (type === "win") {
+          // Celebration fanfare: ascending chord + sparkle
+          const fanfare = [
+            { freq: 523.25, start: 0, dur: 0.5, vol: 0.22, type: "sine" },
+            { freq: 659.25, start: 0.1, dur: 0.5, vol: 0.2, type: "sine" },
+            { freq: 783.99, start: 0.2, dur: 0.5, vol: 0.18, type: "sine" },
+            { freq: 1046.5, start: 0.3, dur: 0.7, vol: 0.2, type: "sine" },
+            { freq: 1318.5, start: 0.5, dur: 0.7, vol: 0.18, type: "triangle" },
+            { freq: 1567.98, start: 0.7, dur: 0.8, vol: 0.14, type: "triangle" },
+          ];
+          fanfare.forEach(({ freq, start, dur, vol, type: waveType }) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = waveType;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+            gain.gain.setValueAtTime(vol, ctx.currentTime + start);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + start);
+            osc.stop(ctx.currentTime + start + dur + 0.05);
+          });
+        } else if (type === "color") {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(360 + Math.random() * 200, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.12);
+        }
+      } catch {
+        // Audio context may be restricted
       }
-    } catch {
-      // Audio context may be restricted
-    }
-  }, [getAudioCtx]);
+    },
+    [getAudioCtx]
+  );
 
   // Voice announcement: "Completed Task!"
   const playVoiceCompleted = useCallback(() => {
@@ -99,9 +124,6 @@ function MindRelaxGames() {
     }
   }, []);
 
-  // =========================================================================
-  // GAME 1: MIND UNWIND – SIMPLE PUZZLE GAME (DRAG & DROP PUZZLE)
-  // =========================================================================
   // =========================================================================
   // GAME 1: MIND UNWIND – 15 RELAXING PUZZLE GAMES (DRAG & DROP)
   // =========================================================================
@@ -144,14 +166,6 @@ function MindRelaxGames() {
     return () => clearInterval(timer);
   }, []);
 
-  // Check if puzzle is solved: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-  const checkSolved = (currentTiles) => {
-    for (let i = 0; i < 9; i++) {
-      if (currentTiles[i] !== i + 1) return false;
-    }
-    return true;
-  };
-
   // Swap two tiles
   const swapTiles = useCallback(
     (index1, index2) => {
@@ -181,15 +195,7 @@ function MindRelaxGames() {
 
   // Scramble / Shuffle puzzle
   const shufflePuzzle = useCallback(() => {
-    let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    do {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-    } while (checkSolved(arr));
-
-    setTiles(arr);
+    setTiles(makeShuffledTiles());
     setPuzzleMoves(0);
     setIsSolved(false);
     setSelectedTileIndex(null);
@@ -199,14 +205,7 @@ function MindRelaxGames() {
   const goToNextPuzzle = useCallback(() => {
     playSound("click");
     setCurrentPuzzleIndex((prev) => (prev + 1) % 15);
-    let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    do {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-    } while (checkSolved(arr));
-    setTiles(arr);
+    setTiles(makeShuffledTiles());
     setPuzzleMoves(0);
     setIsSolved(false);
     setShowFullPreview(false);
@@ -217,14 +216,7 @@ function MindRelaxGames() {
   const goToPrevPuzzle = useCallback(() => {
     playSound("click");
     setCurrentPuzzleIndex((prev) => (prev === 0 ? 14 : prev - 1));
-    let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    do {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-    } while (checkSolved(arr));
-    setTiles(arr);
+    setTiles(makeShuffledTiles());
     setPuzzleMoves(0);
     setIsSolved(false);
     setShowFullPreview(false);
@@ -307,10 +299,11 @@ function MindRelaxGames() {
   // =========================================================================
   // 15 BEAUTIFUL VECTOR ARTWORKS FOR PUZZLES (viewBox 0 0 360 360)
   // =========================================================================
+  const svgStyle = { width: "100%", height: "100%", display: "block" };
 
   // Puzzle 1: Cute Baby Dragon
   const DragonArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#F8FAFC" />
       <path d="M 170 290 Q 230 330 250 280 Q 260 250 240 240 Q 220 260 180 275 Z" fill="#0F172A" />
       <path d="M 235 255 Q 265 245 255 275 Z" fill="#06B6D4" opacity="0.95" />
@@ -339,7 +332,7 @@ function MindRelaxGames() {
 
   // Puzzle 2: Serene Lotus Bloom
   const LotusArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#ECFDF5" />
       <ellipse cx="180" cy="270" rx="130" ry="40" fill="#059669" opacity="0.8" />
       <ellipse cx="180" cy="270" rx="110" ry="32" fill="#10B981" />
@@ -357,7 +350,7 @@ function MindRelaxGames() {
 
   // Puzzle 3: Mountain Sunrise
   const MountainArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#FEF3C7" />
       <circle cx="180" cy="170" r="75" fill="#F59E0B" opacity="0.85" />
       <path d="M 40 280 L 140 140 L 230 280 Z" fill="#6366F1" />
@@ -376,7 +369,7 @@ function MindRelaxGames() {
 
   // Puzzle 4: Zen Panda & Bamboo
   const PandaArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#ECFDF5" />
       <rect x="45" y="40" width="16" height="280" rx="8" fill="#10B981" />
       <rect x="295" y="40" width="16" height="280" rx="8" fill="#10B981" />
@@ -400,7 +393,7 @@ function MindRelaxGames() {
 
   // Puzzle 5: Cosmic Crescent Moon & Stars
   const CosmicMoonArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#0F172A" />
       <circle cx="180" cy="180" r="130" fill="#1E1B4B" opacity="0.7" />
       <circle cx="180" cy="180" r="100" fill="#312E81" opacity="0.5" />
@@ -418,7 +411,7 @@ function MindRelaxGames() {
 
   // Puzzle 6: Ocean Sunset & Leaping Dolphin
   const DolphinArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#FFEDD5" />
       <circle cx="180" cy="160" r="70" fill="#FB923C" />
       <path d="M 20 220 Q 100 190 180 220 Q 260 250 340 220 L 340 340 L 20 340 Z" fill="#0284C7" />
@@ -436,7 +429,7 @@ function MindRelaxGames() {
 
   // Puzzle 7: Zen Bonsai Tree
   const BonsaiArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#FFFBEB" />
       <circle cx="180" cy="130" r="90" fill="#FEF08A" opacity="0.6" />
       <ellipse cx="180" cy="290" rx="90" ry="18" fill="#78350F" />
@@ -457,7 +450,7 @@ function MindRelaxGames() {
 
   // Puzzle 8: Sleeping Cozy Red Fox
   const FoxArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#FEF2F2" />
       <ellipse cx="180" cy="200" rx="110" ry="90" fill="#EA580C" />
       <path d="M 90 190 Q 70 290 180 290 Q 280 290 280 200 Q 270 250 180 250 Q 120 250 100 190 Z" fill="#C2410C" />
@@ -476,7 +469,7 @@ function MindRelaxGames() {
 
   // Puzzle 9: Sunset Hot Air Balloon
   const BalloonArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#E0F2FE" />
       <path d="M 20 290 Q 100 240 180 280 Q 260 320 340 270 L 340 340 L 20 340 Z" fill="#C084FC" />
       <path d="M 20 310 Q 120 270 220 310 Q 290 330 340 300 L 340 340 L 20 340 Z" fill="#7E22CE" />
@@ -492,7 +485,7 @@ function MindRelaxGames() {
 
   // Puzzle 10: Golden Monarch Butterfly
   const ButterflyArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#FAF5FF" />
       <path d="M 180 180 Q 80 50 40 120 Q 20 180 140 195 Z" fill="#F59E0B" stroke="#0F172A" strokeWidth="3" />
       <path d="M 180 180 Q 280 50 320 120 Q 340 180 220 195 Z" fill="#F59E0B" stroke="#0F172A" strokeWidth="3" />
@@ -511,7 +504,7 @@ function MindRelaxGames() {
 
   // Puzzle 11: Wise Midnight Owl
   const OwlArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#0B132B" />
       <circle cx="180" cy="160" r="110" fill="#FEF08A" />
       <path d="M 30 300 Q 180 260 330 300" stroke="#78350F" strokeWidth="18" strokeLinecap="round" fill="none" />
@@ -535,7 +528,7 @@ function MindRelaxGames() {
 
   // Puzzle 12: Tropical Flamingo Lagoon
   const FlamingoArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#FCE7F3" />
       <circle cx="240" cy="130" r="55" fill="#FDE047" opacity="0.8" />
       <path d="M 20 270 Q 180 240 340 270 L 340 340 L 20 340 Z" fill="#06B6D4" />
@@ -553,7 +546,7 @@ function MindRelaxGames() {
 
   // Puzzle 13: Floating Sky Castle
   const CastleArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#E0F2FE" />
       <path d="M 100 220 Q 180 210 260 220 L 230 280 Q 180 300 130 280 Z" fill="#78350F" />
       <ellipse cx="180" cy="220" rx="80" ry="18" fill="#22C55E" />
@@ -571,7 +564,7 @@ function MindRelaxGames() {
 
   // Puzzle 14: Aurora Borealis Lights
   const AuroraArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#030712" />
       <path d="M 40 160 Q 100 70 180 130 Q 260 190 320 100 L 320 200 Q 250 250 170 180 Q 90 120 40 200 Z" fill="#4ADE80" opacity="0.75" />
       <path d="M 40 130 Q 120 50 200 110 Q 280 170 320 80 L 320 150 Q 250 210 180 150 Q 100 90 40 160 Z" fill="#C084FC" opacity="0.65" />
@@ -589,7 +582,7 @@ function MindRelaxGames() {
 
   // Puzzle 15: Rainbow Paradise Waterfall
   const WaterfallArt = () => (
-    <svg viewBox="0 0 360 360" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 360 360" style={svgStyle}>
       <circle cx="180" cy="180" r="160" fill="#E0F2FE" />
       <path d="M 60 240 A 130 130 0 0 1 300 240" stroke="#EF4444" strokeWidth="6" fill="none" opacity="0.85" />
       <path d="M 66 240 A 124 124 0 0 1 294 240" stroke="#F59E0B" strokeWidth="6" fill="none" opacity="0.85" />
@@ -624,51 +617,6 @@ function MindRelaxGames() {
     { id: 14, name: "Aurora Borealis", Component: AuroraArt },
     { id: 15, name: "Rainbow Paradise", Component: WaterfallArt },
   ];
-
-  // Zen Meditating Background Art
-  const MeditatingPersonArt = () => (
-    <svg
-      viewBox="0 0 450 550"
-      style={{ width: "100%", height: "100%", opacity: 0.9, pointerEvents: "none" }}
-    >
-      <circle cx="240" cy="200" r="160" fill="rgba(255, 237, 213, 0.45)" />
-      <g>
-        <circle cx="360" cy="190" r="18" fill="#FBBF24" />
-        <circle cx="360" cy="190" r="8" fill="#FEF3C7" />
-        <path
-          d="M 360 166 L 360 214 M 336 190 L 384 190 M 343 173 L 377 207 M 343 207 L 377 173"
-          stroke="#F59E0B"
-          strokeWidth="6"
-        />
-        <path
-          d="M 330 250 h 20 a 7 7 0 0 1 14 0 h 20 v 20 a 7 7 0 0 1 0 14 v 20 h -20 a 7 7 0 0 0 -14 0 h -20 v -20 a 7 7 0 0 1 0 -14 Z"
-          fill="#FDBA74"
-          opacity="0.85"
-        />
-        <circle cx="290" cy="140" r="22" fill="#FFFFFF" opacity="0.9" />
-        <circle cx="282" cy="140" r="4" fill="#CBD5E1" />
-        <circle cx="290" cy="140" r="4" fill="#CBD5E1" />
-        <circle cx="298" cy="140" r="4" fill="#CBD5E1" />
-        <circle cx="240" cy="45" r="26" fill="#FBBF24" />
-        <path
-          d="M 226 40 Q 232 45 238 40 M 242 40 Q 248 45 254 40 M 235 52 Q 240 57 245 52"
-          stroke="#78350F"
-          strokeWidth="2.5"
-          fill="none"
-          strokeLinecap="round"
-        />
-      </g>
-      <circle cx="220" cy="160" r="55" fill="#1E293B" />
-      <path
-        d="M 210 160 Q 260 170 250 230 Q 245 270 205 280 L 205 315 L 180 315 L 180 260 Z"
-        fill="#FB923C"
-      />
-      <path d="M 235 220 Q 242 228 250 220" stroke="#7C2D12" strokeWidth="3" fill="none" />
-      <path d="M 205 190 Q 235 200 248 210" stroke="#F59E0B" strokeWidth="7" fill="none" />
-      <path d="M 180 300 L 220 300 L 260 410 L 140 410 Z" fill="#FFFFFF" />
-      <ellipse cx="200" cy="460" rx="140" ry="40" fill="#EA580C" />
-    </svg>
-  );
 
   // Helper to slice active puzzle picture across 9 tiles
   const renderPuzzlePiece = (tileNum) => {
@@ -719,7 +667,7 @@ function MindRelaxGames() {
 
   const [mandalaFills, setMandalaFills] = useState({
     center: "#EF4444",
-    "ring2_0": "#FACC15",
+    ring2_0: "#FACC15",
   });
 
   const PALETTE_ROW_1 = [
@@ -867,8 +815,8 @@ function MindRelaxGames() {
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-    const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+    const clientX = e.clientX !== undefined ? e.clientX : e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+    const clientY = e.clientY !== undefined ? e.clientY : e.touches && e.touches[0] ? e.touches[0].clientY : 0;
     const x = (clientX - rect.left) * (canvas.width / (rect.width || 1));
     const y = (clientY - rect.top) * (canvas.height / (rect.height || 1));
     const cx = canvas.width / 2;
@@ -1031,202 +979,224 @@ function MindRelaxGames() {
     link.click();
   };
 
+  // =========================================================================
+  // UI  (mood-bg background, cute 3D icons, mobile-first layout)
+  // =========================================================================
+
+  const pillBtn = (active) => ({
+    border: "none",
+    padding: "10px 8px",
+    borderRadius: "16px",
+    fontWeight: 800,
+    fontSize: "13px",
+    fontFamily: "inherit",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    background: active ? THEME.gradient : "transparent",
+    color: active ? "#FFFFFF" : THEME.text,
+    boxShadow: active ? "0 6px 14px rgba(95,109,166,0.32)" : "none",
+    WebkitTapHighlightColor: "transparent",
+  });
+
+  const smallBtn = (active) => ({
+    border: "none",
+    background: active ? THEME.gradient : "rgba(255,255,255,0.85)",
+    color: active ? "#FFFFFF" : THEME.text,
+    padding: "9px 14px",
+    borderRadius: "14px",
+    fontWeight: 800,
+    fontSize: "12.5px",
+    fontFamily: "inherit",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    boxShadow: "0 4px 10px rgba(46,52,82,0.1)",
+    WebkitTapHighlightColor: "transparent",
+  });
+
+  const gradBtn = {
+    border: "none",
+    background: THEME.gradient,
+    color: "#FFFFFF",
+    padding: "10px 20px",
+    borderRadius: "18px",
+    fontWeight: 800,
+    fontSize: "13px",
+    fontFamily: "inherit",
+    cursor: "pointer",
+    boxShadow: "0 8px 18px rgba(95,109,166,0.32)",
+    WebkitTapHighlightColor: "transparent",
+  };
+
+  const roundNav = {
+    border: "none",
+    backgroundColor: "#FFFFFF",
+    color: THEME.text,
+    width: "34px",
+    height: "34px",
+    borderRadius: "50%",
+    fontSize: "13px",
+    fontWeight: 900,
+    cursor: "pointer",
+    boxShadow: "0 2px 6px rgba(46,52,82,0.14)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  };
+
+  const swatch = (color) => {
+    const isSelected = selectedColor === color;
+    return (
+      <button
+        key={color}
+        onClick={() => {
+          playSound("click");
+          setSelectedColor(color);
+        }}
+        style={{
+          width: "30px",
+          height: "30px",
+          borderRadius: "50%",
+          backgroundColor: color,
+          border: isSelected ? "3px solid #FFFFFF" : "none",
+          boxShadow: isSelected ? `0 0 0 3px ${color}, 0 5px 12px rgba(0,0,0,0.2)` : "0 2px 6px rgba(0,0,0,0.12)",
+          cursor: "pointer",
+          transform: isSelected ? "scale(1.15)" : "scale(1)",
+          transition: "transform 0.15s ease",
+          padding: 0,
+        }}
+      />
+    );
+  };
+
   return (
     <div
       style={{
-        minHeight: "100vh",
-        backgroundColor: "#F7E6D8",
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        padding: "16px 12px 60px 12px",
+        minHeight: "100dvh",
+        background: THEME.soft,
+        fontFamily: "'Poppins', Arial, sans-serif",
+        padding: "max(16px, env(safe-area-inset-top)) 12px max(48px, env(safe-area-inset-bottom))",
         position: "relative",
         boxSizing: "border-box",
         overflowX: "hidden",
+        WebkitTextSizeAdjust: "100%",
       }}
     >
-      {/* Background Zen Decoration */}
+      {/* Background photo – blurred full-screen copy + sharp phone-width copy */}
       <div
         style={{
           position: "fixed",
-          right: "-60px",
-          top: "100px",
-          width: "480px",
-          height: "600px",
-          opacity: 0.16,
-          pointerEvents: "none",
+          inset: 0,
           zIndex: 0,
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: "blur(28px)",
+          transform: "scale(1.15)",
         }}
-      >
-        <MeditatingPersonArt />
-      </div>
-
-      {/* Top Navbar */}
+      />
       <div
         style={{
-          maxWidth: "680px",
-          margin: "0 auto 16px auto",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "10px",
-          position: "relative",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "100dvh",
           zIndex: 1,
+          display: "flex",
+          justifyContent: "center",
+          pointerEvents: "none",
         }}
       >
-        <button
-          onClick={() => navigate("/dashboard")}
-          style={{
-            border: "none",
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            color: "#334155",
-            padding: "9px 18px",
-            borderRadius: "14px",
-            fontWeight: 800,
-            fontSize: "13px",
-            cursor: "pointer",
-            boxShadow: "0 3px 10px rgba(0,0,0,0.06)",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
-        >
-          ← Back to Dashboard
-        </button>
-
-        {/* Tab Switcher */}
         <div
           style={{
-            display: "flex",
-            gap: "6px",
-            backgroundColor: "rgba(255, 255, 255, 0.85)",
-            padding: "5px",
-            borderRadius: "18px",
-            boxShadow: "0 3px 10px rgba(0,0,0,0.06)",
+            width: "100%",
+            maxWidth: "480px",
+            height: "100%",
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.06), rgba(255,255,255,0.16)), url(${bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            boxShadow: "0 0 40px rgba(0,0,0,0.15)",
           }}
-        >
-          <button
-            onClick={() => setActiveTab("puzzle")}
-            style={{
-              border: "none",
-              padding: "8px 18px",
-              borderRadius: "14px",
-              fontWeight: 800,
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              backgroundColor: activeTab === "puzzle" ? "#EA6A61" : "transparent",
-              color: activeTab === "puzzle" ? "#FFFFFF" : "#475569",
-              boxShadow: activeTab === "puzzle" ? "0 4px 10px rgba(234, 106, 97, 0.3)" : "none",
-            }}
-          >
-            🧩 Daily Puzzle
-          </button>
-          <button
-            onClick={() => setActiveTab("mandala")}
-            style={{
-              border: "none",
-              padding: "8px 18px",
-              borderRadius: "14px",
-              fontWeight: 800,
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              backgroundColor: activeTab === "mandala" ? "#EA6A61" : "transparent",
-              color: activeTab === "mandala" ? "#FFFFFF" : "#475569",
-              boxShadow: activeTab === "mandala" ? "0 4px 10px rgba(234, 106, 97, 0.3)" : "none",
-            }}
-          >
-            🌸 Mandala Therapy
-          </button>
-        </div>
+        />
       </div>
 
-      {/* =================================================================== */}
-      {/* VIEW 1: DAILY TASK PUZZLE (SCREENSHOT 1) */}
-      {/* =================================================================== */}
-      {activeTab === "puzzle" && (
-        <div
-          style={{
-            maxWidth: "580px",
-            margin: "0 auto",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
+      <div style={{ position: "relative", zIndex: 2, maxWidth: "480px", margin: "0 auto", display: "grid", gap: "14px" }}>
+        {/* Top bar */}
+        <div style={{ display: "grid", gap: "10px" }}>
+          <button
+            onClick={() => navigate("/dashboard")}
+            style={{
+              ...glass,
+              justifySelf: "start",
+              color: THEME.ink,
+              padding: "9px 18px",
+              borderRadius: "16px",
+              fontWeight: 800,
+              fontSize: "13px",
+              fontFamily: "inherit",
+              cursor: "pointer",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            ← Back to Dashboard
+          </button>
+
           <div
             style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: "32px",
-              padding: "32px 24px 28px 24px",
-              boxShadow: "0 20px 50px rgba(74, 55, 43, 0.12)",
+              ...glass,
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "6px",
+              padding: "5px",
+              borderRadius: "20px",
+            }}
+          >
+            <button onClick={() => setActiveTab("puzzle")} style={pillBtn(activeTab === "puzzle")}>
+              <Icon3D name="puzzle" size={22} /> Daily Puzzle
+            </button>
+            <button onClick={() => setActiveTab("mandala")} style={pillBtn(activeTab === "mandala")}>
+              <Icon3D name="flower" size={22} /> Mandala
+            </button>
+          </div>
+        </div>
+
+        {/* ============================ PUZZLE ============================ */}
+        {activeTab === "puzzle" && (
+          <div
+            style={{
+              ...glass,
+              borderRadius: "28px",
+              padding: "22px 16px 24px",
               textAlign: "center",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              width: "100%",
               boxSizing: "border-box",
             }}
           >
-            {/* Header: "Your Daily Task" */}
-            <h1
-              style={{
-                fontSize: "23px",
-                fontWeight: 900,
-                color: "#1E293B",
-                margin: "0 0 14px 0",
-              }}
-            >
-              Your Daily Task
-            </h1>
+            <h1 style={{ fontSize: "22px", fontWeight: 800, color: THEME.ink, margin: "0 0 12px 0" }}>Your Daily Task</h1>
+            <div style={{ width: "88%", height: "1px", backgroundColor: THEME.line, marginBottom: "14px" }} />
 
-            {/* Divider */}
-            <div
-              style={{
-                width: "88%",
-                height: "1px",
-                backgroundColor: "#E2E8F0",
-                marginBottom: "18px",
-              }}
-            />
-
-            {/* Subtitle in Coral */}
-            <h2
-              style={{
-                fontSize: "17.5px",
-                fontWeight: 900,
-                color: "#EA6A61",
-                margin: "0 0 8px 0",
-              }}
-            >
+            <h2 style={{ fontSize: "16.5px", fontWeight: 800, color: THEME.accentDark, margin: "0 0 8px 0" }}>
               Mind Unwind – Simple Puzzle Game
             </h2>
-
-            {/* Instructions */}
-            <p
-              style={{
-                fontSize: "13px",
-                color: "#475569",
-                margin: "0 0 6px 0",
-                maxWidth: "460px",
-                lineHeight: "1.45",
-              }}
-            >
-              Challenge your mind gently with this relaxing puzzle. Rearrange the pieces to
-              complete the picture or pattern.
+            <p style={{ fontSize: "13px", color: THEME.text, margin: "0 0 6px 0", lineHeight: 1.5 }}>
+              Challenge your mind gently with this relaxing puzzle. Rearrange the pieces to complete the picture or pattern.
             </p>
-            <p
-              style={{
-                fontSize: "12.5px",
-                color: "#64748B",
-                margin: "0 0 14px 0",
-                maxWidth: "460px",
-                lineHeight: "1.45",
-              }}
-            >
-              Take your time—there's no timer, no pressure. Just drag & drop pieces to swap and solve.
+            <p style={{ fontSize: "12.5px", color: THEME.text, opacity: 0.85, margin: "0 0 14px 0", lineHeight: 1.5 }}>
+              Take your time—there's no timer, no pressure. Just drag &amp; drop pieces to swap and solve.
             </p>
 
-            {/* 15 Puzzle Level Selector & Switcher */}
+            {/* Puzzle selector */}
             <div
               style={{
                 display: "flex",
@@ -1234,85 +1204,43 @@ function MindRelaxGames() {
                 justifyContent: "space-between",
                 width: "100%",
                 maxWidth: "320px",
-                margin: "0 auto 16px auto",
-                padding: "6px 14px",
-                backgroundColor: "#F8FAFC",
-                borderRadius: "18px",
-                border: "1.5px solid #E2E8F0",
+                margin: "0 auto 14px auto",
+                padding: "6px 10px",
+                background: "rgba(255,255,255,0.75)",
+                borderRadius: "20px",
+                border: `1.5px solid ${THEME.line}`,
                 boxSizing: "border-box",
               }}
             >
-              <button
-                onClick={goToPrevPuzzle}
-                style={{
-                  border: "none",
-                  backgroundColor: "#FFFFFF",
-                  color: "#475569",
-                  width: "30px",
-                  height: "30px",
-                  borderRadius: "50%",
-                  fontSize: "13px",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                title="Previous Puzzle"
-              >
+              <button onClick={goToPrevPuzzle} style={roundNav} title="Previous Puzzle">
                 ◀
               </button>
-
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "13px", fontWeight: 900, color: "#1E293B" }}>
+              <div style={{ textAlign: "center", minWidth: 0 }}>
+                <div style={{ fontSize: "13px", fontWeight: 800, color: THEME.ink }}>
                   Puzzle {currentPuzzleIndex + 1} of {PUZZLES.length}
                 </div>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#EA6A61" }}>
-                  {PUZZLES[currentPuzzleIndex].name}
-                </div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: THEME.accentDark }}>{PUZZLES[currentPuzzleIndex].name}</div>
               </div>
-
-              <button
-                onClick={goToNextPuzzle}
-                style={{
-                  border: "none",
-                  backgroundColor: "#FFFFFF",
-                  color: "#475569",
-                  width: "30px",
-                  height: "30px",
-                  borderRadius: "50%",
-                  fontSize: "13px",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                title="Next Puzzle"
-              >
+              <button onClick={goToNextPuzzle} style={roundNav} title="Next Puzzle">
                 ▶
               </button>
             </div>
 
-            {/* 3x3 Puzzle Grid with DRAG & DROP support */}
+            {/* 3x3 grid (drag & drop + touch) */}
             <div
               style={{
-                width: "290px",
-                height: "290px",
-                maxWidth: "100%",
+                width: "min(300px, 100%)",
                 aspectRatio: "1 / 1",
-                backgroundColor: "#FFFFFF",
-                borderRadius: "22px",
+                backgroundColor: "rgba(255,255,255,0.9)",
+                borderRadius: "24px",
                 padding: "8px",
-                boxShadow: "0 8px 22px rgba(0, 0, 0, 0.06)",
-                border: "1.5px solid #F1F5F9",
+                boxShadow: "0 8px 22px rgba(46,52,82,0.12)",
+                border: `1.5px solid ${THEME.line}`,
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
                 gridTemplateRows: "repeat(3, 1fr)",
                 gap: "7px",
-                marginBottom: "16px",
+                marginBottom: "14px",
                 position: "relative",
                 boxSizing: "border-box",
                 userSelect: "none",
@@ -1320,14 +1248,7 @@ function MindRelaxGames() {
               }}
             >
               {showFullPreview ? (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    gridRow: "1 / -1",
-                    borderRadius: "14px",
-                    overflow: "hidden",
-                  }}
-                >
+                <div style={{ gridColumn: "1 / -1", gridRow: "1 / -1", borderRadius: "14px", overflow: "hidden" }}>
                   {React.createElement(PUZZLES[currentPuzzleIndex].Component)}
                 </div>
               ) : (
@@ -1354,11 +1275,7 @@ function MindRelaxGames() {
                         cursor: isSolved ? "default" : isBeingDragged ? "grabbing" : "grab",
                         opacity: isBeingDragged ? 0.45 : 1,
                         transform: isDragTarget ? "scale(1.06)" : isSelected ? "scale(1.04)" : "scale(1)",
-                        outline: isDragTarget
-                          ? "2px dashed #EA6A61"
-                          : isSelected
-                          ? "2px solid #38BDF8"
-                          : "none",
+                        outline: isDragTarget ? `2px dashed ${THEME.accent}` : isSelected ? `2px solid ${THEME.teal}` : "none",
                         outlineOffset: "2px",
                         borderRadius: "14px",
                         transition: "transform 0.15s ease, opacity 0.15s ease",
@@ -1371,104 +1288,61 @@ function MindRelaxGames() {
               )}
             </div>
 
-            {/* Puzzle Controls */}
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginBottom: "16px",
-                alignItems: "center",
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              <button
-                onClick={shufflePuzzle}
-                style={{
-                  border: "none",
-                  backgroundColor: "#F1F5F9",
-                  color: "#475569",
-                  padding: "7px 15px",
-                  borderRadius: "12px",
-                  fontWeight: 800,
-                  fontSize: "12px",
-                  cursor: "pointer",
-                }}
-              >
-                🔀 Mix Pieces
+            {/* Controls */}
+            <div style={{ display: "flex", gap: "10px", marginBottom: "14px", alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
+              <button onClick={shufflePuzzle} style={smallBtn(false)}>
+                <Icon3D name="shuffle" size={20} /> Mix Pieces
               </button>
-              <button
-                onClick={() => setShowFullPreview((p) => !p)}
-                style={{
-                  border: "none",
-                  backgroundColor: showFullPreview ? "#EA6A61" : "#F1F5F9",
-                  color: showFullPreview ? "#FFFFFF" : "#475569",
-                  padding: "7px 15px",
-                  borderRadius: "12px",
-                  fontWeight: 800,
-                  fontSize: "12px",
-                  cursor: "pointer",
-                }}
-              >
-                👁️ {showFullPreview ? "Hide Full Image" : "Peek Original"}
+              <button onClick={() => setShowFullPreview((p) => !p)} style={smallBtn(showFullPreview)}>
+                <Icon3D name="eye" size={20} /> {showFullPreview ? "Hide Full Image" : "Peek Original"}
               </button>
               {puzzleMoves > 0 && (
-                <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: 700 }}>
-                  Moves: {puzzleMoves}
-                </span>
+                <span style={{ fontSize: "12px", color: THEME.text, fontWeight: 700 }}>Moves: {puzzleMoves}</span>
               )}
             </div>
 
-            {/* Target Reference Image Below Puzzle */}
+            {/* Target reference */}
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                marginBottom: "18px",
-                backgroundColor: "#F8FAFC",
+                marginBottom: "16px",
+                background: "rgba(255,255,255,0.7)",
                 padding: "10px 14px",
-                borderRadius: "18px",
-                border: "1.5px dashed #CBD5E1",
+                borderRadius: "20px",
+                border: `1.5px dashed ${THEME.accent}`,
               }}
             >
-              <span
-                style={{
-                  fontSize: "11.5px",
-                  fontWeight: 800,
-                  color: "#64748B",
-                  marginBottom: "6px",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                🎯 Target Reference Image
+              <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 800, color: THEME.text, marginBottom: "6px" }}>
+                <Icon3D name="target" size={18} /> Target Reference Image
               </span>
               <div
                 style={{
-                  width: "110px",
-                  height: "110px",
-                  borderRadius: "14px",
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: "16px",
                   overflow: "hidden",
                   backgroundColor: "#FFFFFF",
-                  border: "1.5px solid #E2E8F0",
-                  boxShadow: "0 3px 10px rgba(0, 0, 0, 0.08)",
+                  border: `1.5px solid ${THEME.line}`,
+                  boxShadow: "0 3px 10px rgba(46,52,82,0.12)",
                 }}
               >
                 {React.createElement(PUZZLES[currentPuzzleIndex].Component)}
               </div>
             </div>
 
-            {/* Solved celebration badge & Next Puzzle Button */}
+            {/* Solved */}
             {isSolved && (
               <div
                 style={{
-                  backgroundColor: "#DCFCE7",
+                  backgroundColor: "rgba(220,252,231,0.95)",
                   border: "1.5px solid #86EFAC",
                   color: "#166534",
-                  padding: "14px 22px",
-                  borderRadius: "18px",
-                  marginBottom: "18px",
-                  boxShadow: "0 6px 18px rgba(22, 101, 52, 0.15)",
+                  padding: "14px 18px",
+                  borderRadius: "20px",
+                  marginBottom: "16px",
+                  boxShadow: "0 6px 18px rgba(22,101,52,0.15)",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1478,54 +1352,17 @@ function MindRelaxGames() {
                   boxSizing: "border-box",
                 }}
               >
-                <div style={{ fontWeight: 900, fontSize: "14px" }}>
-                  🎉 Puzzle {currentPuzzleIndex + 1} Completed! Well done!
+                <div style={{ fontWeight: 800, fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Icon3D name="party" size={26} /> Puzzle {currentPuzzleIndex + 1} Completed! Well done!
                 </div>
-                <button
-                  onClick={goToNextPuzzle}
-                  style={{
-                    border: "none",
-                    background: "linear-gradient(135deg, #7C3AED, #DB2777)",
-                    color: "#FFFFFF",
-                    padding: "11px 28px",
-                    borderRadius: "22px",
-                    fontWeight: 900,
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    boxShadow: "0 6px 18px rgba(124, 58, 237, 0.38)",
-                    transition: "all 0.2s ease",
-                    letterSpacing: "0.3px",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.06)";
-                    e.currentTarget.style.boxShadow = "0 8px 22px rgba(124, 58, 237, 0.52)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.boxShadow = "0 6px 18px rgba(124, 58, 237, 0.38)";
-                  }}
-                >
-                  🎮 Play New Game
+                <button onClick={goToNextPuzzle} style={{ ...gradBtn, display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  <Icon3D name="gamepad" size={22} /> Play New Game
                 </button>
               </div>
             )}
 
-            {/* ============================================================= */}
-            {/* BUTTONS UNDER THE PUZZLE (COMPLETED BUTTONS REMOVED) */}
-            {/* Only Day 7 & Outcomes are shown. */}
-            {/* Day 7 turns GREEN only AFTER the task is completed! */}
-            {/* ============================================================= */}
-            <div
-              style={{
-                display: "flex",
-                gap: "14px",
-                width: "100%",
-                maxWidth: "340px",
-                marginBottom: "20px",
-                justifyContent: "center",
-              }}
-            >
-              {/* Day 7 Button: Green ONLY after task completion! */}
+            {/* Day / Outcomes */}
+            <div style={{ display: "flex", gap: "12px", width: "100%", maxWidth: "340px", marginBottom: "16px", justifyContent: "center" }}>
               <button
                 onClick={() => {
                   setActiveDay(7);
@@ -1537,383 +1374,197 @@ function MindRelaxGames() {
                 style={{
                   flex: 1,
                   border: "none",
-                  backgroundColor: isDayCompleted ? "#168038" : "#EA6A61",
+                  background: isDayCompleted ? "linear-gradient(135deg, #22A04F, #168038)" : THEME.gradient,
                   color: "#FFFFFF",
-                  padding: "13px 20px",
-                  borderRadius: "22px",
-                  fontWeight: 900,
-                  fontSize: "15px",
+                  padding: "13px 10px",
+                  borderRadius: "20px",
+                  fontWeight: 800,
+                  fontSize: "14.5px",
+                  fontFamily: "inherit",
                   cursor: "pointer",
-                  boxShadow: isDayCompleted
-                    ? "0 6px 16px rgba(22, 128, 56, 0.35)"
-                    : "0 6px 16px rgba(234, 106, 97, 0.35)",
+                  boxShadow: isDayCompleted ? "0 8px 18px rgba(22,128,56,0.35)" : "0 8px 18px rgba(95,109,166,0.35)",
                   transition: "all 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
+                  WebkitTapHighlightColor: "transparent",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
               >
                 {isDayCompleted ? `✓ Day ${activeDay} Completed` : `Day ${activeDay}`}
               </button>
 
-              {/* Outcomes Button */}
               <button
                 onClick={() => setShowOutcomes(true)}
                 style={{
                   flex: 1,
                   border: "none",
-                  backgroundColor: "#EA6A61",
+                  background: THEME.gradientWarm,
                   color: "#FFFFFF",
-                  padding: "13px 20px",
-                  borderRadius: "22px",
-                  fontWeight: 900,
-                  fontSize: "15px",
+                  padding: "13px 10px",
+                  borderRadius: "20px",
+                  fontWeight: 800,
+                  fontSize: "14.5px",
+                  fontFamily: "inherit",
                   cursor: "pointer",
-                  boxShadow: "0 6px 16px rgba(234, 106, 97, 0.35)",
-                  transition: "all 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  boxShadow: "0 8px 18px rgba(183,147,196,0.4)",
+                  WebkitTapHighlightColor: "transparent",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
               >
                 Outcomes
               </button>
             </div>
 
-            {/* Countdown Notice matching Screenshot 1 */}
-            <div
-              style={{
-                color: "#EA6A61",
-                fontSize: "13.5px",
-                fontWeight: 700,
-                letterSpacing: "0.2px",
-                marginTop: "4px",
-              }}
-            >
+            {/* Countdown */}
+            <div style={{ color: THEME.accentDark, fontSize: "13px", fontWeight: 700 }}>
               Do the task and come back in{" "}
               <span style={{ fontWeight: 900 }}>
-                {String(countdown.hours).padStart(2, "0")}h:
-                {String(countdown.mins).padStart(2, "0")}m:
+                {String(countdown.hours).padStart(2, "0")}h:{String(countdown.mins).padStart(2, "0")}m:
                 {String(countdown.secs).padStart(2, "0")}s
               </span>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* =================================================================== */}
-      {/* VIEW 2: MANDALA COLORING THERAPY (SCREENSHOT 2) */}
-      {/* =================================================================== */}
-      {activeTab === "mandala" && (
-        <div
-          style={{
-            maxWidth: "580px",
-            margin: "0 auto",
-            backgroundColor: "#FFFFFF",
-            borderRadius: "32px",
-            padding: "32px 20px",
-            boxShadow: "0 20px 50px rgba(74, 55, 43, 0.12)",
-            textAlign: "center",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            position: "relative",
-            zIndex: 1,
-            boxSizing: "border-box",
-          }}
-        >
+        {/* ============================ MANDALA ============================ */}
+        {activeTab === "mandala" && (
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              marginBottom: "2px",
-            }}
-          >
-            <span style={{ fontSize: "22px" }}>🌸</span>
-            <h1
-              style={{
-                fontSize: "24px",
-                fontWeight: 900,
-                background: "linear-gradient(135deg, #E06D53, #C88D78)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                margin: 0,
-              }}
-            >
-              Mandala Coloring Therapy
-            </h1>
-          </div>
-
-          <div style={{ fontSize: "20px", marginBottom: "6px" }}>🌸</div>
-
-          <p
-            style={{
-              fontSize: "13px",
-              color: "#64748B",
-              margin: "0 0 20px 0",
-              maxWidth: "460px",
-              lineHeight: "1.45",
-            }}
-          >
-            Relax, breathe, and let your creativity flow through beautiful mandala patterns
-          </p>
-
-          {/* Palette */}
-          <div
-            style={{
+              ...glass,
+              borderRadius: "28px",
+              padding: "22px 14px 24px",
+              textAlign: "center",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "10px",
-              marginBottom: "20px",
-            }}
-          >
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
-              {PALETTE_ROW_1.map((color) => {
-                const isSelected = selectedColor === color;
-                return (
-                  <button
-                    key={color}
-                    onClick={() => {
-                      playSound("click");
-                      setSelectedColor(color);
-                    }}
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: color,
-                      border: isSelected ? "3px solid #FFFFFF" : "none",
-                      boxShadow: isSelected
-                        ? `0 0 0 3px ${color}, 0 5px 12px rgba(0,0,0,0.2)`
-                        : "0 2px 6px rgba(0,0,0,0.1)",
-                      cursor: "pointer",
-                      transform: isSelected ? "scale(1.15)" : "scale(1)",
-                      transition: "transform 0.15s ease",
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              {PALETTE_ROW_2.map((color) => {
-                const isSelected = selectedColor === color;
-                return (
-                  <button
-                    key={color}
-                    onClick={() => {
-                      playSound("click");
-                      setSelectedColor(color);
-                    }}
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: color,
-                      border: isSelected ? "3px solid #FFFFFF" : "none",
-                      boxShadow: isSelected
-                        ? `0 0 0 3px ${color}, 0 5px 12px rgba(0,0,0,0.2)`
-                        : "0 2px 6px rgba(0,0,0,0.1)",
-                      cursor: "pointer",
-                      transform: isSelected ? "scale(1.15)" : "scale(1)",
-                      transition: "transform 0.15s ease",
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Controls: Brush Size & Tool mode */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              marginBottom: "18px",
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
-                Brush Size:
-              </span>
-              <input
-                type="range"
-                min="2"
-                max="24"
-                value={brushSize}
-                onChange={(e) => setBrushSize(Number(e.target.value))}
-                style={{ accentColor: "#38BDF8", cursor: "pointer", width: "90px" }}
-              />
-              <span style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
-                {brushSize}
-              </span>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "3px",
-                backgroundColor: "#F1F5F9",
-                padding: "3px",
-                borderRadius: "12px",
-              }}
-            >
-              <button
-                onClick={() => setColorMode("fill")}
-                style={{
-                  border: "none",
-                  backgroundColor: colorMode === "fill" ? "#FFFFFF" : "transparent",
-                  color: colorMode === "fill" ? "#EA6A61" : "#64748B",
-                  padding: "5px 12px",
-                  borderRadius: "10px",
-                  fontWeight: 800,
-                  fontSize: "11.5px",
-                  cursor: "pointer",
-                  boxShadow: colorMode === "fill" ? "0 2px 5px rgba(0,0,0,0.06)" : "none",
-                }}
-              >
-                🪣 Tap to Fill
-              </button>
-              <button
-                onClick={() => setColorMode("brush")}
-                style={{
-                  border: "none",
-                  backgroundColor: colorMode === "brush" ? "#FFFFFF" : "transparent",
-                  color: colorMode === "brush" ? "#EA6A61" : "#64748B",
-                  padding: "5px 12px",
-                  borderRadius: "10px",
-                  fontWeight: 800,
-                  fontSize: "11.5px",
-                  cursor: "pointer",
-                  boxShadow: colorMode === "brush" ? "0 2px 5px rgba(0,0,0,0.06)" : "none",
-                }}
-              >
-                🖌️ Free Brush
-              </button>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              marginBottom: "20px",
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
-            <button
-              onClick={handleClearAll}
-              style={{
-                border: "none",
-                background: "linear-gradient(135deg, #FF6A55, #F857A6)",
-                color: "#FFFFFF",
-                padding: "8px 20px",
-                borderRadius: "18px",
-                fontWeight: 800,
-                fontSize: "13px",
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(255, 106, 85, 0.25)",
-              }}
-            >
-              Clear All
-            </button>
-            <button
-              onClick={handleNewMandala}
-              style={{
-                border: "none",
-                background: "linear-gradient(135deg, #FF6A55, #F857A6)",
-                color: "#FFFFFF",
-                padding: "8px 20px",
-                borderRadius: "18px",
-                fontWeight: 800,
-                fontSize: "13px",
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(255, 106, 85, 0.25)",
-              }}
-            >
-              New Mandala
-            </button>
-            <button
-              onClick={handleSaveArt}
-              style={{
-                border: "none",
-                background: "linear-gradient(135deg, #FF6A55, #F857A6)",
-                color: "#FFFFFF",
-                padding: "8px 20px",
-                borderRadius: "18px",
-                fontWeight: 800,
-                fontSize: "13px",
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(255, 106, 85, 0.25)",
-              }}
-            >
-              Save Art
-            </button>
-          </div>
-
-          {/* Canvas */}
-          <div
-            style={{
-              width: "360px",
-              maxWidth: "100%",
-              aspectRatio: "1 / 1",
-              backgroundColor: "#FFFFFF",
-              borderRadius: "22px",
-              border: "1.5px solid #E2E8F0",
-              boxShadow: "0 6px 24px rgba(0, 0, 0, 0.04)",
-              overflow: "hidden",
-              position: "relative",
-              cursor: colorMode === "fill" ? "pointer" : "crosshair",
               boxSizing: "border-box",
             }}
           >
-            <canvas
-              ref={mandalaCanvasRef}
-              width={420}
-              height={420}
-              onClick={handleCanvasClick}
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "block",
-                touchAction: "none",
-              }}
-            />
-          </div>
-        </div>
-      )}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "6px" }}>
+              <Icon3D name="flower" size={34} />
+              <h1 style={{ fontSize: "21px", fontWeight: 800, color: THEME.ink, margin: 0, lineHeight: 1.2 }}>
+                Mandala Coloring Therapy
+              </h1>
+            </div>
 
-      {/* Outcomes Modal */}
+            <p style={{ fontSize: "13px", color: THEME.text, margin: "0 0 16px 0", lineHeight: 1.5 }}>
+              Relax, breathe, and let your creativity flow through beautiful mandala patterns
+            </p>
+
+            {/* Palette */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>{PALETTE_ROW_1.map(swatch)}</div>
+              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>{PALETTE_ROW_2.map(swatch)}</div>
+            </div>
+
+            {/* Brush size + mode */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", flexWrap: "wrap", justifyContent: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: THEME.ink }}>Brush Size:</span>
+                <input
+                  type="range"
+                  min="2"
+                  max="24"
+                  value={brushSize}
+                  onChange={(e) => setBrushSize(Number(e.target.value))}
+                  style={{ accentColor: THEME.accent, cursor: "pointer", width: "90px" }}
+                />
+                <span style={{ fontSize: "13px", fontWeight: 700, color: THEME.ink }}>{brushSize}</span>
+              </div>
+
+              <div style={{ display: "flex", gap: "4px", background: "rgba(255,255,255,0.75)", padding: "4px", borderRadius: "16px" }}>
+                <button
+                  onClick={() => setColorMode("fill")}
+                  style={{
+                    border: "none",
+                    background: colorMode === "fill" ? THEME.gradient : "transparent",
+                    color: colorMode === "fill" ? "#fff" : THEME.text,
+                    padding: "6px 12px",
+                    borderRadius: "12px",
+                    fontWeight: 800,
+                    fontSize: "12px",
+                    fontFamily: "inherit",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <Icon3D name="bucket" size={18} /> Tap to Fill
+                </button>
+                <button
+                  onClick={() => setColorMode("brush")}
+                  style={{
+                    border: "none",
+                    background: colorMode === "brush" ? THEME.gradient : "transparent",
+                    color: colorMode === "brush" ? "#fff" : THEME.text,
+                    padding: "6px 12px",
+                    borderRadius: "12px",
+                    fontWeight: 800,
+                    fontSize: "12px",
+                    fontFamily: "inherit",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <Icon3D name="brush" size={18} /> Free Brush
+                </button>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", justifyContent: "center" }}>
+              <button onClick={handleClearAll} style={gradBtn}>
+                Clear All
+              </button>
+              <button onClick={handleNewMandala} style={gradBtn}>
+                New Mandala
+              </button>
+              <button onClick={handleSaveArt} style={{ ...gradBtn, background: THEME.gradientWarm, boxShadow: "0 8px 18px rgba(183,147,196,0.4)" }}>
+                Save Art
+              </button>
+            </div>
+
+            {/* Canvas */}
+            <div
+              style={{
+                width: "min(360px, 100%)",
+                aspectRatio: "1 / 1",
+                backgroundColor: "#FFFFFF",
+                borderRadius: "24px",
+                border: `1.5px solid ${THEME.line}`,
+                boxShadow: "0 8px 24px rgba(46,52,82,0.1)",
+                overflow: "hidden",
+                position: "relative",
+                cursor: colorMode === "fill" ? "pointer" : "crosshair",
+                boxSizing: "border-box",
+              }}
+            >
+              <canvas
+                ref={mandalaCanvasRef}
+                width={420}
+                height={420}
+                onClick={handleCanvasClick}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Outcomes modal */}
       {showOutcomes && (
         <div
           onClick={() => setShowOutcomes(false)}
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(15, 23, 42, 0.55)",
+            inset: 0,
+            backgroundColor: "rgba(46,52,82,0.5)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -1925,79 +1576,40 @@ function MindRelaxGames() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: "#FFFFFF",
+              ...glass,
+              background: "rgba(255,255,255,0.92)",
               borderRadius: "28px",
-              padding: "32px 24px",
-              maxWidth: "420px",
+              padding: "26px 20px",
+              maxWidth: "400px",
               width: "100%",
               textAlign: "center",
-              boxShadow: "0 25px 60px rgba(0, 0, 0, 0.2)",
+              boxSizing: "border-box",
             }}
           >
-            <span style={{ fontSize: "40px" }}>🏆</span>
-            <h2 style={{ fontSize: "20px", fontWeight: 900, color: "#1E293B", margin: "10px 0 6px 0" }}>
-              7-Day Mindful Outcomes
-            </h2>
-            <p style={{ color: "#64748B", fontSize: "13px", lineHeight: "1.45", margin: "0 0 18px 0" }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Icon3D name="trophy" size={64} />
+            </div>
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: THEME.ink, margin: "10px 0 6px 0" }}>7-Day Mindful Outcomes</h2>
+            <p style={{ color: THEME.text, fontSize: "13px", lineHeight: 1.5, margin: "0 0 16px 0" }}>
               You've demonstrated consistent dedication to your mental tranquility and focus.
             </p>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "10px",
-                marginBottom: "20px",
-              }}
-            >
-              <div
-                style={{
-                  backgroundColor: "#F8FAFC",
-                  padding: "14px",
-                  borderRadius: "16px",
-                  border: "1px solid #E2E8F0",
-                }}
-              >
-                <div style={{ fontSize: "18px", fontWeight: 900, color: "#168038" }}>
-                  {isDayCompleted ? "7 / 7" : "6 / 7"}
-                </div>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", marginTop: "3px" }}>
-                  Days Solved
-                </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
+              <div style={{ background: THEME.soft, padding: "14px 8px", borderRadius: "18px", border: `1px solid ${THEME.line}` }}>
+                <div style={{ fontSize: "18px", fontWeight: 800, color: "#168038" }}>{isDayCompleted ? "7 / 7" : "6 / 7"}</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: THEME.text, marginTop: "3px" }}>Days Solved</div>
               </div>
-              <div
-                style={{
-                  backgroundColor: "#F8FAFC",
-                  padding: "14px",
-                  borderRadius: "16px",
-                  border: "1px solid #E2E8F0",
-                }}
-              >
-                <div style={{ fontSize: "18px", fontWeight: 900, color: "#EA6A61" }}>
-                  {isDayCompleted ? "100%" : "94%"}
-                </div>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", marginTop: "3px" }}>
-                  Mindful Score
-                </div>
+              <div style={{ background: THEME.soft, padding: "14px 8px", borderRadius: "18px", border: `1px solid ${THEME.line}` }}>
+                <div style={{ fontSize: "18px", fontWeight: 800, color: THEME.accentDark }}>{isDayCompleted ? "100%" : "94%"}</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: THEME.text, marginTop: "3px" }}>Mindful Score</div>
               </div>
             </div>
 
             <button
               onClick={() => setShowOutcomes(false)}
-              style={{
-                width: "100%",
-                border: "none",
-                backgroundColor: "#EA6A61",
-                color: "#FFFFFF",
-                padding: "12px",
-                borderRadius: "16px",
-                fontWeight: 900,
-                fontSize: "14px",
-                cursor: "pointer",
-                boxShadow: "0 5px 14px rgba(234, 106, 97, 0.35)",
-              }}
+              style={{ ...gradBtn, width: "100%", padding: "13px", fontSize: "14.5px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
             >
-              Continue My Journey ✨
+              Continue My Journey <Icon3D name="sparkle" size={20} />
             </button>
           </div>
         </div>
