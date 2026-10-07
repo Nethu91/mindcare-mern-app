@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "train:chatbot": "node scripts/trainChatbot.js",
+    "test": "node --test tests/*.test.js",
+    "check:llm": "node scripts/checkChatbotLLM.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

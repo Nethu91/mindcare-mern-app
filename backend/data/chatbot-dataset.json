@@ -1,0 +1,81 @@
+{
+  "version": "mindcare-english-intents-v1",
+  "language": "en",
+  "source": "Synthetic English examples authored for this student project; no real user conversations.",
+  "reviewStatus": "Not clinically reviewed. Demonstration dataset, not a clinical benchmark.",
+  "splitPolicy": "Per intent: first 8 examples train, example 9 validation, example 10 test. Do not move test examples into training to improve reported results.",
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": ["Hello", "Hi there", "Hey MindCare", "Good morning", "Good evening assistant", "Hello can we talk", "Hi I want to chat", "Hey how are you", "Hello MindCare assistant", "Hi can you listen to me"],
+      "responses": ["Hi, I'm here to listen. What would you like to talk about today?", "Hello. You can share as much or as little as you want. How have you been feeling?"],
+      "followUp": "I'm listening. What has been on your mind recently?"
+    },
+    {
+      "tag": "stress",
+      "patterns": ["I feel stressed", "My exams are stressing me out", "I am overwhelmed by deadlines", "Work pressure is too much", "I have too many assignments to finish", "My workload makes me stressed", "I cannot manage all my responsibilities", "Exam pressure is overwhelming", "Deadlines and assignments are making me stressed", "I am overwhelmed with my workload"],
+      "responses": ["That sounds like a lot to carry. We can break one task into a smaller step and make room for a short pause. What is putting the most pressure on you?", "It sounds like the demands are piling up. Which task needs your attention first? We can think about one manageable next step."],
+      "followUp": "Let's keep the next step small: choose one task, write down its first step, and set a realistic time for it. Would a short break or a simple task list help more?"
+    },
+    {
+      "tag": "anxiety",
+      "patterns": ["I feel anxious", "I am having anxiety", "I am scared about my presentation", "I keep worrying about everything", "I feel nervous and restless", "I think I am panicking", "My anxious thoughts will not stop", "I am afraid something bad will happen", "I feel anxious and nervous about tomorrow", "I cannot stop worrying and feel scared"],
+      "responses": ["That sounds unsettling. If you are somewhere safe, you could notice a few things you can see and feel your feet on the floor. What is worrying you most?", "I'm listening. You might try noticing your surroundings and letting your breathing stay comfortable. Would you like a grounding activity or to talk about the worry?"],
+      "followUp": "For a gentle grounding exercise, name five things you can see, four you can feel, and three you can hear. You can stop if it feels uncomfortable. What do you notice around you?"
+    },
+    {
+      "tag": "sadness",
+      "patterns": ["I feel sad", "I have been feeling depressed", "I want to cry", "I feel low and upset", "Nothing feels enjoyable anymore", "I am not happy", "I do not feel good emotionally", "I feel empty and down", "I feel sad and want to cry today", "I am feeling depressed and upset"],
+      "responses": ["I'm sorry things feel heavy. You do not have to explain everything at once. Did something happen, or has this feeling been building for a while?", "Thank you for telling me. We can talk about what's been difficult, and you might also reach out to someone you trust. What would feel helpful right now?"],
+      "followUp": "You could start by naming one thing that has been difficult today, or write it in your journal. If these feelings persist or affect daily life, a qualified professional can help you explore them."
+    },
+    {
+      "tag": "loneliness",
+      "patterns": ["I feel lonely", "I have nobody to talk to", "I feel alone even with other people", "I miss my friends", "Nobody listens to me", "I feel disconnected from everyone", "I wish I had someone to talk with", "I am isolated and lonely", "I feel lonely and miss my friends", "I feel isolated with nobody to talk to"],
+      "responses": ["Feeling disconnected can be painful. Is there someone you feel comfortable sending a small message to, even just to say hello?", "I'm here to listen. Would you prefer to talk about the loneliness, or think of one gentle way to connect with someone?"],
+      "followUp": "A small connection can be a starting point: message someone you trust, join an activity you enjoy, or arrange time with a counselor. Which feels most manageable for you?"
+    },
+    {
+      "tag": "sleep",
+      "patterns": ["I cannot sleep", "I keep waking up at night", "I have trouble falling asleep", "My sleep schedule is irregular", "I lie awake all night", "I need help with my bedtime routine", "I feel tired after poor sleep", "I struggle with insomnia", "I have trouble sleeping at night", "I cannot fall asleep and feel tired"],
+      "responses": ["Poor sleep can make the day harder. A quiet wind-down routine and a consistent bedtime may be worth trying. What tends to keep you awake?", "That sounds tiring. Would you like to think about a calmer evening routine? If sleep problems persist, a qualified healthcare professional can help assess them."],
+      "followUp": "You could choose a regular wind-down time, reduce stimulating activities near bedtime, and keep the room comfortable. Which small change would be realistic tonight?"
+    },
+    {
+      "tag": "positive",
+      "patterns": ["I feel happy", "I am doing well today", "I feel much better", "I am proud of myself", "I feel grateful", "Today was a wonderful day", "I am excited about my progress", "I feel good and hopeful", "I am happy and proud of my progress", "I feel better and grateful today"],
+      "responses": ["I'm glad you shared that. What contributed to this good moment? You can save it in your mood tracker or journal if you like.", "It's nice to hear that things feel brighter. What is one moment you would like to remember from today?"],
+      "followUp": "You could write down the moment and what helped make it happen, so you can revisit it later. Would you like to open your journal or mood tracker?"
+    },
+    {
+      "tag": "calming",
+      "patterns": ["I need calming tips", "Help me relax", "Can we do a grounding exercise", "I want to calm down", "Suggest a relaxing activity", "I need a peaceful break", "Guide me through gentle breathing", "I would like a relaxation exercise", "Can you suggest a calming exercise", "I want to relax with a gentle breathing activity"],
+      "responses": ["Let's take a gentle pause. Relax your shoulders if comfortable, notice your feet on the floor, and take a few unforced breaths. Would you prefer music, a calming video, or a grounding activity?", "You could try a quiet activity for a few minutes: soft music, a calming video, or noticing the sights and sounds around you. What feels comfortable?"],
+      "followUp": "Try naming three things you can see and two things you can hear. There is no need to force your breathing or continue if it feels uncomfortable. You can also open a calming activity below."
+    },
+    {
+      "tag": "app_help",
+      "patterns": ["How do I use the mood tracker", "Open calm videos", "Where can I find music", "How do I book a counselor appointment", "I want to write in my journal", "Where is the self assessment", "Help me find meditation or breathing", "Where are the mind relax games", "Show me the mood tracker in this app", "How can I book an appointment with a counselor"],
+      "responses": ["I can help you find a MindCare feature. Use the links below to open it. Booking and saving entries happen on the feature page; I cannot do those actions from this chat.", "MindCare has mood tracking, a journal, calming activities, self-assessments, and counselor appointments. Which feature would you like to open?"],
+      "followUp": "Choose a feature below. This chat can guide you to a page, but it does not book appointments or change your saved records."
+    },
+    {
+      "tag": "medical_boundary",
+      "patterns": ["Can you diagnose me", "Do I have depression", "What medicine should I take", "Tell me which antidepressant to use", "Should I stop my medication", "What dose of tablets do I need", "Am I bipolar", "Can you prescribe treatment", "Can you diagnose my anxiety disorder", "Which medication and dosage should I take"],
+      "responses": ["I cannot diagnose a condition, prescribe medicine, or advise changes to medication. A qualified healthcare professional can assess your situation. I can listen to what you are experiencing or help you find the counselor page.", "For diagnosis, treatment, or medication questions, please speak with a qualified healthcare professional. I can offer general emotional support and help you navigate MindCare."],
+      "followUp": "A qualified professional is the right person for that decision. If you want, you can describe how you have been feeling without sharing identifying details."
+    },
+    {
+      "tag": "crisis",
+      "patterns": ["I want to kill myself", "I am thinking about suicide", "I want to hurt myself", "I do not want to be alive", "I might harm myself tonight", "I am not safe right now", "I want to end my life", "I am going to hurt someone", "I am suicidal and need help", "I want to end my life and hurt myself"],
+      "responses": ["I'm concerned about your safety. If you have already hurt yourself, taken an overdose, or may act on these thoughts, contact local emergency services or go to the nearest emergency department now. If possible, ask someone you trust to stay with you and move away from anything you could use to hurt yourself or someone else. Open MindCare's Emergency page for support contacts. Are you in immediate danger right now?"],
+      "followUp": "Please contact emergency support if you are in immediate danger, and ask someone you trust to stay with you. This chat cannot contact emergency services or monitor your safety."
+    },
+    {
+      "tag": "thanks",
+      "patterns": ["Thank you", "Thanks for listening", "That was helpful", "I appreciate your support", "Thanks MindCare", "Thank you for helping me", "I appreciate it", "Thanks that helped", "Thank you for your helpful support", "I appreciate you listening thank you"],
+      "responses": ["You're welcome. Is there anything else you would like to talk about?", "Thank you for sharing with me. You can come back to this conversation while the page is open."],
+      "followUp": "You're welcome. What would you like to focus on next?"
+    }
+  ]
+}

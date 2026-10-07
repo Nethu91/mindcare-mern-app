@@ -1,0 +1,96 @@
+{"id":"greeting-1","text":"Hello","intent":"greeting"}
+{"id":"greeting-2","text":"Hi there","intent":"greeting"}
+{"id":"greeting-3","text":"Hey MindCare","intent":"greeting"}
+{"id":"greeting-4","text":"Good morning","intent":"greeting"}
+{"id":"greeting-5","text":"Good evening assistant","intent":"greeting"}
+{"id":"greeting-6","text":"Hello can we talk","intent":"greeting"}
+{"id":"greeting-7","text":"Hi I want to chat","intent":"greeting"}
+{"id":"greeting-8","text":"Hey how are you","intent":"greeting"}
+{"id":"stress-1","text":"I feel stressed","intent":"stress"}
+{"id":"stress-2","text":"My exams are stressing me out","intent":"stress"}
+{"id":"stress-3","text":"I am overwhelmed by deadlines","intent":"stress"}
+{"id":"stress-4","text":"Work pressure is too much","intent":"stress"}
+{"id":"stress-5","text":"I have too many assignments to finish","intent":"stress"}
+{"id":"stress-6","text":"My workload makes me stressed","intent":"stress"}
+{"id":"stress-7","text":"I cannot manage all my responsibilities","intent":"stress"}
+{"id":"stress-8","text":"Exam pressure is overwhelming","intent":"stress"}
+{"id":"anxiety-1","text":"I feel anxious","intent":"anxiety"}
+{"id":"anxiety-2","text":"I am having anxiety","intent":"anxiety"}
+{"id":"anxiety-3","text":"I am scared about my presentation","intent":"anxiety"}
+{"id":"anxiety-4","text":"I keep worrying about everything","intent":"anxiety"}
+{"id":"anxiety-5","text":"I feel nervous and restless","intent":"anxiety"}
+{"id":"anxiety-6","text":"I think I am panicking","intent":"anxiety"}
+{"id":"anxiety-7","text":"My anxious thoughts will not stop","intent":"anxiety"}
+{"id":"anxiety-8","text":"I am afraid something bad will happen","intent":"anxiety"}
+{"id":"sadness-1","text":"I feel sad","intent":"sadness"}
+{"id":"sadness-2","text":"I have been feeling depressed","intent":"sadness"}
+{"id":"sadness-3","text":"I want to cry","intent":"sadness"}
+{"id":"sadness-4","text":"I feel low and upset","intent":"sadness"}
+{"id":"sadness-5","text":"Nothing feels enjoyable anymore","intent":"sadness"}
+{"id":"sadness-6","text":"I am not happy","intent":"sadness"}
+{"id":"sadness-7","text":"I do not feel good emotionally","intent":"sadness"}
+{"id":"sadness-8","text":"I feel empty and down","intent":"sadness"}
+{"id":"loneliness-1","text":"I feel lonely","intent":"loneliness"}
+{"id":"loneliness-2","text":"I have nobody to talk to","intent":"loneliness"}
+{"id":"loneliness-3","text":"I feel alone even with other people","intent":"loneliness"}
+{"id":"loneliness-4","text":"I miss my friends","intent":"loneliness"}
+{"id":"loneliness-5","text":"Nobody listens to me","intent":"loneliness"}
+{"id":"loneliness-6","text":"I feel disconnected from everyone","intent":"loneliness"}
+{"id":"loneliness-7","text":"I wish I had someone to talk with","intent":"loneliness"}
+{"id":"loneliness-8","text":"I am isolated and lonely","intent":"loneliness"}
+{"id":"sleep-1","text":"I cannot sleep","intent":"sleep"}
+{"id":"sleep-2","text":"I keep waking up at night","intent":"sleep"}
+{"id":"sleep-3","text":"I have trouble falling asleep","intent":"sleep"}
+{"id":"sleep-4","text":"My sleep schedule is irregular","intent":"sleep"}
+{"id":"sleep-5","text":"I lie awake all night","intent":"sleep"}
+{"id":"sleep-6","text":"I need help with my bedtime routine","intent":"sleep"}
+{"id":"sleep-7","text":"I feel tired after poor sleep","intent":"sleep"}
+{"id":"sleep-8","text":"I struggle with insomnia","intent":"sleep"}
+{"id":"positive-1","text":"I feel happy","intent":"positive"}
+{"id":"positive-2","text":"I am doing well today","intent":"positive"}
+{"id":"positive-3","text":"I feel much better","intent":"positive"}
+{"id":"positive-4","text":"I am proud of myself","intent":"positive"}
+{"id":"positive-5","text":"I feel grateful","intent":"positive"}
+{"id":"positive-6","text":"Today was a wonderful day","intent":"positive"}
+{"id":"positive-7","text":"I am excited about my progress","intent":"positive"}
+{"id":"positive-8","text":"I feel good and hopeful","intent":"positive"}
+{"id":"calming-1","text":"I need calming tips","intent":"calming"}
+{"id":"calming-2","text":"Help me relax","intent":"calming"}
+{"id":"calming-3","text":"Can we do a grounding exercise","intent":"calming"}
+{"id":"calming-4","text":"I want to calm down","intent":"calming"}
+{"id":"calming-5","text":"Suggest a relaxing activity","intent":"calming"}
+{"id":"calming-6","text":"I need a peaceful break","intent":"calming"}
+{"id":"calming-7","text":"Guide me through gentle breathing","intent":"calming"}
+{"id":"calming-8","text":"I would like a relaxation exercise","intent":"calming"}
+{"id":"app_help-1","text":"How do I use the mood tracker","intent":"app_help"}
+{"id":"app_help-2","text":"Open calm videos","intent":"app_help"}
+{"id":"app_help-3","text":"Where can I find music","intent":"app_help"}
+{"id":"app_help-4","text":"How do I book a counselor appointment","intent":"app_help"}
+{"id":"app_help-5","text":"I want to write in my journal","intent":"app_help"}
+{"id":"app_help-6","text":"Where is the self assessment","intent":"app_help"}
+{"id":"app_help-7","text":"Help me find meditation or breathing","intent":"app_help"}
+{"id":"app_help-8","text":"Where are the mind relax games","intent":"app_help"}
+{"id":"medical_boundary-1","text":"Can you diagnose me","intent":"medical_boundary"}
+{"id":"medical_boundary-2","text":"Do I have depression","intent":"medical_boundary"}
+{"id":"medical_boundary-3","text":"What medicine should I take","intent":"medical_boundary"}
+{"id":"medical_boundary-4","text":"Tell me which antidepressant to use","intent":"medical_boundary"}
+{"id":"medical_boundary-5","text":"Should I stop my medication","intent":"medical_boundary"}
+{"id":"medical_boundary-6","text":"What dose of tablets do I need","intent":"medical_boundary"}
+{"id":"medical_boundary-7","text":"Am I bipolar","intent":"medical_boundary"}
+{"id":"medical_boundary-8","text":"Can you prescribe treatment","intent":"medical_boundary"}
+{"id":"crisis-1","text":"I want to kill myself","intent":"crisis"}
+{"id":"crisis-2","text":"I am thinking about suicide","intent":"crisis"}
+{"id":"crisis-3","text":"I want to hurt myself","intent":"crisis"}
+{"id":"crisis-4","text":"I do not want to be alive","intent":"crisis"}
+{"id":"crisis-5","text":"I might harm myself tonight","intent":"crisis"}
+{"id":"crisis-6","text":"I am not safe right now","intent":"crisis"}
+{"id":"crisis-7","text":"I want to end my life","intent":"crisis"}
+{"id":"crisis-8","text":"I am going to hurt someone","intent":"crisis"}
+{"id":"thanks-1","text":"Thank you","intent":"thanks"}
+{"id":"thanks-2","text":"Thanks for listening","intent":"thanks"}
+{"id":"thanks-3","text":"That was helpful","intent":"thanks"}
+{"id":"thanks-4","text":"I appreciate your support","intent":"thanks"}
+{"id":"thanks-5","text":"Thanks MindCare","intent":"thanks"}
+{"id":"thanks-6","text":"Thank you for helping me","intent":"thanks"}
+{"id":"thanks-7","text":"I appreciate it","intent":"thanks"}
+{"id":"thanks-8","text":"Thanks that helped","intent":"thanks"}

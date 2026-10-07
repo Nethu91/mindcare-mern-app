@@ -1,0 +1,57 @@
+.chatbot-page .chatbot-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chatbot-page .chat-model-status { font-size: 12px; color: var(--muted); }
+.chatbot-page .chat-model-status.ready { color: #176047; }
+.chatbot-page .chat-model-status.offline { color: #9c352c; }
+.chatbot-page .chatbot-tools button,
+.chatbot-page .chat-error button {
+  padding: 8px 12px;
+  border: 1px solid #b7b4ce;
+  border-radius: 12px;
+  background: #fff;
+  color: #353148;
+  cursor: pointer;
+}
+.chatbot-page .chatbot-warning a { display: block; margin-top: 6px; color: #73332a; font-weight: 700; }
+.chatbot-page .premium-message { overflow-wrap: anywhere; }
+.chatbot-page .premium-message[data-urgent] { border: 2px solid #aa4539; }
+.chatbot-page .chat-action-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chatbot-page .chat-action-links a {
+  display: inline-block;
+  border-radius: 10px;
+  padding: 7px 10px;
+  background: #eef2ff;
+  color: #343b78;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.chatbot-page .chat-error {
+  background: #fff1ec;
+  color: #70352a;
+  border: 1px solid #dbb0a2;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.chatbot-page .chat-error p { margin: 0 0 8px; }
+.chatbot-page .chat-error a { color: #70352a; margin-left: 12px; font-weight: 700; }
+.chatbot-page button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.chatbot-page .premium-input-area input { min-width: 0; }
+.chatbot-page a:focus-visible,
+.chatbot-page button:focus-visible,
+.chatbot-page input:focus-visible { outline: 3px solid #7154ab; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .chatbot-page .bot-avatar,
+  .chatbot-page .premium-message,
+  .chatbot-page .typing-bubble span { animation: none; }
+}
+
+.chatbot-page .chat-reply-text { white-space: pre-wrap; }
+.chatbot-page .chat-reply-notice { margin: 10px 0 0; font-size: 12px; color: #684331; border-top: 1px solid #ded5cc; padding-top: 7px; }

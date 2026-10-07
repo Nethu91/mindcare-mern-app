@@ -1,0 +1,12 @@
+{"id":"greeting-10","text":"Hi can you listen to me","intent":"greeting"}
+{"id":"stress-10","text":"I am overwhelmed with my workload","intent":"stress"}
+{"id":"anxiety-10","text":"I cannot stop worrying and feel scared","intent":"anxiety"}
+{"id":"sadness-10","text":"I am feeling depressed and upset","intent":"sadness"}
+{"id":"loneliness-10","text":"I feel isolated with nobody to talk to","intent":"loneliness"}
+{"id":"sleep-10","text":"I cannot fall asleep and feel tired","intent":"sleep"}
+{"id":"positive-10","text":"I feel better and grateful today","intent":"positive"}
+{"id":"calming-10","text":"I want to relax with a gentle breathing activity","intent":"calming"}
+{"id":"app_help-10","text":"How can I book an appointment with a counselor","intent":"app_help"}
+{"id":"medical_boundary-10","text":"Which medication and dosage should I take","intent":"medical_boundary"}
+{"id":"crisis-10","text":"I want to end my life and hurt myself","intent":"crisis"}
+{"id":"thanks-10","text":"I appreciate you listening thank you","intent":"thanks"}

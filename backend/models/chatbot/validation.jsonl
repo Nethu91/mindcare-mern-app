@@ -1,0 +1,12 @@
+{"id":"greeting-9","text":"Hello MindCare assistant","intent":"greeting"}
+{"id":"stress-9","text":"Deadlines and assignments are making me stressed","intent":"stress"}
+{"id":"anxiety-9","text":"I feel anxious and nervous about tomorrow","intent":"anxiety"}
+{"id":"sadness-9","text":"I feel sad and want to cry today","intent":"sadness"}
+{"id":"loneliness-9","text":"I feel lonely and miss my friends","intent":"loneliness"}
+{"id":"sleep-9","text":"I have trouble sleeping at night","intent":"sleep"}
+{"id":"positive-9","text":"I am happy and proud of my progress","intent":"positive"}
+{"id":"calming-9","text":"Can you suggest a calming exercise","intent":"calming"}
+{"id":"app_help-9","text":"Show me the mood tracker in this app","intent":"app_help"}
+{"id":"medical_boundary-9","text":"Can you diagnose my anxiety disorder","intent":"medical_boundary"}
+{"id":"crisis-9","text":"I am suicidal and need help","intent":"crisis"}
+{"id":"thanks-9","text":"Thank you for your helpful support","intent":"thanks"}

@@ -13,6 +13,8 @@ const resourceRoutes = require("./routes/resourceRoutes");
 const medicationRoutes = require("./routes/medicationRoutes");
 const emergencyRoutes = require("./routes/emergencyRoutes");
 
+const chatRoutes = require("./routes/chatRoutes");
+
 const app = express();
 
 connectDB();
@@ -22,6 +24,7 @@ app.use(cors());
 // 5mb so the profile photo (base64) is never rejected
 app.use(express.json({ limit: "5mb" }));
 
+app.use("/api/chat", chatRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/moods", moodRoutes);
 app.use("/api/assessments", assessmentRoutes);

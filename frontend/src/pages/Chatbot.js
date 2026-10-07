@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import API from "../api/axios";
+import "../styles/chatbot.css";
 import BottomNav from "../components/BottomNav";
 import botAvatar from "../assets/Bot avatar.jpeg";
 import chatBg from "../assets/Chat bg.jpeg";
@@ -12,7 +15,6 @@ function Chatbot() {
 
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const chatEndRef = useRef(null);
 
   const suggestions = [
     "I feel stressed",
@@ -21,67 +23,111 @@ function Chatbot() {
     "I feel anxious",
   ];
 
-  const getBotReply = (userMessage) => {
-    const msg = userMessage.toLowerCase();
+  const requestRef = useRef(null);
+  const messageIdRef = useRef(1);
+  const chatBoxRef = useRef(null);
+  const [error, setError] = useState(null);
+  const [modelStatus, setModelStatus] = useState("checking");
+  const [replyMode, setReplyMode] = useState("local");
+  const [retryRequest, setRetryRequest] = useState(null);
 
-    if (
-      msg.includes("suicide") ||
-      msg.includes("kill myself") ||
-      msg.includes("unsafe") ||
-      msg.includes("harm")
-    ) {
-      return "I’m really sorry you’re feeling this way. Please contact someone you trust immediately. If you are in immediate danger, use the Emergency section or contact local emergency support.";
+  useEffect(() => {
+    const controller = new AbortController();
+    API.get("/chat/model", { signal: controller.signal, timeout: 8000 })
+      .then(({ data }) => {
+        if (!controller.signal.aborted) {
+          setModelStatus("ready");
+          setReplyMode(data.generation?.engine === "llm" ? "configured" : "local");
+        }
+      })
+      .catch(() => { if (!controller.signal.aborted) setModelStatus("offline"); });
+    return () => {
+      controller.abort();
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, []);
+
+  const submitRequest = async (payload) => {
+    if (requestRef.current) return;
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setTyping(true);
+    setError(null);
+    setRetryRequest(null);
+    try {
+      const { data } = await API.post("/chat", payload, {
+        signal: controller.signal,
+        timeout: 32000,
+      });
+      if (requestRef.current !== controller || controller.signal.aborted) return;
+      if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("Invalid reply");
+      // Only allow known in-app destinations from the API response.
+      const allowedPaths = new Set(["/dashboard", "/mood", "/journal", "/counselor", "/appointments", "/assessment", "/calm-videos", "/music", "/meditation", "/breathing", "/mind-relax-games", "/emergency"]);
+      const actions = Array.isArray(data.actions)
+        ? data.actions.filter((action) => action && allowedPaths.has(action.path) && typeof action.label === "string").slice(0, 3)
+        : [];
+      const replyId = ++messageIdRef.current;
+      setMessages((previous) => [...previous, {
+        id: replyId,
+        sender: "bot",
+        text: data.reply,
+        actions,
+        urgent: data.urgent === true,
+        notice: typeof data.notice === "string" ? data.notice : null,
+      }]);
+      setModelStatus("ready");
+      if (data.engine === "llm") setReplyMode("llm");
+      else if (data.engine === "local") setReplyMode("local");
+    } catch (requestError) {
+      if (controller.signal.aborted || requestRef.current !== controller) return;
+      const status = requestError.response?.status;
+      setError({
+        status,
+        text: status === 401
+          ? "Your session has expired. Please sign in again."
+          : status === 429
+            ? "Please pause for a moment, then retry your message."
+            : "I could not connect to the support assistant. Check that the backend is running, then retry. For urgent help, open Emergency support.",
+      });
+      if (status !== 401) setRetryRequest(payload);
+      setModelStatus("offline");
+    } finally {
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setTyping(false);
+      }
     }
-
-    if (msg.includes("sad") || msg.includes("depressed") || msg.includes("lonely")) {
-      return "I’m sorry you’re feeling this way. Your feelings are valid. Try taking a slow breath, drink some water, and write down what made you feel this way. You can also track this mood or speak with a counselor.";
-    }
-
-    if (msg.includes("stress") || msg.includes("stressed")) {
-      return "Stress can feel heavy. Try this: inhale for 4 seconds, hold for 4 seconds, exhale for 6 seconds. Repeat it 3 times. Would you like to open the calm music or mood tracker?";
-    }
-
-    if (msg.includes("anxious") || msg.includes("anxiety") || msg.includes("panic")) {
-      return "Anxiety can be uncomfortable, but you are not alone. Try grounding yourself: name 5 things you can see, 4 things you can touch, 3 things you can hear, 2 things you can smell, and 1 thing you can taste.";
-    }
-
-    if (msg.includes("happy") || msg.includes("good") || msg.includes("better")) {
-      return "That’s lovely to hear. Try saving this positive moment in your mood tracker so you can look back at your progress.";
-    }
-
-    if (msg.includes("calm") || msg.includes("relax")) {
-      return "Let’s try a calming activity. Sit comfortably, relax your shoulders, and take 3 slow breaths. You can also open Calm Videos or Music from your dashboard.";
-    }
-
-    return "Thank you for sharing that with me. I’m here to support you. You can track your mood, take a self-assessment, try calming music, or book a counselor appointment.";
   };
 
   const sendMessage = (messageText = input) => {
-    if (!messageText.trim()) return;
-
-    const userMessage = {
+    const text = messageText.trim();
+    if (!text || text.length > 1000 || requestRef.current || retryRequest) return;
+    const history = messages.slice(-6).map(({ sender, text }) => ({ sender, text }));
+    const userId = ++messageIdRef.current;
+    setMessages((previous) => [...previous, {
+      id: userId,
       sender: "user",
-      text: messageText,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+      text,
+    }]);
     setInput("");
-    setTyping(true);
+    submitRequest({ message: text, history });
+  };
 
-    setTimeout(() => {
-      const botMessage = {
-        sender: "bot",
-        text: getBotReply(messageText),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-      setTyping(false);
-    }, 900);
+  const clearChat = () => {
+    requestRef.current?.abort();
+    requestRef.current = null;
+    setTyping(false);
+    setError(null);
+    setRetryRequest(null);
+    setInput("");
+    setMessages([{ id: ++messageIdRef.current, sender: "bot", text: "Hi, I'm MindCare Assistant. How are you feeling today?" }]);
   };
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typing]);
+    const box = chatBoxRef.current;
+    box?.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
+  }, [messages, typing, error]);
 
   return (
     <div
@@ -98,27 +144,37 @@ function Chatbot() {
           <img src={botAvatar} alt="MindCare AI" style={styles.headerAvatarImg} />
         </div>
         <div>
-          <h2>MindCare AI</h2>
-          <p>Calm support assistant</p>
+          <h2>MindCare Assistant</h2>
+          <p>English support assistant</p>
         </div>
       </div>
 
+      <div className="chatbot-tools">
+        <span role="status" className={`chat-model-status ${modelStatus}`}>
+          {modelStatus === "ready" ? replyMode === "llm" ? "AI assistant connected" : replyMode === "configured" ? "AI mode configured" : "Support assistant connected" : modelStatus === "checking" ? "Connecting..." : "Assistant unavailable"}
+        </span>
+        <button type="button" onClick={clearChat}>New chat</button>
+      </div>
+
       <div className="chatbot-warning">
-        This chatbot is for basic emotional support only. It is not a medical diagnosis tool.
+        Basic emotional support only, not medical diagnosis or emergency care.
+        Conversations reset when you leave this page. In AI mode, messages and recent
+        conversation context are sent to your configured AI provider (Groq or OpenAI). Avoid sharing identifying details.
+        <Link to="/emergency">Emergency support</Link>
       </div>
 
       <div className="chat-suggestions">
         {suggestions.map((item) => (
-          <button key={item} onClick={() => sendMessage(item)}>
+          <button type="button" key={item} disabled={typing || Boolean(retryRequest)} onClick={() => sendMessage(item)}>
             {item}
           </button>
         ))}
       </div>
 
-      <div className="premium-chat-box">
+      <div className="premium-chat-box" ref={chatBoxRef} role="log" aria-label="Support conversation" aria-live="polite" aria-relevant="additions" aria-busy={typing}>
         {messages.map((message, index) => (
           <div
-            key={index}
+            key={message.id || `initial-${index}`}
             className={
               message.sender === "user"
                 ? "message-row user-row"
@@ -137,8 +193,17 @@ function Chatbot() {
                   ? "premium-message user-bubble"
                   : "premium-message bot-bubble"
               }
+              data-urgent={message.urgent || undefined}
             >
-              {message.text}
+              <div className="chat-reply-text">{message.text}</div>
+              {message.notice && <p className="chat-reply-notice">{message.notice}</p>}
+              {message.actions?.length > 0 && (
+                <div className="chat-action-links">
+                  {message.actions.map((action) => (
+                    <Link key={action.path} to={action.path}>{action.label}</Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -148,7 +213,7 @@ function Chatbot() {
             <div className="mini-avatar">
               <img src={botAvatar} alt="Bot" style={styles.miniAvatarImg} />
             </div>
-            <div className="typing-bubble">
+            <div className="typing-bubble" role="status" aria-label="Assistant is replying">
               <span></span>
               <span></span>
               <span></span>
@@ -156,22 +221,35 @@ function Chatbot() {
           </div>
         )}
 
-        <div ref={chatEndRef}></div>
       </div>
 
-      <div className="premium-input-area">
+      {error && (
+        <div className="chat-error" role="alert">
+          <p>{error.text}</p>
+          {retryRequest && <button type="button" disabled={typing} onClick={() => submitRequest(retryRequest)}>Retry message</button>}
+          {error.status === 401 && <Link to="/login">Sign in</Link>}
+          <Link to="/emergency">Emergency support</Link>
+        </div>
+      )}
+
+      <form className="premium-input-area" onSubmit={(event) => {
+        event.preventDefault();
+        sendMessage();
+      }}>
         <input
           type="text"
+          aria-label="Your message"
           placeholder="Type how you feel..."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") sendMessage();
+          maxLength={1000}
+          disabled={Boolean(retryRequest)}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && (event.nativeEvent.isComposing || event.keyCode === 229)) event.preventDefault();
           }}
         />
-
-        <button onClick={() => sendMessage()}>➤</button>
-      </div>
+        <button type="submit" aria-label="Send message" disabled={typing || Boolean(retryRequest) || !input.trim()}>➤</button>
+      </form>
 
       <BottomNav />
     </div>
